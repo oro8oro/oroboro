@@ -1,0 +1,43 @@
+<template name="files">
+    {{#if isInRole 'admin'}}
+        {{> insert_file}}
+    {{/if}}
+    {{> view_files}}
+</template>
+
+<template name="insert_file">
+    <div class="insert_button">
+        {{#afModal class="btn btn-default btn-block" collection="File" fields="uuid,width,height,image,fileType,script,permissions" id="insert_file" operation="insert" buttonContent="Insert File" title="Insert a New File" buttonClasses="btn-primary"}}New File{{/afModal}}
+    </div>
+</template>
+
+<template name="view_files">
+    {{> tabular table=TabularTables.File class="table table-striped table-bordered table-condensed"}}
+</template>
+
+<template name="operation_file">
+    <div class="flex">
+        <div class="update_button">
+            {{#if isInRole 'admin'}}
+                {{#afModal class="btn btn-default btn-block" collection="File" fields="uuid,width,height,image,fileType,script,permissions" id="update_file" operation="update" doc=this._id buttonContent="Update File" title="Update File" buttonClasses="btn-primary"}}<span class="glyphicon glyphicon-upload" aria-hidden="true"></span>{{/afModal}}
+            {{/if}}
+        </div>
+        <div class="remove_button">
+            {{#if isInRole 'admin'}}
+                {{#afModal class="btn btn-default btn-block" collection="File" fields="userId,title" id="remove_file" operation="remove" doc=this._id buttonContent="Remove File" title="Remove File" buttonClasses="btn-primary" prompt="Are you sure? This will delete all groups and shapes under this File."}}<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>{{/afModal}}
+            {{/if}}
+        </div>
+        <div class="view_button">
+            <button class="btn btn-default btn-block" id="view_file"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></button>
+        </div>
+    </div>
+</template>
+
+<template name="show_file">
+</template>
+
+<template name="show_meteor_file_svg">
+    {{log this}}
+    <svg width="{{this.width}}" height="{{this.height}}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="svg_test">
+    </svg>
+</template>

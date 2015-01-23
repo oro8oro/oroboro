@@ -1,0 +1,31 @@
+<template name="rasters">
+    {{#if isInRole 'admin'}}
+        {{> insert_raster}}
+    {{/if}}
+    {{> view_rasters}}
+</template>
+
+<template name="insert_raster">
+    <div class="insert_button">
+        {{#afModal class="btn btn-default btn-block" collection="Images" fields="fileId1,fileId2,type" id="insert_raster" operation="insert" buttonContent="Insert Image" title="Insert a New Image" buttonClasses="btn-primary"}}New Image{{/afModal}}
+    </div>
+</template>
+
+<template name="view_rasters">
+    {{> tabular table=TabularTables.Images class="table table-striped table-bordered table-condensed"}}
+</template>
+
+<template name="operation_raster">
+    <div class="flex">
+        <div class="update_button">
+            {{#if isInRole 'admin'}}
+                {{#afModal class="btn btn-default btn-block" collection="Images" fields="fileId1,fileId2,type" id="update_raster" operation="update" doc=this._id buttonContent="Update Image" title="Update Image" buttonClasses="btn-primary"}}<span class="glyphicon glyphicon-upload" aria-hidden="true"></span>{{/afModal}}
+            {{/if}}
+        </div>
+        <div class="remove_button">
+            {{#if isInRole 'admin'}}
+                {{#afModal class="btn btn-default btn-block" collection="Images" fields="userId,title" id="remove_raster" operation="remove" doc=this._id buttonContent="Remove Image" title="Remove Image" buttonClasses="btn-primary" prompt="Are you sure?"}}<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>{{/afModal}}
+            {{/if}}
+        </div>
+    </div>
+</template>

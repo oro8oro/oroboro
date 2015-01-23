@@ -1,0 +1,62 @@
+<template name="items">
+    {{#if isInRole 'admin'}}
+        {{> insert_item}}
+    {{/if}}
+    <div class="">
+        <!--{{> expression_filter}}-->
+    </div>
+    <div id="viewer">
+        {{> view_items}}
+    </div>
+    <!--<div class="modal_image_div">{{> modal_image}}</div>-->
+</template>
+
+<template name="insert_item">
+    <div class="insert_button">
+        {{#afModal class="btn btn-default btn-block" collection="Item" fields="groupId,type,ordering,text,strokeColor,strokeWidth,fillColor,complexity,pointList,closed, parameters" id="insert_item" operation="insert" buttonContent="Insert Item" title="Insert a New Item" buttonClasses="btn-primary"}}New Item{{/afModal}}
+    </div>
+</template>
+
+<template name="view_items">
+    <div class="table-responsive">
+        {{> tabular table=TabularTables.Item selector=selector class="table table-striped table-bordered table-hover table-condensed"}}
+    </div>
+</template>
+
+<template name="operation_item">
+    <div class="flex">
+        <div class="update_button">
+            {{#if isInRole 'admin'}}
+                {{#afModal class="btn btn-default btn-block" collection="Item" fields="groupId,type,ordering,text,strokeColor,strokeWidth,fillColor,complexity,pointList,closed,parameters" id="update_item" operation="update" doc=this._id buttonContent="Update Item" title="Update Item" buttonClasses="btn-primary"}}<span class="glyphicon glyphicon-upload" aria-hidden="true"></span>{{/afModal}}
+            {{/if}}
+        </div>
+        <div class="remove_button">
+            {{#if isInRole 'admin'}}
+                {{#afModal class="btn btn-default btn-block" collection="Item" id="remove_item" operation="remove" doc=this._id buttonContent="Remove Item" title="Remove Item" buttonClasses="btn-primary"}}<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>{{/afModal}}
+            {{/if}}
+        </div>
+        <div class="view_button">
+            <button class="btn btn-default btn-block" id="view_item"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></button>
+        </div>
+    </div>
+</template>
+<!--
+<template name="render_image">
+    <a href="javascript:;"><img class="grid_img" src={{this.src}}></a>
+</template>
+
+<template name="modal_image">
+    <div class="modal fade modal_image">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          </div>
+          <div class="modal-body">
+            <img class="modal_img" src={{$.Session.get "image_src"}}>
+          </div>
+        </div>
+      </div>
+    </div>
+</template>
+-->

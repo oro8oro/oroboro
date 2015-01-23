@@ -1,0 +1,31 @@
+<template name="depends">
+    {{#if isInRole 'admin'}}
+        {{> insert_depend}}
+    {{/if}}
+    {{> view_depends}}
+</template>
+
+<template name="insert_depend">
+    <div class="insert_button">
+        {{#afModal class="btn btn-default btn-block" collection="Dependency" fields="fileId1,fileId2,type" id="insert_depend" operation="insert" buttonContent="Insert Dependency" title="Insert a New Dependency" buttonClasses="btn-primary"}}New Dependency{{/afModal}}
+    </div>
+</template>
+
+<template name="view_depends">
+    {{> tabular table=TabularTables.Dependency class="table table-striped table-bordered table-condensed"}}
+</template>
+
+<template name="operation_depend">
+    <div class="flex">
+        <div class="update_button">
+            {{#if isInRole 'admin'}}
+                {{#afModal class="btn btn-default btn-block" collection="Dependency" fields="fileId1,fileId2,type" id="update_depend" operation="update" doc=this._id buttonContent="Update Dependency" title="Update Dependency" buttonClasses="btn-primary"}}<span class="glyphicon glyphicon-upload" aria-hidden="true"></span>{{/afModal}}
+            {{/if}}
+        </div>
+        <div class="remove_button">
+            {{#if isInRole 'admin'}}
+                {{#afModal class="btn btn-default btn-block" collection="Dependency" fields="userId,title" id="remove_depend" operation="remove" doc=this._id buttonContent="Remove Dependency" title="Remove Dependency" buttonClasses="btn-primary" prompt="Are you sure?"}}<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>{{/afModal}}
+            {{/if}}
+        </div>
+    </div>
+</template>

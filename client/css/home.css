@@ -1,0 +1,27 @@
+#content{
+    max-width: 98%;
+    margin: auto;
+}
+.insert_button{
+    max-width: 20%;
+    margin-bottom: 15px;
+}
+.grid_img{
+    max-height: 65px;
+}
+.modal_img{
+    max-height: 400px;
+    max-width: 550px;
+    display: block;
+    margin: auto;
+}
+img{
+    max-height: 25px;
+}
+.flex{
+    display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
+    display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */
+    display: -ms-flexbox;      /* TWEENER - IE 10 */
+    display: -webkit-flex;     /* NEW - Chrome */
+    display: flex;
+}

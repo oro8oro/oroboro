@@ -1,0 +1,22 @@
+<template name="users">
+    {{> view_users}}
+</template>
+
+<template name="view_users">
+    {{> tabular table=TabularTables.UserList class="table table-striped table-bordered table-condensed"}}
+</template>
+
+<template name="operation_user">
+    <div class="flex">    
+        <div class="update_button">
+            {{#if isInRole 'admin'}}
+                {{#afModal class="btn btn-default btn-block" collection="Meteor.users" fields="profile" id="update_user" operation="update" doc=this._id buttonContent="Update User" title="Update User" buttonClasses="btn-primary"}}<span class="glyphicon glyphicon-upload" aria-hidden="true"></span>{{/afModal}}
+            {{/if}}
+        </div>
+        <div class="remove_button">
+            {{#if isInRole 'admin'}}
+                {{#afModal class="btn btn-default btn-block" collection="Meteor.users" id="remove_user" operation="remove" doc=this._id buttonContent="Remove User" title="Remove User" buttonClasses="btn-primary" prompt="Are you sure? This will delete all Task Lists associated with this user."}}<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>{{/afModal}}
+            {{/if}}
+        </div>
+    </div>
+</template>

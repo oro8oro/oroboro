@@ -1,0 +1,38 @@
+<template name="groups">
+    {{#if isInRole 'admin'}}
+        {{> insert_group}}
+    {{/if}}
+    {{> view_groups}}
+</template>
+
+<template name="insert_group">
+    <div class="insert_button">
+        {{#afModal class="btn btn-default btn-block" collection="Group" fields="uuid,fileId,groupId,type,ordering,parameters,transparency" id="insert_group" operation="insert" buttonContent="Insert Group" title="Insert a New Group" buttonClasses="btn-primary"}}New Group{{/afModal}}
+    </div>
+</template>
+
+<template name="view_groups">
+    {{> tabular table=TabularTables.Group class="table table-striped table-bordered table-condensed"}}
+</template>
+
+<template name="operation_group">
+    <div class="flex">
+        <div class="update_button">
+            {{#if isInRole 'admin'}}
+                {{#afModal class="btn btn-default btn-block" collection="Group" fields="uuid,fileId,groupId,type,ordering,parameters,transparency" id="update_group" operation="update" doc=this._id buttonContent="Update Group" title="Update Group" buttonClasses="btn-primary"}}<span class="glyphicon glyphicon-upload" aria-hidden="true"></span>{{/afModal}}
+            {{/if}}
+        </div>
+        <div class="remove_button">
+            {{#if isInRole 'admin'}}
+                {{#afModal class="btn btn-default btn-block" collection="Group" fields="userId,title" id="remove_group" operation="remove" doc=this._id buttonContent="Remove Group" title="Remove Group" buttonClasses="btn-primary" prompt="Are you sure? This will delete all groups and shapes under this Group."}}<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>{{/afModal}}
+            {{/if}}
+        </div>
+        <div class="view_button">
+            <button class="btn btn-default btn-block" id="view_group"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></button>
+        </div>
+    </div>
+</template>
+
+
+<template name="show_group">
+</template>

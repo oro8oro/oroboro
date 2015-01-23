@@ -1,0 +1,28 @@
+
+Meteor.publish('dependencies', function(){
+    //if (Roles.userIsInRole(this.userId, 'admin')) {
+        return Dependency.find();
+    //}
+});
+
+
+Meteor.publish('tabular_dependencies', function (tableName, ids, fields) {
+    check(tableName, String);
+    check(ids, [String]);
+    check(fields, Match.Optional(Object));
+    Publish.relations(this, Dependency.find({_id: {$in: ids}}, {fields: fields}), function (id, doc) {
+        doc.subject1 = this.changeParentDoc(File.find({_id: doc.fileId1}), function (id, doc){
+                if(doc.uuid)
+                  return doc.uuid;
+                else
+                  return doc._id
+            }, 'subject1');
+        doc.subject2 = this.changeParentDoc(File.find({_id: doc.fileId2}), function (id, doc){
+                if(doc.uuid)
+                  return doc.uuid;
+                else
+                  return doc._id
+            }, 'subject2');
+      });
+      return this.ready();
+});
