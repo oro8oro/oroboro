@@ -7,7 +7,7 @@
 
 <template name="insert_group">
     <div class="insert_button">
-        {{#afModal class="btn btn-default btn-block" collection="Group" fields="uuid,fileId,groupId,type,ordering,parameters,transparency" id="insert_group" operation="insert" buttonContent="Insert Group" title="Insert a New Group" buttonClasses="btn-primary"}}New Group{{/afModal}}
+        {{#afModal class="btn btn-default btn-block" collection="Group" fields="uuid,fileId,groupId,type,ordering,parameters,transparency,transform" id="insert_group" operation="insert" buttonContent="Insert Group" title="Insert a New Group" buttonClasses="btn-primary"}}New Group{{/afModal}}
     </div>
 </template>
 
@@ -19,7 +19,7 @@
     <div class="flex">
         <div class="update_button">
             {{#if isInRole 'admin'}}
-                {{#afModal class="btn btn-default btn-block" collection="Group" fields="uuid,fileId,groupId,type,ordering,parameters,transparency" id="update_group" operation="update" doc=this._id buttonContent="Update Group" title="Update Group" buttonClasses="btn-primary"}}<span class="glyphicon glyphicon-upload" aria-hidden="true"></span>{{/afModal}}
+                {{#afModal class="btn btn-default btn-block" collection="Group" fields="uuid,fileId,groupId,type,ordering,parameters,transparency,transform" id="update_group" operation="update" doc=this._id buttonContent="Update Group" title="Update Group" buttonClasses="btn-primary"}}<span class="glyphicon glyphicon-upload" aria-hidden="true"></span>{{/afModal}}
             {{/if}}
         </div>
         <div class="remove_button">
@@ -28,7 +28,8 @@
             {{/if}}
         </div>
         <div class="view_button">
-            <button class="btn btn-default btn-block" id="view_group"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></button>
+            <a href="/group/{{this._id}}" target="_blank">
+            <button class="btn btn-default btn-block" id="view_group"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></button></a>
         </div>
     </div>
 </template>

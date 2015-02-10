@@ -48,9 +48,10 @@ Schemas.Dependency = new SimpleSchema({
             options: function () {
                 return [
                     {label:"structural", value: 1},
-                    {label:"link", value: 2},
+                    {label:"link to descendants", value: 2},
                     {label:"dependency", value: 3},
-                    {label:"needed by", value: 4}
+                    {label:"needed by", value: 4},
+                    {label:"simple link", value: 5},
                 ];
             }
         }

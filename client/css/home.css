@@ -25,3 +25,54 @@ img{
     display: -webkit-flex;     /* NEW - Chrome */
     display: flex;
 }
+.block{
+    display: -moz-inline-stack;
+    display: inline-block;
+    *display: inline;
+}
+
+/* file / group:*/
+.no_scroll{
+   overflow:hidden;
+}
+
+code{
+    color: #000000;
+}
+
+.univ {
+    position: fixed;
+    right: 0;
+    top: auto;
+    bottom: 0;
+    left: auto;
+    z-index: 1040;
+    overflow: hidden;
+    /*max-width: 180px;*/
+}
+.univ-dialog{
+    margin-bottom: 0;
+    max-width: 110px;
+    opacity: 0.9;
+}
+.univ-content{
+    max-width: 108px;
+}
+.univ-body{
+    padding: 0;
+}
+.univ-header{
+    padding: 0;
+    max-width: 95px;
+}
+.input_sm{
+    max-width: 75px;
+}
+/*
+.jPicker.Container{
+    z-index: 2000;
+    right: 0;
+    left: auto;
+    bottom: 0;
+    top: auto;
+}*/

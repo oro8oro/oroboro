@@ -1,23 +1,4 @@
 Schemas.File = new SimpleSchema({
-    /*
-    fileId2: {
-        type: String,
-        label: "Parent File",
-        optional: true,
-        autoform: {
-          type: "select",
-          options: function () {
-            var list = File.find({}).fetch();
-            if(list.length > 0){
-                var option = [];
-                for(u = 0; u < list.length ; u++){
-                    option.push({label: list[u]._id, value: list[u]._id});
-                }
-                return option;
-            }
-          }
-        }
-    },*/
     uuid: {
         type: String,
         label: "Subject",
@@ -108,6 +89,28 @@ Schemas.File = new SimpleSchema({
         optional: true,
         autoValue: function(){
             return Meteor.userId();
+        }
+    },
+    locked: {
+        type: String,
+        label: "Locked",
+        optional: true,
+        autoValue: function(){
+            if(false)
+                return Meteor.userId();
+            else
+                return null;
+        }
+    },
+    selected: {
+        type: String,
+        label: "Selected",
+        optional: true,
+        autoValue: function(){
+            if(false)
+                return Meteor.userId();
+            else
+                return null;
         }
     }
 });

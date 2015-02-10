@@ -52,9 +52,11 @@ Schemas.Group = new SimpleSchema({
                 return [
                     {label:"Menu", value:"menu"},
                     {label:"Menu Item", value:"menu_item"},
+                    {label:"Menu Button", value:"menu_button"},
                     {label:"Layer", value:"layer"},
                     {label:"Simple Group", value:"simpleGroup"},
-                    {label:"Linked Group", value:"linkedGroup"}
+                    {label:"Linked Group", value:"linkedGroup"},
+                    {label:"Parametrized Group", value:"parametrizedGroup"}
                 ];
             }
         }
@@ -62,7 +64,8 @@ Schemas.Group = new SimpleSchema({
     ordering: {
         type: Number,
         label: "Ordering",
-        optional: true
+        optional: true,
+        defaultValue: 100
     },
     selected: {
         type: String,
@@ -105,6 +108,20 @@ Schemas.Group = new SimpleSchema({
         type: Number,
         label: "No of Rows",
         optional: true
+    },
+    'parameters.hide': {
+        type: String,
+        label: "Hide Content",
+        optional: true,
+        autoform: {
+            type: "select",
+            options: function () {
+                return [
+                    {label:"true", value:"true"},
+                    {label:"false", value:"false"},
+                ];
+            }
+        }
     },
     transparency: {
         type: Number,

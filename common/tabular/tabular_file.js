@@ -3,17 +3,9 @@ TabularTables.File = new Tabular.Table({
   collection: File,
   pub: "tabular_files",
   columns: [
-    {data: "_id", title: "File"},
-    {
-      data: "fileId2", title: "Parent File",
-      render: function(val, type, doc){
-        if(!val.length)
-          return "none";
-        else
-          return val;
-      }
-    },
     {data: "creatorId", visible: false},
+    {tmpl: Meteor.isClient && Template.operation_file},
+    {data: "_id", title: "File"},
     {data: "creator", title: "Creator"},
     {data: "uuid", title: "Subject"},
     {data: "width", title: "Width"},
@@ -41,7 +33,6 @@ TabularTables.File = new Tabular.Table({
           }
       }
     },
-    {data: "permissions", title: "Permissions"},
-    {tmpl: Meteor.isClient && Template.operation_file}
+    {data: "permissions", title: "Permissions"}
   ]
 });

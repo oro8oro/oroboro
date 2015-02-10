@@ -7,16 +7,29 @@ TabularTables.Item = new Tabular.Table({
     //{data: "fileId", visible: false},
     //{data: "file", title: "File"},
     {data: "groupId", visible: false},
+    {tmpl: Meteor.isClient && Template.operation_item},
     {data: "group", title: "Group"},
     {data: "type", title: "Type"},
     {data: "text", title: "Text"},
     {data: "ordering", title: "Ordering"},
-    {data: "strokeColor", title: "Stroke Color"},
-    {data: "strokeWidth", title: "Stroke Width"},
-    {data: "fillColor", title: "Fill Color"},
+    {
+      data: "palette", title: "Palette",
+      render: function(val, type, doc){
+          if(val){
+            return JSON.stringify(val);
+          }
+      }
+    },
+    //{data: "strokeWidth", title: "Stroke Width"},
+    //{data: "fillColor", title: "Fill Color"},
     //{data: "complexity", title: "Complexity"},
     {
-      data: "pointList", title: "List of Points"
+      data: "pointList", title: "List of Points",
+      render: function(val, type, doc){
+          if(val){
+              return val.substr(0,200);
+          }
+      }
     },
     {data: "closed", title: "Closed"},
     {
@@ -25,7 +38,6 @@ TabularTables.Item = new Tabular.Table({
         console.log(val);
         return JSON.stringify(val);
       }
-    },
-    {tmpl: Meteor.isClient && Template.operation_item}
+    }
   ]
 });

@@ -16,19 +16,28 @@
 </template>
 
 <template name="operation_file">
-    <div class="flex">
-        <div class="update_button">
-            {{#if isInRole 'admin'}}
-                {{#afModal class="btn btn-default btn-block" collection="File" fields="uuid,width,height,image,fileType,script,permissions" id="update_file" operation="update" doc=this._id buttonContent="Update File" title="Update File" buttonClasses="btn-primary"}}<span class="glyphicon glyphicon-upload" aria-hidden="true"></span>{{/afModal}}
-            {{/if}}
+    <div class="block">
+        <div class="flex">
+            <div class="update_button">
+                {{#if isInRole 'admin'}}
+                    {{#afModal class="btn btn-default btn-block" collection="File" fields="uuid,width,height,image,fileType,script,permissions" id="update_file" operation="update" doc=this._id buttonContent="Update File" title="Update File" buttonClasses="btn-primary"}}<span class="glyphicon glyphicon-upload" aria-hidden="true"></span>{{/afModal}}
+                {{/if}}
+            </div>
+            <div class="remove_button">
+                {{#if isInRole 'admin'}}
+                    {{#afModal class="btn btn-default btn-block" collection="File" fields="userId,title" id="remove_file" operation="remove" doc=this._id buttonContent="Remove File" title="Remove File" buttonClasses="btn-primary" prompt="Are you sure? This will delete all groups and shapes under this File."}}<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>{{/afModal}}
+                {{/if}}
+            </div>
         </div>
-        <div class="remove_button">
-            {{#if isInRole 'admin'}}
-                {{#afModal class="btn btn-default btn-block" collection="File" fields="userId,title" id="remove_file" operation="remove" doc=this._id buttonContent="Remove File" title="Remove File" buttonClasses="btn-primary" prompt="Are you sure? This will delete all groups and shapes under this File."}}<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>{{/afModal}}
-            {{/if}}
-        </div>
-        <div class="view_button">
-            <button class="btn btn-default btn-block" id="view_file"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></button>
+        <div class="flex">
+            <div class="view_button">
+                <a href="/file/{{this._id}}" target="_blank">
+                <button class="btn btn-default btn-block" id="view_file"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></button></a>
+            </div>
+            <div class="edit_button">
+                <a href="/filem/{{this._id}}" target="_blank">
+                <button class="btn btn-default btn-block" id="edit_file"><span class="glyphicon glyphicon-edit" aria-hidden="true"></span></button></a>
+            </div>
         </div>
     </div>
 </template>
@@ -36,8 +45,61 @@
 <template name="show_file">
 </template>
 
-<template name="show_meteor_file_svg">
-    {{log this}}
-    <svg width="{{this.width}}" height="{{this.height}}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="svg_test">
+<template name="svgEditor">
+    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="svgEditor">
     </svg>
+    {{> svgCodeEditor}}
+    {{> paletteModal}}
+</template>
+
+<template name="show_meteor_file_svg">
+    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="{{this._id}}">
+    </svg>
+</template>
+
+<template name="svgCodeEditor">
+    <div class="modal fade" id="CodeEditorModal" tabindex="-1" role="dialog" aria-labelledby="CodeEditorModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-body" id="CodeEditorModalBody" style="overflow:auto;" contentEditable="true">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal" onclick="enablePan();">Close</button>
+            <button type="button" class="btn btn-primary" onclick="menuItemCodeSave();">Save changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+</template>
+
+<template name="paletteModal">
+    <div class="modal univ" id="Palette" tabindex="-1" role="dialog" aria-labelledby="UnivModalLabel" aria-hidden="true">
+      <div class="modal-dialog univ-dialog modal-sm">
+        <div class="modal-header univ-header flex">
+            <button type="button" class="btn-xs btn-default" data-dismiss="modal"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
+        </div>
+        <div class="modal-content univ-content">
+            <div class="modal-body univ-body" id="UnivModalBody" style="overflow:auto;">
+            <div class="flex">
+                <input class="form-control input-sm input_sm" id="FillPicker" type="text" value="99330030" />
+            </div>
+            <div class="flex">
+                <input class="form-control input-sm input_sm" id="StrokePicker" type="text" value="99330030" />
+            </div>
+                <input class="form-control input-sm input_sm" id="StrokeWidth" type="text" oninput="setStrokeWidth();" value="0" />
+                <input class="form-control input-sm input_sm" id="StrokeDasharray" type="text" oninput="setStrokeDasharray();" value="" />
+                <select class="form-control input-sm input_sm" id="StrokeLinejoin" onchange="setStrokeLinejoin();">
+                    <option></option>
+                    <option>bevel</option>
+                    <option>round</option>
+                </select>
+                 <select class="form-control input-sm input_sm" id="StrokeLinecap" onchange="setStrokeLinecap();">
+                    <option></option>
+                    <option>square</option>
+                    <option>round</option>
+                </select>
+          </div>
+        </div>
+      </div>
+    </div>
 </template>

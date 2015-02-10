@@ -10,13 +10,6 @@ Meteor.publish('tabular_items', function (tableName, ids, fields) {
     check(ids, [String]);
     check(fields, Match.Optional(Object));
     Publish.relations(this, Item.find({_id: {$in: ids}}, {fields: fields}), function (id, doc) {
-        /*
-        doc.file = this.changeParentDoc(File.find({_id: doc.fileId}), function (id, doc){
-                if(doc.uuid)
-                  return doc.uuid;
-                else
-                  return doc._id;
-            }, 'file');*/
         doc.group = this.changeParentDoc(Group.find({_id: doc.groupId}), function (id, doc){
                 if(doc.uuid)
                   return doc.uuid;

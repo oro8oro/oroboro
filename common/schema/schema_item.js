@@ -32,10 +32,10 @@ Schemas.Item = new SimpleSchema({
                 return [
                     {label:"Simple Path", value:"simple_path"},
                     {label:"Complex Path", value:"complex_path"},
-                    {label:"Parametrized Path", value:"parametrized_simple_path"},
-                    {label:"Polyline", value:"polyline"},
                     {label:"Text", value:"text"},
                     {label:"Raster Image", value:"rasterImage"},
+                    {label:"Embeded iFrame", value:"embedediFrame"},
+                    {label:"Embeded Canvas", value:"embededCanvas"}
                 ];
             }
         }
@@ -55,24 +55,140 @@ Schemas.Item = new SimpleSchema({
         label: "Ordering",
         optional: true
     },
-    strokeColor: {
+    palette:{
+        type: Object,
+        label: "Palette",
+        optional: true
+    },
+    'palette.strokeColor': {
         type: String,
         label: "Stroke Color",
         optional: true,
-        defaultValue: '#000'
+        defaultValue: '000000ff'
     },
-    strokeWidth: {
+    'palette.strokeWidth': {
         type: String,
         label: "Stroke Width",
         optional: true,
         decimal: true,
         defaultValue: '0'
     },
-    fillColor: {
+    'palette.strokeOpacity': {
+        type: String,
+        label: "Stroke Opacity",
+        optional: true,
+        decimal: true,
+        defaultValue: '1'
+    },
+    'palette.fillColor': {
         type: String,
         label: "Fill Color",
         optional: true,
-        defaultValue: '#000'
+        defaultValue: '000000ff'
+    },
+    'palette.fillOpacity': {
+        type: String,
+        label: "Fill Opacity",
+        optional: true,
+        decimal: true,
+        defaultValue: '1'
+    },
+    'palette.strokeDasharray': {
+        type: String,
+        label: "Dash Array",
+        optional: true
+    },
+    'palette.strokeLinejoin': {
+        type: String,
+        label: "Stroke Linejoin",
+        optional: true,
+        autoform: {
+            type: "select",
+            options: function () {
+                return [
+                    {label:"bevel", value:"bevel"},
+                    {label:"round", value:"round"},
+                    {label:"miter", value:"miter"}
+                ];
+            }
+        }
+    },
+    'palette.strokeLinecap': {
+        type: String,
+        label: "Stroke Linecap",
+        optional: true,
+        autoform: {
+            type: "select",
+            options: function () {
+                return [
+                    {label:"square", value:"square"},
+                    {label:"round", value:"round"},
+                    {label:"butt", value:"butt"}
+                ];
+            }
+        }
+    },
+    'palette.opacity': {
+        type: String,
+        label: "General Opacity",
+        optional: true,
+        decimal: true,
+        defaultValue: '1'
+    },
+    font:{
+        type: Object,
+        label: "Font",
+        optional: true
+    },
+    'font.style': {
+        type: String,
+        label: "Font Style",
+        optional: true,
+        autoform: {
+            type: "select",
+            options: function () {
+                return [
+                    {label:"normal", value:"normal"},
+                    {label:"italic", value:"italic"}
+                ];
+            }
+        }
+    },
+    'font.weight': {
+        type: String,
+        label: "Font Weight",
+        optional: true,
+        autoform: {
+            type: "select",
+            options: function () {
+                return [
+                    {label:"normal", value:"normal"},
+                    {label:"bold", value:"bold"}
+                ];
+            }
+        }
+    },
+    'font.family': {
+        type: String,
+        label: "Font Family",
+        optional: true,
+        autoform: {
+            type: "select",
+            options: function () {
+                return [
+                    {label:"serif", value:"serif"},
+                    {label:"Sans-serif", value:"Sans-serif"},
+                    {label:"Cursive", value:"Cursive"},
+                    {label:"Fantasy", value:"Fantasy"},
+                    {label:"Monospace", value:"Monospace"}
+                ];
+            }
+        }
+    },
+    'font.size': {
+        type: String,
+        label: "Font Size",
+        optional: true
     },
     complexity: {
         type: Number,
@@ -91,9 +207,18 @@ Schemas.Item = new SimpleSchema({
         optional: true
     },
     closed: {
-        type: Boolean,
+        type: String,
         label: 'Closed',
-        optional: true
+        optional: true,
+        autoform: {
+            type: "select",
+            options: function () {
+                return [
+                    {label:"true", value:"true"},
+                    {label:"false", value:"false"},
+                ];
+            }
+        }
     },
     selected: {
         type: String,

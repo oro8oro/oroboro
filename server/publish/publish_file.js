@@ -4,12 +4,6 @@ Meteor.publish('files', function(){
     //}
 });
 
-Meteor.publish('files_by_id', function(id){
-    //if (Roles.userIsInRole(this.userId, 'admin')) {
-        return File.find({_id:id});
-    //}
-});
-
 Meteor.publish('tabular_files', function (tableName, ids, fields) {
     check(tableName, String);
     check(ids, [String]);
@@ -28,3 +22,22 @@ Meteor.publish('tabular_files', function (tableName, ids, fields) {
       });
       return this.ready();
 });
+
+/*
+Meteor.publish('file', function(id){
+    check(id, String);
+
+    Publish.relations(this, File.find({_id: id}), function (id, doc) {  this.cursor(Dependency.find({fileId1: id})).publish();
+        this.cursor(Group.find({fileId: id})).publish(function (id, doc) {
+            this.cursor(Group.find({groupId: id})).publish(function (id, doc) {
+                this.cursor(Item.find({groupId: id})).publish();
+            });
+            this.cursor(Dependency.find({fileId1: id})).publish(function(id, doc){
+                this.cursor(Group.find({_id: doc.fileId2}))
+            });
+        });
+          
+      });
+    return this.ready();
+});
+*/

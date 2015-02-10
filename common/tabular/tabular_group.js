@@ -4,8 +4,10 @@ TabularTables.Group = new Tabular.Table({
   collection: Group,
   pub: "tabular_groups",
   columns: [
-    {data: "uuid", title: "Group"}, 
     {data: "fileId", visible: false},
+    {tmpl: Meteor.isClient && Template.operation_group},   
+    {data: "_id", title: "Id"},
+    {data: "uuid", title: "Group"}, 
     {
       data: "file", title: "File",
       render: function(val, type, doc){
@@ -15,7 +17,7 @@ TabularTables.Group = new Tabular.Table({
           return val;
       }
     },
-    {data: "groupId", visible: false},
+    {data: "groupId", title: "GroupId"},
     {
       data: "group2", title: "Parent Group",
       render: function(val, type, doc){
@@ -36,6 +38,6 @@ TabularTables.Group = new Tabular.Table({
       }
     },
     {data: "transparency", title: "Transparency"},
-    {tmpl: Meteor.isClient && Template.operation_group}
+    {data: "transform", title: "Transform"},
   ]
 });
