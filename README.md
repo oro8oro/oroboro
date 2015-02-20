@@ -2,6 +2,10 @@
 
 ## License: [GPLv3](http://www.gnu.org/copyleft/gpl.html)
 
+(see gplv3_license.txt)
+
+For the moment, there is no live demo of the project. Come again in 1 week.
+
 
 
     meteor add twbs:bootstrap
