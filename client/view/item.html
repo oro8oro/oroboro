@@ -27,7 +27,7 @@
     <div class="flex">
         <div class="update_button">
             {{#if isInRole 'admin'}}
-                {{#afModal class="btn btn-default btn-block" collection="Item" fields="groupId,type,ordering,text,palette,complexity,pointList,closed,parameters" id="update_item" operation="update" doc=this._id buttonContent="Update Item" title="Update Item" buttonClasses="btn-primary"}}<span class="glyphicon glyphicon-upload" aria-hidden="true"></span>{{/afModal}}
+                {{#afModal class="btn btn-default btn-block" collection="Item" fields="groupId,type,ordering,text,palette,complexity,pointList,closed,selected,parameters" id="update_item" operation="update" doc=this._id buttonContent="Update Item" title="Update Item" buttonClasses="btn-primary"}}<span class="glyphicon glyphicon-upload" aria-hidden="true"></span>{{/afModal}}
             {{/if}}
         </div>
         <div class="remove_button">

@@ -32,337 +32,38 @@ buildMenu = function buildMenu(editor,subject){
         kids[k].scale(global_oro_variables.menu_scale ,global_oro_variables.menu_scale);
 }
 
-datGuiParam = function(item){
-    if(['rasterImage', 'text'].indexOf(item.attr('type')) == -1){
-        this.fillColor = '#000000';
-        this.fillOpacity = 1;
-        this.strokeColor = '#000000';
-        this.strokeOpacity = 1;
-        this.strokeWidth = 1;
-        this.strokeDasharray = '';
-        this.strokeLinejoin = '';
-        this.strokeLinecap = '';
-        this.opacity = 1;
-    }
-    if(item.attr('type') == 'text'){
-        this.fontStyle = 'normal';
-        this.fontWeight = 'normal';
-        this.fontFamily = 'Sans serif';
-        this.fontSize = 15;
-    }
-    if(item.attr('href'))
-        this.href = item.attr('href')
-    if(item.attr('type') == 'text')
-        this.text = item.text();
-    if(item.attr('font-style'))
-        this.fontStyle = item.attr('font-style');
-    if(item.attr('font-weight'))
-        this.fontWeight = item.attr('font-weight');
-    if(item.attr('font-family'))
-        this.fontFamily = item.attr('font-family');
-    if(item.attr('font-size'))
-        this.fontSize = item.attr('font-size');
-    if(item.attr('fill')){
-        if(item.attr('fill') == 'none'){
-            this.fillColor = '#FFFFFF';
-            this.fillOpacity = 0;
-        }
-        else{
-            this.fillColor = item.attr('fill');
-            if(item.attr('fill-opacity'))
-                this.fillOpacity = Number(item.attr('fill-opacity'));
-        }
-    }
-    if(item.attr('stroke')){
-        if(item.attr('stroke') == 'none'){
-            this.strokeColor = '#FFFFFF';
-            this.strokeOpacity = 0;
-        }
-        else{
-            this.strokeColor = item.attr('stroke');
-            if(item.attr('stroke-opacity'))
-                this.strokeOpacity = Number(item.attr('stroke-opacity'));
-        }
-    }
-    if(item.attr('stroke-width'))
-        if(item.attr('stroke-width') == 'null')
-            this.strokeWidth = 0;
-        else
-            this.strokeWidth = Number(item.attr('stroke-width'));
-    if(item.attr('stroke-dasharray'))
-        if(item.attr('stroke-dasharray') != 'null')
-            this.strokeDasharray = item.attr('stroke-dasharray');
-    if(item.attr('stroke-linejoin'))
-        if(item.attr('stroke-linejoin') != 'null')
-            this.strokeLinejoin = item.attr('stroke-linejoin');
-    if(item.attr('stroke-linecap'))
-        if(item.attr('stroke-linecap') != 'null')
-            this.strokeLinecap = item.attr('stroke-linecap');
-    if(item.attr('opacity'))
-        if(item.attr('opacity') != 'null')
-            this.opacity = item.attr('opacity');
-    var box = item.bbox();
-    this.width = box.width;
-    this.height = box.height;
-    this.maintainRatio = true;
-    this.x = box.x;
-    this.y = box.y;
-    this.cx = box.cx;
-    this.cy = box.cy;
-    this.angle = 0;
-}
-
-buildDatGui = function(gui, item){
-    var param = new datGuiParam(item);
-    var f1 = gui.addFolder('Appearance');
-    var f2 = gui.addFolder('Geometry');
-    var f3 = gui.addFolder('Actions');
-
-    if(item.attr('type') == 'text'){
-        var txt = f1.add(param, 'text');
-        var st = Schemas.Item.schema()['font.style'].autoform.options();
-        var we = Schemas.Item.schema()['font.weight'].autoform.options();
-        var fa = Schemas.Item.schema()['font.family'].autoform.options();
-        var sty = [], wei = [], fam = [];
-        for(i in st)
-            sty.push(st[i].value);
-        for(i in we)
-            wei.push(we[i].value);
-        for(i in fa)
-            fam.push(fa[i].value);
-        var style = f1.add(param, 'fontStyle', sty);
-        var weight = f1.add(param, 'fontWeight', wei);
-        var fam = f1.add(param, 'fontFamily', fam);
-        var size = f1.add(param, 'fontSize');
-        txt.onChange(function(value){
-            item.text(value);
-        });
-        txt.onFinishChange(function(value){
-            setItemsValue('text',value);
-        });
-        style.onChange(function(value){
-            item.attr('font-style', value);
-        });
-        style.onFinishChange(function(value){
-            setItemsValue('font.style',value);
-        });
-        weight.onChange(function(value){
-            item.attr('font-weight', value);
-            setItemsValue('font.weight',value);
-        });
-        weight.onFinishChange(function(value){
-            setItemsValue('font.weight',value);
-        });
-        fam.onChange(function(value){
-            item.attr('font-family', value);
-        });
-        fam.onFinishChange(function(value){
-            setItemsValue('font.family',value);
-        });
-        size.onChange(function(value){
-            item.attr('font-size', value);
-            positionSelector(item.attr("id"));
-        });
-        size.onFinishChange(function(value){
-            setItemsValue('font.size',value);
-            saveItemLocalisation(item.attr("id"));
-        });
-    }
-    if(item.attr('type') == 'rasterImage'){
-        var src = f1.add(param, 'href');
-        src.onChange(function(value){
-            item.attr('href', value);
-        });
-        src.onFinishChange(function(value){
-            setItemsValue('text',value);
-        });
-    }
-    if(['rasterImage', 'text'].indexOf(item.attr('type')) == -1){
-        var fill = f1.addColor(param, 'fillColor')
-        var fillo = f1.add(param, 'fillOpacity', 0,1)
-        var stroke = f1.addColor(param, 'strokeColor')
-        var strokeo = f1.add(param, 'strokeOpacity', 0,1)
-        var strokew = f1.add(param, 'strokeWidth').min(0).step(1)
-        var stroked = f1.add(param, 'strokeDasharray')
-        var lj = Schemas.Item.schema()['palette.strokeLinejoin'].autoform.options();
-        var lc = Schemas.Item.schema()['palette.strokeLinecap'].autoform.options();
-        var slj = [], slc = [];
-        for(i in lj)
-            slj.push(lj[i].value);
-        for(i in lc)
-            slc.push(lc[i].value);
-        var strokelj = f1.add(param, 'strokeLinejoin', slj)
-        var strokelc = f1.add(param, 'strokeLinecap', slc)
-        var angle = f2.add(param, 'angle', -180, 180).step(10)
-    }
-    var opac = f1.add(param, 'opacity', 0,1)
-
-    var w = f2.add(param, 'width')
-    var h = f2.add(param, 'height')
-    var ratio = f2.add(param, 'maintainRatio')
-    var x = f2.add(param, 'x')
-    var y = f2.add(param, 'y')
-    var cx = f2.add(param, 'cx')
-    var cy = f2.add(param, 'cy')
-
-    //f3.add(param, 'simplifyCPath');
-    f1.open();
-
-    if(['rasterImage', 'text'].indexOf(item.attr('type')) == -1){
-        fill.onChange(function(value){
-            item.attr('fill', value);
-            setFill(value);
-        });
-        fill.onFinishChange(function(value){
-            console.log(value);
-            setFill(value);
-        });
-        fillo.onChange(function(value){
-            item.attr('fill-opacity', value);
-        });
-        fillo.onFinishChange(function(value){
-            console.log(value);
-            setFillOpacity(value);
-        });
-        stroke.onChange(function(value){
-            item.attr('stroke', value);
-            setStroke(value);
-        });
-        stroke.onFinishChange(function(value){
-            console.log(value);
-            setStroke(value);
-        });
-        strokeo.onChange(function(value){
-            item.attr('stroke-opacity', value);
-        });
-        strokeo.onFinishChange(function(value){
-            console.log(value);
-            setStrokeOpacity(value);
-        });
-        strokew.onChange(function(value){
-            item.attr('stroke-width', value);
-        });
-        strokew.onFinishChange(function(value){
-            console.log(value);
-            setStrokeWidth(value);
-        });
-        stroked.onChange(function(value){
-            item.attr('stroke-dasharray', value);
-        });
-        stroked.onFinishChange(function(value){
-            console.log(value);
-            setStrokeDasharray(value);
-        });
-        strokelj.onChange(function(value){
-            item.attr('stroke-linejoin', value);
-        });
-        strokelj.onFinishChange(function(value){
-            console.log(value);
-            setStrokeLinejoin(value);
-        });
-        strokelc.onChange(function(value){
-            item.attr('stroke-linecap', value);
-        });
-        strokelc.onFinishChange(function(value){
-            console.log(value);
-            setStrokeLinecap(value);
-        });
-        var degrees = 0, temp;
-        angle.onChange(function(value){
-            temp = value;
-            value = value - degrees;
-            degrees = temp;
-            if(item.attr("type") == 'simple_path')
-                rotateSPath(item, item.cx(), item.cy(), value/180*Math.PI)
-            if(item.attr("type") == 'complex_path')
-                rotateCPath(item, item.cx(), item.cy(), value/180*Math.PI)
-            rotate_selector(item.attr("id"), item.cx(), item.cy(), value/180*Math.PI)
-        });
-        angle.onFinishChange(function(value){
-            console.log(value);
-            degrees = 0;
-            saveItemLocalisation(item.attr("id"));
-            //update(param, 'angle', 0);
-            param.angle = 0;
-        });
-    }
-    opac.onChange(function(value){
-        item.opacity(value);
-    });
-    opac.onFinishChange(function(value){
-        console.log(value);
-        setOpacity(value);
-    });
-    w.onChange(function(value){
-        var wg = item.width();
-        item.width(value);
-        if(param.maintainRatio)
-            item.height(item.height()*value/wg);
-        positionSelector(item.attr("id"));
-    });
-    w.onFinishChange(function(value){
-        console.log(value);
-        saveItemLocalisation(item.attr("id"));
-    });
-    h.onChange(function(value){
-        var hg = item.height();
-        item.height(value);
-        if(param.maintainRatio)
-            item.width(item.width()*value/hg);
-        positionSelector(item.attr("id"));
-    });
-    h.onFinishChange(function(value){
-        console.log(value);
-        saveItemLocalisation(item.attr("id"));
-    });
-    x.onChange(function(value){
-        item.x(value);
-        positionSelector(item.attr("id"));
-    });
-    x.onFinishChange(function(value){
-        console.log(value);
-        saveItemLocalisation(item.attr("id"));
-    });
-    y.onChange(function(value){
-        item.y(value);
-        positionSelector(item.attr("id"));
-    });
-    y.onFinishChange(function(value){
-        console.log(value);
-        saveItemLocalisation(item.attr("id"));
-    });
-    cx.onChange(function(value){
-        item.cx(value);
-        positionSelector(item.attr("id"));
-    });
-    cx.onFinishChange(function(value){
-        console.log(value);
-        saveItemLocalisation(item.attr("id"));
-    });
-    cy.onChange(function(value){
-        item.cy(value);
-        positionSelector(item.attr("id"));
-    });
-    cy.onFinishChange(function(value){
-        console.log(value);
-        saveItemLocalisation(item.attr("id"));
-    });
-}
-
 menuItemBox = function menuItemBox(){
     if(global_oro_variables.selected.members.length > 0 ){
-        var result = global_oro_variables.selected.members[0];
-        var id = result.attr("selected");
-        var selected = SVG.get(id);
-        //console.log("Type: ", selected.attr("type"));
-        if(selected.attr("type") != 'layer'){
-            var parent = result.parent;
-            var box = parent.bbox();
-            //console.log(parent.attr("id"));
-            //console.log(box);
-            result.size(box.width, box.height).move(box.x, box.y).attr("selected",parent.attr("id"));
+        var selector = global_oro_variables.selected.members[0];
+        var selected = SVG.get(selector.attr("selected"));
+        console.log("Type: ", selected.attr("type"));
+        if(selected.parent.attr("type") != 'layer'){
+            deselect();
+            var selector = buildSelector(SVG.get('svgEditor'), selected.parent.attr("id"));
+            global_oro_variables.selected.add(selector);
+            showDatGui();
+            Session.set("selected", "true");
+            //selected.parent.draggable();
         }
     }
+}
+menuItemGroup = function menuItemGroup(){
+    var selected = global_oro_variables.selected.members;
+    var first = SVG.get(selected[0].attr("selected"));
+    var doc = {groupId: first.parent.attr('id'), type: 'simpleGroup', ordering: first.parent.index(first)};
+    var ids = [];
+    for(s in selected)
+        ids.push(selected[s].attr("selected"));
+    Meteor.call('insert_document', 'Group', doc, function(error, id){
+        if(error)
+            console.log(error);
+        console.log(id);
+        console.log(ids);
+        //SVG.get(first.parent.attr('id')).group().attr("id", id);
+        for(i in ids)
+            Item.update({_id: ids[i]}, {$set: {groupId: id}});
+        //todo reset ordering (-index);
+    });
 }
 
 menuItemCode = function menuItemCode(){
@@ -379,8 +80,9 @@ menuItemCode = function menuItemCode(){
         script = '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="' + fileId + '" width="' + SVG.get(fileId).width() + '" height="' + SVG.get(fileId).height() + '">' + $('#' + fileId).html() + '</svg>';
 
     $('#CodeEditorModalBody').html('<code>' + htmlEntities(script) + '</code>');
+    //$('#CodeEditorModal').attr('aria-hidden','false').attr("style", 'visibility: visible;'); // ?don't think so
     $('#CodeEditorModal').modal({backdrop: false, show: true});
-    global_oro_variables.svgPan.removeHandlers();
+    disablePan();
 }
 
 updateDoc = function updateDoc(collection, id, ids, upd, query, callb){
@@ -539,7 +241,7 @@ updateGroupDB = function updateGroupDB(group, parentId, ids, layer){
 updateFileDB = function updateFileDB(root, ids){
     var upd = {width: root.attr("width"), height: root.attr("height"), fileType: "image/svg+xml"}
     var id = root.attr("id");
-    id = updateDoc('File', id, [Session.get("fileId")], upd, {_id: id, creatorId: Meteor.userId()});
+    id = updateDoc('File', id, [Session.get("fileId")], upd, {_id: id});
     console.log("FileId: ", id);
     if(typeof id != 'undefined'){
         console.log("FileId: ", id);
@@ -631,6 +333,7 @@ menuItemCodeSave = function menuItemCodeSave(){
     else
         absorbSVG(code);
     $('#CodeEditorModal').modal('hide');
+    //$('#CodeEditorModal').attr('aria-hidden','true').attr("style", 'visibility: hidden;');
     enablePan();
 }
 /*
@@ -638,6 +341,11 @@ menuItemPalette = function menuItemPalette(){
     $('#Palette').modal({backdrop: false, show: true});
 }
 */
+
+removeLayerMenu = function(){
+    SVG.get("layersGroup").clear();
+}
+
 createLayerMenu = function createLayerMenu(x,y){
     var layersg = SVG.get("layersGroup");
     //var layerH = y - SVG.get('minimap').bbox().height - 50;
@@ -647,24 +355,30 @@ createLayerMenu = function createLayerMenu(x,y){
     var filelayers = SVG.get(Session.get("fileId")).children();
     var layers = [];
     var rects = [];
-    //console.log(filelayers);
+    var hidden = [];
     for(k in filelayers){
-        if(filelayers[k].attr("type") == 'layer' || filelayers[k].attr("type") == 'menu_item')
+        if(filelayers[k].attr("type") == 'layer' || filelayers[k].attr("type") == 'menu_item'){
             layers.push(filelayers[k]);
+            var g = Group.findOne({_id: filelayers[k].attr("id")});
+            if(g.parameters)
+                if(g.parameters.hide == "true"){
+                    hidden.push(filelayers[k].attr("id"));
+                    filelayers[k].hide();
+                }
+        }
     }
+    Session.set("hiddenLayers", hidden);
     var h = layerH / (layers.length + 1);
     var lx  = x - layerW;
-    var ly = 5;
+    var ly = 30;
     if(layers.length > 0){
         var alllayers = layersg.rect(layerW,h).move(lx, ly).fill('#FFFFFF').attr("id","alllayers").opacity(0.6);
         ly = ly + h;
-        /*
+
         alllayers.on('dblclick', function(event){
-            var hidden = Session.get("hiddenLayers");
-            for(var h in hidden)
-                SVG.get(hidden[h]).show();
-            Session.set("hiddenLayers", []);
-        });*/
+            if(Session.get("enableEdit") == 'true')
+                Meteor.call('insert_document', 'Group', {fileId: Session.get("fileId"), type: "layer", uuid: "layer_"+(layers.length+1)});
+        });
         alllayers.on('mouseover', function(event){
             SVG.get('background').fill('#FFFFFF');
             this.opacity(1);
@@ -704,31 +418,43 @@ createLayerMenu = function createLayerMenu(x,y){
                 SVG.get(this.attr("id").substring(1)).hide();
         });
         rects[l].on('dblclick', function(event){
-            var hidden = Session.get("hiddenLayers");
-            var layerId = this.attr("id").substring(1);
-            if(hidden.indexOf(layerId) == -1){
-                SVG.get(layerId).hide();
-                hidden.push(layerId);
-                Session.set("hiddenLayers", hidden);
-            }
-            else{
-                SVG.get(layerId).show();
-                hidden.splice(hidden.indexOf(layerId),1);
-                Session.set("hiddenLayers", hidden);
+            if(Session.get("enableEdit") == 'true'){
+                var hidden = Session.get("hiddenLayers");
+                var layerId = this.attr("id").substring(1);
+                if(hidden.indexOf(layerId) == -1){
+                    SVG.get(layerId).hide();
+                    Meteor.call('update_collection', "Group", [layerId], {'parameters.hide': "true"});
+                    hidden.push(layerId);
+                    Session.set("hiddenLayers", hidden);
+                }
+                else{
+                    SVG.get(layerId).show();
+                    Meteor.call('update_collection', "Group", [layerId], {'parameters.hide': "false"});
+                    hidden.splice(hidden.indexOf(layerId),1);
+                    Session.set("hiddenLayers", hidden);
+                }
             }
         });
         rects[l].on('click', function(event){
-            if(global_oro_variables.selected.members.length > 0){
-                var selections = global_oro_variables.selected.members;
-                var layerId = this.attr("id").substring(1);
-                for(var s in selections)
-                    SVG.get(layerId).add(SVG.get(selections[s].attr("selected")));
+            if(event.shiftKey){
+                removeGroup(this.attr("id").substring(1));
             }
             else{
-                if(Session.get("selectedLayer") != this.attr("id").substring(1))   
-                    Session.set("selectedLayer", this.attr("id").substring(1));
-                else
-                    Session.set("selectedLayer", '');
+                if(global_oro_variables.selected.members.length > 0){
+                    var selections = global_oro_variables.selected.members;
+                    var layerId = this.attr("id").substring(1);
+                    var ids = [];
+                    for(var s in selections)
+                        ids.push(selections[s].attr("selected"));
+                    Meteor.call('update_collection', 'Item', ids, {groupId: layerId});
+                    //SVG.get(layerId).add(SVG.get(selections[s].attr("selected")));
+                }
+                else{
+                    if(Session.get("selectedLayer") != this.attr("id").substring(1))   
+                        Session.set("selectedLayer", this.attr("id").substring(1));
+                    else
+                        Session.set("selectedLayer", '');
+                }
             }
         });
     }
@@ -771,6 +497,7 @@ menuItemReflectvSS = function menuItemReflectvSS(){
     var points = pathArraySvgOro(item.array.value);
     points = reflectSPath(points, false, true);
     item.plot(split_oro_path_points(JSON.stringify(points)));
+    saveItemLocalisation(item.attr("id"));
 }
 
 menuItemReflecthSS = function menuItemReflecthSS(){
@@ -778,6 +505,7 @@ menuItemReflecthSS = function menuItemReflecthSS(){
     var points = pathArraySvgOro(item.array.value);
     points = reflectSPath(points, true, false);
     item.plot(split_oro_path_points(JSON.stringify(points)));
+    saveItemLocalisation(item.attr("id"));
 }
 
 menuItemReflectvSC = function menuItemReflectvSC(){
@@ -785,6 +513,7 @@ menuItemReflectvSC = function menuItemReflectvSC(){
     var points = item.array.value;
     points = reflectCPath(points, false, true);
     item.plot(points);
+    saveItemLocalisation(item.attr("id"));
 }
 
 menuItemReflecthSC = function menuItemReflecthSC(){
@@ -792,6 +521,7 @@ menuItemReflecthSC = function menuItemReflecthSC(){
     var points = item.array.value;
     points = reflectCPath(points, true, false);
     item.plot(points);
+    saveItemLocalisation(item.attr("id"));
 }
 
 univClipper = function(cliptype){
@@ -830,16 +560,31 @@ menuItemIntersectSS = function menuItemIntersectSS(){
 
 menuItemDelete = function menuItemDelete(){
     var selected = global_oro_variables.selected.members;
-    for(s in selected)
-        Meteor.call('remove_document', 'Item', selected[s].attr("selected"));
+    for(s in selected){
+        if(SVG.get(selected[s].attr("selected")).type != 'g')
+            Meteor.call('remove_document', 'Item', selected[s].attr("selected"));
+        else
+            removeGroup(selected[s].attr("selected"));
+    }
 }
 
 menuItemClone = function menuItemClone(){
     var selected = global_oro_variables.selected.members;
     for(s in selected){
-        var item = Item.findOne({_id: selected[s].attr("selected")});
-        delete item._id;
-        Meteor.call("insert_document", "Item", item);
+        var it = SVG.get(selected[s].attr("selected"));
+        if(it.type != 'g')
+            cloneItem(it.attr("id"), it.parent.attr("id"));
+        else{
+            if(it.parent.type == 'g')
+                var parent = 'groupId';
+            else
+                var parent = 'fileId'
+            cloneGroup(it.attr("id"), it.parent.attr("id"), parent);
+        }
+        //var item = Item.findOne({_id: selected[s].attr("selected")});
+        //delete item._id;
+        //item.selected = 'null';
+        //Meteor.call("insert_document", "Item", item);
     }
 }
 
@@ -850,24 +595,38 @@ menuItemBrowse = function menuItemBrowse(){
 }
 
 menuItemToBack = function menuItemToBack(){
-    SVG.get(global_oro_variables.selected.members[0].attr("selected")).back();
+    var id = global_oro_variables.selected.members[0].attr("selected");
+    SVG.get(id).back();
+    SVG.get(id).parent.each(function(i,children){
+        if(this.type == 'g')
+            Meteor.call('update_document', 'Group', this.attr('id'), {ordering: SVG.get(id).parent.index(this)});
+        else
+            Meteor.call('update_document', 'Item', this.attr('id'), {ordering: SVG.get(id).parent.index(this)});
+    });
 }
 
 menuItemToFront = function menuItemToFront(){
-    SVG.get(global_oro_variables.selected.members[0].attr("selected")).front();
+    var id = global_oro_variables.selected.members[0].attr("selected");
+    SVG.get(id).front();
+    SVG.get(id).parent.each(function(i,children){
+        if(this.type == 'g')
+            Meteor.call('update_document', 'Group', this.attr('id'), {ordering: SVG.get(id).parent.index(this)});
+        else
+            Meteor.call('update_document', 'Item', this.attr('id'), {ordering: SVG.get(id).parent.index(this)});
+    });
 }
 
-curveToSimplePath = function(points, bigDiag, noPoints, decim){
-    var ct = 3;
+curveToSimplePath = function(points, bigDiag, noPoints, decim, val){
+    var ct = val;
     var tempath = SVG.get("svgEditor").path(points);
     var len = tempath.length();
     var box = tempath.bbox();
     var dg = Math.sqrt(Math.pow(box.width,2)+Math.pow(box.height,2));
-    var noPo = noPoints * dg / bigDiag * ct;
+    var noPo = (noPoints * dg / bigDiag) * ct;
     var step = len/noPo;
     var newpoints = [];
-    console.log(len);console.log(noPo); console.log(step);
-    console.log(dg); console.log(bigDiag);
+    //console.log(len);console.log(noPo); console.log(step);
+    //console.log(dg); console.log(bigDiag);
     for(var i = 0 ; i < len ; i = i + step){
         var point = tempath.pointAt(i);
         newpoints.push( [ Number(point.x.toFixed(decim)), Number(point.y.toFixed(decim)) ] );
@@ -877,7 +636,7 @@ curveToSimplePath = function(points, bigDiag, noPoints, decim){
     return newpoints;
 }
 
-complexToSimplePath = function(points, diag, noPoints, decim){
+complexToSimplePath = function(points, diag, noPoints, decim, val){
     var newpoints = [], temp = [], f;
     for(p in points){
         if(points[p][0] != 'C'){
@@ -885,7 +644,7 @@ complexToSimplePath = function(points, diag, noPoints, decim){
                 var first = clone(newpoints[newpoints.length-1]);
                 first.splice(0, 0, 'M');
                 temp.splice(0, 0, first);
-                var newtemp = curveToSimplePath(temp, diag, noPoints, decim).slice(1);
+                var newtemp = curveToSimplePath(temp, diag, noPoints, decim, val).slice(1);
                 newpoints = newpoints.concat(newtemp);
                 temp = [];
             }
@@ -899,20 +658,138 @@ complexToSimplePath = function(points, diag, noPoints, decim){
     return newpoints;
 }
 
-menuItemSimplifySC = function menuItemSimplifySC(){
+menuItemSimplifySC = function menuItemSimplifySC(val){
     var path = SVG.get(global_oro_variables.selected.members[0].attr("selected"));
     var box = path.bbox();
     var diag = Math.sqrt(Math.pow(box.width,2)+Math.pow(box.height,2));
     var decim = getDecimalNo(path);
     var subpaths = getSubPaths(path);
-    var newpoints = [];
+    var newpoints = [], clone;
     for(p in subpaths)
-        newpoints.push(complexToSimplePath(subpaths[p].subpath, diag, subpaths[0].path.length, decim));    
-    //var newp = split_oro_path_points(JSON.stringify(newpoints));
-    //SVG.get("viewport").path(split_oro_path_points(JSON.stringify(newpoints))).stroke({color: '#993300', width: 2}).fill('none');
-    //Meteor.call('update_collection', "Item", [path.attr("id")], {"pointList": newpoints, "type": "simple_path"});
+        newpoints.push(complexToSimplePath(subpaths[p].subpath, diag, subpaths[0].path.length, decim, val));
+    if(SVG.get("clone_"+ path.attr("id")))
+        clone = SVG.get("clone_"+ path.attr("id"));
+    else{
+        clone = path.clone();
+        clone.opacity(1);
+    }
+    clone.plot(split_oro_path_points(JSON.stringify(newpoints))).attr("id", "clone_"+ path.attr("id"));
+}
 
-    path.plot(split_oro_path_points(JSON.stringify(newpoints)));
-    saveItemLocalisation(path.attr("id"));
-    //setItemsValue('type', 'simple_path');
+menuItemJoin = function menuItemJoin(){
+    var selected = global_oro_variables.selected.members;
+    var arr = [];
+    for(s in selected)
+        arr.push(SVG.get(selected[s].attr("selected")));
+    var newpath = joinPaths(arr);
+    console.log(newpath);
+    SVG.get(selected[0].attr("selected")).plot(newpath);
+    saveItemLocalisation(selected[0].attr("selected"));
+    for(s = 1; s < selected.length; s++)
+        Meteor.call('remove_document', 'Item', selected[s].attr("selected"));
+}
+menuItemReverse = function menuItemReverse(){
+    var selected = global_oro_variables.selected.members[0];
+    SVG.get(selected.attr("selected")).plot(reversePath(SVG.get(selected.attr("selected"))));
+    saveItemLocalisation(selected.attr("selected"));
+}
+menuItemSplit = function menuItemSplit(){
+    var selected = global_oro_variables.selected.members[0];
+    var arr = getSubPaths(SVG.get(selected.attr("selected")));
+    var subpaths = [];
+    for(i in arr)
+        subpaths.push(arr[i].subpath);
+    SVG.get(selected.attr("selected")).plot(subpaths[0]);
+    saveItemLocalisation(selected.attr("selected"));
+    var item = Item.findOne({_id: selected.attr("selected")});
+    delete item._id;
+    item.selected = 'null';
+    for(i = 1; i < subpaths.length; i++){
+        if(item.type == 'simple_path')
+            item.pointList = JSON.stringify(pathArraySvgOro(subpaths[i]));
+        else{
+            var temp = SVG.get('svgEditor').path(subpaths[i]);
+            item.pointList = temp.attr("d");
+            temp.remove();
+        }
+        Meteor.call('insert_document', 'Item', item);
+    }
+}
+
+menuItemReload = function menuItemReload(){
+    SVG.get(Session.get('fileId')).clear();
+    Blaze.remove(renderedTemplates["show_meteor_file_svg"]);
+    Blaze.renderWithData(Template.show_meteor_file_svg, {"_id": Session.get('fileId')}, document.getElementById("viewport"));
+}
+
+menuItemPermissions = function menuItemPermissions(){
+
+}
+
+menuItemSaveNew = function menuItemSaveNew(){
+    Blaze.remove(renderedTemplates['show_meteor_file_svg']);
+    cloneFile(Session.get("fileId"), function(res){
+        Blaze.renderWithData(Template.show_meteor_file_svg, {"_id": res}, document.getElementById("viewport"));
+    });
+
+}
+
+menuItemAddElement = function menuItemAddElement(){
+    if($('#filebrowserModalBody').html() == ''){
+        var win = Session.get("window");
+        Session.set("filebrowserInHouse", "true");
+        var files = Dependency.find({fileId2: "vyRjpfv2kki5sPE9G"}, {skip: Number(1)-1, limit: 9}).fetch();
+        var data = {files: files, start: 1, dim: 5, id: "vyRjpfv2kki5sPE9G", col: "file"};
+        $('#filebrowserModalBody').html('<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button><iframe width="' + 700 + '" height="' + 500 + '" src="/browse/file/vyRjpfv2kki5sPE9G/1/5/nobuttons" frameborder="0" ></iframe>')
+    }
+    $('#filebrowserModal').modal({backdrop: false, show: true});
+    //$('#filebrowserModal').attr('aria-hidden','false').attr("style", 'visibility: visible;');
+}
+
+menuAddElemCallb = function menuAddElemCallb(id){
+    $('#filebrowserModal').modal('hide');
+    //$('#filebrowserModal').attr('aria-hidden','true').attr("style", 'visibility: hidden;');
+    var currentLayer;
+    SVG.get(Session.get('fileId')).each(function(i,children){
+        if(this.visible())
+            currentLayer = this;
+    });
+    if(!currentLayer)
+        currentLayer =  SVG.get(Session.get('fileId')).first();
+    if(File.findOne({_id: id})){
+        var g = Group.findOne({fileId: id, type: 'layer'});
+        var elem = Group.findOne({groupId: g._id},{sort: {ordering: 1}});
+        if(elem)
+            cloneGroup(elem, currentLayer.attr("id"), 'groupId');
+        else{
+            var elem = Item.findOne({groupId: g._id},{sort: {ordering: 1}});
+            cloneItem(elem, currentLayer.attr("id"));
+        }
+    }
+    else{
+        var elem = Group.findOne({_id: id})
+        if(elem){
+            if(elem.type == 'layer')
+                cloneGroup(Group.findOne({_id: id}), Session.get('fileId'), 'fileId');
+            else
+                cloneGroup(Group.findOne({_id: id}), currentLayer.attr("id"), 'groupId');
+        }
+        else
+            cloneItem(Item.findOne({_id: id}), currentLayer.attr("id"));
+    }
+}
+
+menuItemResetMatrix = function menuItemResetMatrix(){
+    var selected = global_oro_variables.selected.members[0];
+    SVG.get(selected.attr("selected")).transform("matrix", '1,0,0,1,0,0');
+
+}
+
+menuItemSelect = function menuItemSelect(id){
+    console.log(id);
+    var results = buildSelector(SVG.get("svgEditor"), id);
+    global_oro_variables.selected.add(results);
+    SVG.get(id).draggable();
+    Session.set("selected", "true");
+    showDatGui();
 }

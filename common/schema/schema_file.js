@@ -4,6 +4,11 @@ Schemas.File = new SimpleSchema({
         label: "Subject",
         optional: true
     },
+    title: {
+        type: String,
+        label: "Title",
+        optional: true
+    },
     width: {
         type: Number,
         label: "Width",
@@ -52,7 +57,8 @@ Schemas.File = new SimpleSchema({
                     {label: "js", value: "application/javascript"},
                     {label: "png", value: "image/png"},
                     {label: "jpeg", value: "image/jpeg"},
-                    {label: "css", value: "text/css"}
+                    {label: "css", value: "text/css"},
+                    {label: "txt", value: "text/plain"}
                 ];
             }
         }
@@ -66,7 +72,7 @@ Schemas.File = new SimpleSchema({
             type: "textarea"
           }
         }
-    },
+    },/*
     permissions: {
         type: String,
         label: "Permissions",
@@ -81,37 +87,38 @@ Schemas.File = new SimpleSchema({
             }
         },
         optional: true
+    },*/
+    permissions: {
+        type: Object,
+        label: "Permissions",
+        optional: true
+    },
+    'permissions.view': {
+        type: [String],
+        label: "View Permissions",
+        optional: true,
+    },
+    'permissions.edit': {
+        type: [String],
+        label: "View Permissions",
+        optional: true
     },
     creatorId: {
         type: String,
         label: "Creator",
         max: 200,
         optional: true,
-        autoValue: function(){
-            return Meteor.userId();
-        }
     },
     locked: {
         type: String,
         label: "Locked",
         optional: true,
-        autoValue: function(){
-            if(false)
-                return Meteor.userId();
-            else
-                return null;
-        }
     },
     selected: {
-        type: String,
+        type: [String],
         label: "Selected",
         optional: true,
-        autoValue: function(){
-            if(false)
-                return Meteor.userId();
-            else
-                return null;
-        }
+        defaultValue: []
     }
 });
 

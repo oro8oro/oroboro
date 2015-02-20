@@ -16,6 +16,12 @@ Schemas.UserProfile = new SimpleSchema({
             return option;
           }
         }
+    },
+    icon: {
+        type: String,
+        label: 'Icon URL',
+        optional: true,
+        defaultValue: '/file/dfyWJwvZc6sWvXXsm'
     }
 });
 Schemas.User = new SimpleSchema({

@@ -7,7 +7,7 @@
 
 <template name="insert_file">
     <div class="insert_button">
-        {{#afModal class="btn btn-default btn-block" collection="File" fields="uuid,width,height,image,fileType,script,permissions" id="insert_file" operation="insert" buttonContent="Insert File" title="Insert a New File" buttonClasses="btn-primary"}}New File{{/afModal}}
+        {{#afModal class="btn btn-default btn-block" collection="File" fields="uuid,title,width,height,image,fileType,script,permissions,dateModified" id="insert_file" operation="insert" buttonContent="Insert File" title="Insert a New File" buttonClasses="btn-primary"}}New File{{/afModal}}
     </div>
 </template>
 
@@ -20,7 +20,7 @@
         <div class="flex">
             <div class="update_button">
                 {{#if isInRole 'admin'}}
-                    {{#afModal class="btn btn-default btn-block" collection="File" fields="uuid,width,height,image,fileType,script,permissions" id="update_file" operation="update" doc=this._id buttonContent="Update File" title="Update File" buttonClasses="btn-primary"}}<span class="glyphicon glyphicon-upload" aria-hidden="true"></span>{{/afModal}}
+                    {{#afModal class="btn btn-default btn-block" collection="File" fields="uuid,title,width,height,image,fileType,script,permissions,dateModified" id="update_file" operation="update" doc=this._id buttonContent="Update File" title="Update File" buttonClasses="btn-primary"}}<span class="glyphicon glyphicon-upload" aria-hidden="true"></span>{{/afModal}}
                 {{/if}}
             </div>
             <div class="remove_button">
@@ -49,7 +49,7 @@
     <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="svgEditor">
     </svg>
     {{> svgCodeEditor}}
-    {{> paletteModal}}
+    {{> filebrowserModal}}
 </template>
 
 <template name="show_meteor_file_svg">
@@ -57,7 +57,22 @@
     </svg>
 </template>
 
+
 <template name="svgCodeEditor">
+    <!--
+    <section class="modal-show" id="CodeEditorModal" tabindex="-1" role="dialog" aria-labelledby="CodeEditorModalLabel" aria-hidden="true" style="visibility: hidden;" >
+        <div class="modal-inner" id='CodeEditorModalInner'>
+            <header id="CodeEditorModalLabel">
+                <button onclick="menuItemCodeSave();" data-close="Close" data-dismiss="modal">Save</button>
+            </header>
+            <div class="modal-content" id='CodeEditorModalBody' style="overflow:auto;" contentEditable="true"></div>
+        </div>
+    </section>-->
+
+<!--
+    <div id="modal-overlay" style="visibility: hidden;"></div>
+    <div id="modal-container" style="visibility: hidden;"><div id="modal-header" style="cursor: default;"><div id="modal-close"></div></div><div id="modal-content"></div></div>-->
+
     <div class="modal fade" id="CodeEditorModal" tabindex="-1" role="dialog" aria-labelledby="CodeEditorModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -72,34 +87,19 @@
     </div>
 </template>
 
-<template name="paletteModal">
-    <div class="modal univ" id="Palette" tabindex="-1" role="dialog" aria-labelledby="UnivModalLabel" aria-hidden="true">
-      <div class="modal-dialog univ-dialog modal-sm">
-        <div class="modal-header univ-header flex">
-            <button type="button" class="btn-xs btn-default" data-dismiss="modal"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
+<template name="filebrowserModal">
+    <!--
+    <section class="modal-show" id="filebrowserModal" tabindex="-1" role="dialog" aria-labelledby="filebrowserModalLabel" aria-hidden="true" style="visibility: hidden; margin:auto" >
+        <div class="modal-inner" id='filebrowserModalInner'>
+            <div class="modal-content" id='filebrowserModalBody' style="overflow:auto; margin:auto"></div>
         </div>
-        <div class="modal-content univ-content">
-            <div class="modal-body univ-body" id="UnivModalBody" style="overflow:auto;">
-            <div class="flex">
-                <input class="form-control input-sm input_sm" id="FillPicker" type="text" value="99330030" />
+    </section>-->
+
+    <div class="modal fade" id="filebrowserModal" tabindex="-1" role="dialog" aria-labelledby="filebrowserModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-body" id="filebrowserModalBody"></div>
             </div>
-            <div class="flex">
-                <input class="form-control input-sm input_sm" id="StrokePicker" type="text" value="99330030" />
-            </div>
-                <input class="form-control input-sm input_sm" id="StrokeWidth" type="text" oninput="setStrokeWidth();" value="0" />
-                <input class="form-control input-sm input_sm" id="StrokeDasharray" type="text" oninput="setStrokeDasharray();" value="" />
-                <select class="form-control input-sm input_sm" id="StrokeLinejoin" onchange="setStrokeLinejoin();">
-                    <option></option>
-                    <option>bevel</option>
-                    <option>round</option>
-                </select>
-                 <select class="form-control input-sm input_sm" id="StrokeLinecap" onchange="setStrokeLinecap();">
-                    <option></option>
-                    <option>square</option>
-                    <option>round</option>
-                </select>
-          </div>
         </div>
-      </div>
     </div>
 </template>

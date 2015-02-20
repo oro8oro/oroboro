@@ -9,6 +9,8 @@ addAtributes = function addAtributes(palette){
             str = str + ' stroke="' + '#' + palette.strokeColor.substring(0,6) + '"';
     if(palette.strokeWidth)
         str = str + ' stroke-width="' + palette.strokeWidth + '"';
+    if(palette.strokeOpacity)
+        str = str + ' stroke-opacity="' + palette.strokeOpacity + '"';
     if(palette.fillColor == 'none')
         str = str + ' fill="none"';
     else
@@ -16,64 +18,79 @@ addAtributes = function addAtributes(palette){
             str = str + ' fill="' + palette.fillColor + '"';
         else
             str = str + ' fill="' + '#' + palette.fillColor.substring(0,6) + '"';
+    if(palette.fillOpacity)
+        str = str + ' fill-opacity="' + palette.fillOpacity + '"';
     if(palette.strokeDasharray)
         str = str + ' stroke-dasharray="' + palette.strokeDasharray + '"';
     if(palette.strokeLinejoin)
         str = str + ' stroke-linejoin="' + palette.strokeLinejoin + '"';
     if(palette.strokeLinecap)
         str = str + ' stroke-linecap="' + palette.strokeLinecap + '"';
+    if(palette.opacity)
+        str = str + ' opacity="' + palette.opacity + '"';
     return str;
 }
 
+build_item = function build_item(item){
+    if(item.type == 'rasterImage'){
+            var points = split_oro_points(item.pointList);
+            var itemscript = '<image xlink:href="' + item.text + '" id="' + item._id + '" height="' + points[3] + '" width="' + points[2] + '" x="' + points[0] + '" y="' + points[1] + '"/>';
+        }
+        else 
+            if(item.type == 'text'){
+                var points = item.pointList.split(",");
+                var itemscript = '<text xml:space="preserve"' + ' id="' + item._id + '" x="' + points[0] + '" y="' + points[1] + '"' + addAtributes(item.palette);
+                if(item.font){
+                    if(item.font.size)
+                        itemscript = itemscript + ' font-size="' + item.font.size + '"';
+                    if(item.font.family)
+                        itemscript = itemscript + ' font-family="' + item.font.family + '"';
+                    if(item.font.style)
+                        itemscript = itemscript + ' font-style="' + item.font.style + '"';
+                    if(item.font.weight)
+                        itemscript = itemscript + ' font-weight="' + item.font.weight + '"';
+                    if(item.font.textAnchor)
+                        itemscript = itemscript + ' text-anchor="' + item.font.textAnchor + '"';
+                }
+                itemscript = itemscript + '>' + '<tspan dy="' + (Number(item.font.size)*1.27) + '" x="' + points[0] + '">' + item.text + '</tspan>'
+                + '</text>';
+            }
+            else
+                if(item.type == 'polyline'){
+                    if(item.closed == false)
+                        var itemscript = '<polyline points="' + item.pointList + '"' + addAtributes(item.palette) + '/>';
+                    else
+                        var itemscript = '<polygon points="' + item.pointList + '"' + addAtributes(item.palette) + '/>';
+                }
+                else
+                    if(item.type == 'simple_path' || item.type == 'para_simple_path'){
+                        var points = split_oro_path_points(item.pointList);
+                        var itemscript = '<path d="' + points + '" id="' + item._id + '" type="' + item.type + '" name="' + item.text + '"' + addAtributes(item.palette) + '/>';
+                    }
+                    else
+                        if(item.type == 'complex_path' || item.type == 'para_complex_path'){
+                            var points = item.pointList;
+                            var itemscript = '<path d="' + points + '" name="' + item.text + '" id="' + item._id + '" type="' + item.type + '"' + addAtributes(item.palette) + '/>';
+                        }
+                        else
+                            if(item.type == 'embedediFrame'){
+                                var points = split_oro_points(item.pointList);
+                                var itemscript = '<foreignObject x="' + points[0] + '" y="' + points[1] + '" height="' + points[3] + '" width="' + points[2] + '" id="' + item._id + '" type="' + item.type + '"><div xmlns="http://www.w3.org/1999/xhtml"><iframe xmlns="http://www.w3.org/1999/xhtml" width="' + points[2] + '" height="' + points[3] + '" src="' + item.text + '" frameborder="0" ></iframe></div></foreignObject>';
+                            }
+                            else
+                                if(item.type == 'embededCanvas'){
+                                    //var points = split_oro_points(item.pointList);
+                                    //var itemscript = '<foreignObject x="' + points[0] + '" y="' + points[1] + '" width="' + points[2] + '" height="' + points[3] + '" id="' + item._id + '" type="' + item.type + '"><div xmlns="http://www.w3.org/1999/xhtml"><xhtml:canvas width="' + points[2] + '" height="' + points[3] + '" ></xhtml:canvas></div></foreignObject>';
+                                    var itemscript = '';
+                                }   
+    return itemscript; 
+}
 
 build_group = function build_group(group){
     var result = '';
     var items = Item.find({groupId: group._id}, {sort: {ordering:1}}).fetch();
-    for(var i in items){
-        if(items[i].type == 'rasterImage'){
-            var points = split_oro_points(items[i].pointList);
-            var itemscript = '<image xlink:href="' + items[i].text + '" id="' + items[i]._id + '" height="' + points[3] + '" width="' + points[2] + '" x="' + points[0] + '" y="' + points[1] + '"/>';
-        }
-        else 
-            if(items[i].type == 'text'){
-                var points = items[i].pointList.split(",");
-                var itemscript = '<text xml:space="preserve" text-anchor="middle" font-family="' + items[i].font.family + '" font-size="' + items[i].font.size + '" id="' + items[i]._id + '" x="' + points[0] + '" y="' + points[1] + '"' + addAtributes(items[i].palette);
-                if(items[i].font.style)
-                    itemscript = itemscript + ' font-style="' + items[i].font.style + '" ';
-                if(items[i].font.weight)
-                    itemscript = itemscript + 'font-weight="' + items[i].font.weight + '" ';
-                itemscript = itemscript + '>' + items[i].text + '</text>';
-            }
-            else
-                if(items[i].type == 'polyline'){
-                    if(items[i].closed == false)
-                        var itemscript = '<polyline points="' + items[i].pointList + '"' + addAtributes(items[i].palette) + '/>';
-                    else
-                        var itemscript = '<polygon points="' + items[i].pointList + '"' + addAtributes(items[i].palette) + '/>';
-                }
-                else
-                    if(items[i].type == 'simple_path'){
-                        var points = split_oro_path_points(items[i].pointList);
-                        var itemscript = '<path d="' + points + '" name="' + items[i].text + '"' + addAtributes(items[i].palette) + '/>';
-                    }
-                    else
-                        if(items[i].type == 'complex_path'){
-                            var points = items[i].pointList;
-                            var itemscript = '<path d="' + points + '" name="' + items[i].text + '" id="' + items[i]._id + '" type="' + items[i].type + '"' + addAtributes(items[i].palette) + '/>';
-                        }
-                        else
-                            if(items[i].type == 'embedediFrame'){
-                                var points = split_oro_points(items[i].pointList);
-                                var itemscript = '<foreignObject x="' + points[0] + '" y="' + points[1] + '" height="' + points[3] + '" width="' + points[2] + '" id="' + items[i]._id + '" type="' + items[i].type + '"><div xmlns="http://www.w3.org/1999/xhtml"><iframe xmlns="http://www.w3.org/1999/xhtml" width="' + points[2] + '" height="' + points[3] + '" src="' + items[i].text + '" frameborder="0" ></iframe></div></foreignObject>';
-                            }
-                            else
-                                if(items[i].type == 'embededCanvas'){
-                                    //var points = split_oro_points(items[i].pointList);
-                                    //var itemscript = '<foreignObject x="' + points[0] + '" y="' + points[1] + '" width="' + points[2] + '" height="' + points[3] + '" id="' + items[i]._id + '" type="' + items[i].type + '"><div xmlns="http://www.w3.org/1999/xhtml"><xhtml:canvas width="' + points[2] + '" height="' + points[3] + '" ></xhtml:canvas></div></foreignObject>';
-                                    var itemscript = '';
-                                }    
-        result = result + itemscript;
-    }
+    for(var i in items)
+        result = result + build_item(items[i]);
     return result;
 }
 
@@ -115,10 +132,10 @@ Meteor.methods({
             var result = '<svg width="' + file.width + '" height="' + file.height + '" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" onload="init()" id="' + fileId + '">';
             var end = '</svg>';
         }
-        scripts = '';
+        scripts = '<script type="application/ecmascript" xlink:href="/require.js" /> ';
         recursive_depends(fileId, 3);
         for(var s in js_dep){
-            scripts = scripts + '<script xlink:href="' + '/file/' + js_dep[s] + '" />';
+            scripts = scripts + '<script type="application/ecmascript" xlink:href="' + '/file/' + js_dep[s] + '" />';
         }
         js_dep = [];
         if(file.script)
@@ -137,7 +154,12 @@ Meteor.methods({
     },
     getGroupScript: function(groupId){
         var group = Group.findOne({_id: groupId});
-        var result = '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">' + recursive_group(group) + '</svg>';
+        var result = recursive_group(group);
+        return result;
+    },
+    getItemScript: function(itemId){
+        var item = Item.findOne({_id: itemId});
+        var result = build_item(item);
         return result;
     },
     getDependencies: function(fileId){

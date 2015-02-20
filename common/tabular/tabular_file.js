@@ -8,6 +8,7 @@ TabularTables.File = new Tabular.Table({
     {data: "_id", title: "File"},
     {data: "creator", title: "Creator"},
     {data: "uuid", title: "Subject"},
+    {data: "title", title: "Title"},
     {data: "width", title: "Width"},
     {data: "height", title: "Height"},
     {

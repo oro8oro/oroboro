@@ -1,5 +1,8 @@
-Svg App for Meteor
-ver.0.0.1
+#Oroboro - Svg App for Meteor ver.0.0.2
+
+## License: [GPLv3](http://www.gnu.org/copyleft/gpl.html)
+
+
 
     meteor add twbs:bootstrap
     meteor add accounts-password

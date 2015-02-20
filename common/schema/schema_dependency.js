@@ -19,6 +19,17 @@ Schemas.Dependency = new SimpleSchema({
           }
         }
     },
+    collection1:{
+        type: String,
+        label: "Collection1",
+        optional: true,
+        autoform: {
+            type: "select",
+            options: function(){
+                return Object.keys(Collections);
+            }
+        }
+    },
     fileId2: {
         type: String,
         label: "Parent File",
@@ -39,6 +50,17 @@ Schemas.Dependency = new SimpleSchema({
           }
         }
     },
+    collection2:{
+        type: String,
+        label: "Collection2",
+        optional: true,
+        autoform: {
+            type: "select",
+            options: function(){
+                return Object.keys(Collections);
+            }
+        }
+    },
     type: {
         type: Number,
         label: "Type",
@@ -52,6 +74,7 @@ Schemas.Dependency = new SimpleSchema({
                     {label:"dependency", value: 3},
                     {label:"needed by", value: 4},
                     {label:"simple link", value: 5},
+                    {label:"fork", value: 6},
                 ];
             }
         }

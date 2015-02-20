@@ -7,7 +7,7 @@
 
 <template name="insert_depend">
     <div class="insert_button">
-        {{#afModal class="btn btn-default btn-block" collection="Dependency" fields="fileId1,fileId2,type" id="insert_depend" operation="insert" buttonContent="Insert Dependency" title="Insert a New Dependency" buttonClasses="btn-primary"}}New Dependency{{/afModal}}
+        {{#afModal class="btn btn-default btn-block" collection="Dependency" fields="fileId1,collection1,fileId2,collection2,type" id="insert_depend" operation="insert" buttonContent="Insert Dependency" title="Insert a New Dependency" buttonClasses="btn-primary"}}New Dependency{{/afModal}}
     </div>
 </template>
 
@@ -19,7 +19,7 @@
     <div class="flex">
         <div class="update_button">
             {{#if isInRole 'admin'}}
-                {{#afModal class="btn btn-default btn-block" collection="Dependency" fields="fileId1,fileId2,type" id="update_depend" operation="update" doc=this._id buttonContent="Update Dependency" title="Update Dependency" buttonClasses="btn-primary"}}<span class="glyphicon glyphicon-upload" aria-hidden="true"></span>{{/afModal}}
+                {{#afModal class="btn btn-default btn-block" collection="Dependency" fields="fileId1,collection1,fileId2,collection2,type" id="update_depend" operation="update" doc=this._id buttonContent="Update Dependency" title="Update Dependency" buttonClasses="btn-primary"}}<span class="glyphicon glyphicon-upload" aria-hidden="true"></span>{{/afModal}}
             {{/if}}
         </div>
         <div class="remove_button">

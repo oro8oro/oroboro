@@ -39,6 +39,37 @@ img{
 code{
     color: #000000;
 }
+/*
+#CodeEditorModal{
+    position: fixed;
+    right: auto;
+    top: 20px;
+    bottom: auto;
+    left: 20px;
+    overflow: auto;
+    max-width: 80%;
+    max-height: 90%;
+    margin: auto;
+}
+#filebrowserModal{
+    position: fixed;
+    right: auto;
+    top: 20px;
+    bottom: auto;
+    left: 20px;
+    overflow: auto;
+    max-width: 80%;
+    max-height: 90%;
+    margin: auto;
+}
+#CodeEditorModalBody{
+    padding: 10px;
+    margin: auto;
+}
+#filebrowserModalBody{
+    padding: 10px;
+    margin: auto;
+}*/
 
 .univ {
     position: fixed;

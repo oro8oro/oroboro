@@ -1,6 +1,11 @@
 
-//Meteor.startup(function(){
-/*    
+//Meteor.startup(function(){  
+//});
+
+    //var files = File.find({permissions:"public"}).fetch();
+        //for(i in files)
+            //File.update({_id: files[i]._id},{$set:{permissions: {view:[], edit: [files[i].creatorId]}}});
+/*   
     var groups = Group.find({type: "menu_item"}).fetch();
     for(var g in groups){
         var uuid = "B" + groups[g].uuid;

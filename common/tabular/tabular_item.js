@@ -32,6 +32,7 @@ TabularTables.Item = new Tabular.Table({
       }
     },
     {data: "closed", title: "Closed"},
+    {data: "selected", title: "Selected"},
     {
       data: "parameters", title: "Parameters",
       render: function(val, type, doc){

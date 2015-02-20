@@ -1,20 +1,16 @@
 panCallback = function(a){
         var matrix = a.a + ","+a.b + ","+a.c + ","+a.d + ","+a.e + ","+a.f;
-        SVG.get("mini_doc").transform('matrix',matrix);
+        scaleMinimap(matrix);
+        //SVG.get("mini_doc").transform('matrix',matrix);
         var truematrix = SVG.get("viewport").node.getAttribute("transform");
         truematrix = truematrix.substring(7,truematrix.length-1);
         SVG.get("viewport").transform("matrix",truematrix);
         var selected = global_oro_variables.selected.members;
-        var arr = truematrix.split(",");
-        //console.log(arr);
-        for(s in selected){
-            var box = SVG.get(selected[s].attr("selected")).bbox();
-            x = box.x + Number(arr[4]);
-            y = box.y + Number(arr[5]);
-            w = box.width * Number(arr[0]);
-            h = box.height * Number(arr[3]);
-            selected[s].move(x,y).size(w,h);
-        }
+        for(s in selected)
+            positionSelector(selected[s].attr("selected"));
+        var locked = Session.get("lockedItems")
+        for(l in locked)
+            positionSelectorL(locked[l]);
 }
 
 enablePan = function(){
@@ -207,7 +203,6 @@ reflectSPathp = function(points, x, y, coord){
 
 reflectSPath = function(points, x, y){
     var coord = findCoord(points);
-    console.log(coord);
     var newpoints = [];
     for(var l in points){
         newpoints.push(reflectSPathp(points[l], x, y, coord));
@@ -348,23 +343,89 @@ getAngle = function(center, p1) {
     return (2 * Math.atan2(p1.y - p0.y, p1.x - p0.x));// * 180 / Math.PI;
 }
 
-positionSelector = function(id){
-    if(['3D', 'pathPoints'].indexOf(SVG.get("box_"+id).attr("type")) == -1){
-        var box = SVG.get(id).bbox();   
-        var path = 'M'+box.x+','+box.y+'L'+(box.x+box.width)+','+box.y+'L'+(box.x+box.width)+','+(box.y+box.height)+'L'+box.x+','+(box.y+box.height)+'z';
-        SVG.get("container_path_"+id).plot(path);
-        var newbox = SVG.get("container_path_"+id).bbox();
-        positionCircles(newbox.x,newbox.y,newbox.width,newbox.height, id, true);
+positionPoint = function(x,y){
+    var truematrix = SVG.get("viewport").node.getAttribute("transform");
+    if(truematrix){
+        truematrix = truematrix.substring(7,truematrix.length-1);
+        var matrix = truematrix.split(" ");
+        return {x: x*Number(matrix[0]) + Number(matrix[4]), y: y* Number(matrix[3]) + Number(matrix[5])};
     }
+    else return {x:x,y:y};
 }
 
-positionButtons = function(id){
-    var box = SVG.get(id).bbox();
+positionPointIni = function(x,y){
+    var truematrix = SVG.get("viewport").node.getAttribute("transform");
+    if(truematrix){
+        truematrix = truematrix.substring(7,truematrix.length-1);
+        var matrix = truematrix.split(" ");
+        return { x: (x - Number(matrix[4])) / Number(matrix[0]), y: (y - Number(matrix[5])) / Number(matrix[3]) };
+    }
+    else return {x:x,y:y};
+}
+
+getScale = function(){
+    var truematrix = SVG.get("viewport").node.getAttribute("transform");
+    if(truematrix){
+        truematrix = truematrix.substring(7,truematrix.length-1);
+        var matrix = truematrix.split(" ");
+        return Number(matrix[0]);
+    }
+    else return 1; 
+}
+
+
+transformBox = function(box){
+    var truematrix = SVG.get("viewport").node.getAttribute("transform");
+    if(truematrix){
+        truematrix = truematrix.substring(7,truematrix.length-1);
+        if(truematrix.indexOf(',') != -1)
+            var matrix = truematrix.split(",");
+        else
+            var matrix = truematrix.split(" ");
+        box.x = box.x*Number(matrix[0]) + Number(matrix[4])
+        box.y = box.y* Number(matrix[3]) + Number(matrix[5]) 
+        box.width = box.width * Number(matrix[0]);
+        box.height = box.height * Number(matrix[3]);
+    }
+    return box;
+}
+positionSelectorL = function(id){
+    var box = transformBox(SVG.get(id).bbox());   
+    var path = 'M'+box.x+','+box.y+'L'+(box.x+box.width)+','+box.y+'L'+(box.x+box.width)+','+(box.y+box.height)+'L'+box.x+','+(box.y+box.height)+'z';
+    SVG.get("container_path_"+id).plot(path);
+}
+
+positionSelector = function(id){
+    if(['3D','pathPoints'].indexOf(SVG.get("box_"+id).attr("type")) == -1){
+        var box = transformBox(SVG.get(id).bbox());   
+        var path = 'M'+box.x+','+box.y+'L'+(box.x+box.width)+','+box.y+'L'+(box.x+box.width)+','+(box.y+box.height)+'L'+box.x+','+(box.y+box.height)+'z';
+        if(SVG.get("container_path_"+id)){
+            SVG.get("container_path_"+id).plot(path);
+            var newbox = SVG.get("container_path_"+id).bbox();
+        }
+        if(SVG.get("box_"+id).attr("type") == 'draggable')
+            positionCircles(newbox.x,newbox.y,newbox.width,newbox.height, id, true);
+        if(SVG.get("editPoints")) 
+            positionButtons(newbox);
+    }
+    //if(SVG.get("box_"+id).attr("type") == '3D'){
+    //    positionSelector3D(id);
+    //}
+}
+
+positionButtons = function(box){
     var but = 35;
     var sp = but/4;
+    SVG.get("editPoints").size(but,but).move(box.x+box.width/2-but-sp, box.y+box.height+sp)
+    SVG.get("3DPoints").size(but,but).move(box.x+box.width/2+sp, box.y+box.height+sp)
+}
+
+setButtons = function(id){
+    var box = SVG.get(id).bbox();
     var buttons = []
-    buttons[0] = SVG.get("container_"+id).image('/file/sh8BiMTztrdGXaPsS').size(but,but).move(box.x+box.width/2-but-sp, box.y+box.height+sp).attr("id", "editPoints").opacity(0.6);
-    buttons[1] = SVG.get("container_"+id).image('/file/isqRsRCPhGeSPNhoh').size(but,but).move(box.x+box.width/2+sp, box.y+box.height+sp).attr("id", "3DPoints").opacity(0.6);
+    buttons[0] = SVG.get("container_"+id).image('/file/MeSC479WX69b9GATS').attr("id", "editPoints").opacity(0.6);
+    buttons[1] = SVG.get("container_"+id).image('/file/isqRsRCPhGeSPNhoh').attr("id", "3DPoints").opacity(0.6);
+    positionButtons(box);
     for(i in buttons){
         buttons[i].on('mouseover', function(){
             this.opacity(1);
@@ -397,12 +458,14 @@ buildSelector = function(parent,id, dragg){
     for(i = 0 ; i < 8 ; i++)
         circles[i] = buildCircle(container,"circle_"+i+"_"+id,r,i);
     circles[8] = buildCircle(selector, "rotate_"+id,r);
-    positionCircles(box.x,box.y,box.width,box.height,id);
+    //positionCircles(box.x,box.y,box.width,box.height,id);
     circles[8].cx(box.x + box.width/2).cy(box.y - 30); 
     circles[8].attr("style","cursor:url(/icons/rotate.png) 12 12, auto;");
     //circles[8].attr("style","cursor:url(/file/W6fHbEQiGTQ83k5tp) 12 12, auto;");
     if(['simple_path', 'complex_path'].indexOf(dragg) != -1) 
-        positionButtons(id);
+        setButtons(id);
+
+    positionSelector(id);
 
     circles[8].draggable();
     var shift = false;
@@ -411,7 +474,7 @@ buildSelector = function(parent,id, dragg){
             shift = true;
     });
     circles[8].on('beforedrag', function(event){
-        global_oro_variables.svgPan.removeHandlers()
+        disablePan();
         event.stopPropagation();
         event.preventDefault();
     });
@@ -419,7 +482,7 @@ buildSelector = function(parent,id, dragg){
     var cx = SVG.get(id).cx();
     var cy = SVG.get(id).cy();
     circles[8].on('dragstart', function(event){
-        global_oro_variables.svgPan.removeHandlers()
+        disablePan();
         event.stopPropagation();
         event.preventDefault();
     });
@@ -448,7 +511,8 @@ buildSelector = function(parent,id, dragg){
         if(dragg == 'complex_path')
             rotateCPath(SVG.get(id), cx, cy, angle);
         rotate_selector(id, cx, cy, angle);
-        enablePan();
+        //enablePan();
+        togglePanZoom();
         event.stopPropagation();
         event.preventDefault();
         saveItemLocalisation(id);
@@ -479,12 +543,12 @@ buildSelector = function(parent,id, dragg){
                     shift = true;
             });
             circles[i].on('beforedrag', function(event){
-                global_oro_variables.svgPan.removeHandlers()
+                disablePan();
                 event.stopPropagation();
                 event.preventDefault();
             });
             circles[i].on('dragstart', function(event){
-                global_oro_variables.svgPan.removeHandlers()
+                disablePan();
                 event.stopPropagation();
                 event.preventDefault();
                 sx = startx = this.cx();
@@ -649,7 +713,8 @@ buildSelector = function(parent,id, dragg){
                     item.plot(resizeCPath(item.array.value, distx, disty, sidex, sidey));
                 if(dragg == 'rasterImage')
                     resizeImage(item, distx, disty, sidex, sidey);
-                enablePan();
+                //enablePan();
+                togglePanZoom();
                 event.stopPropagation();
                 event.preventDefault();
                 saveItemLocalisation(id);
@@ -665,13 +730,14 @@ buildSelector = function(parent,id, dragg){
 buildSelectorSimple = function(parent,id){
     var box = SVG.get(id).bbox();
     var selector = parent.group().attr("id","box_"+id).attr("selected",id).attr("type","simple");
-    var rect1 = selector.rect(box.width,box.height).stroke({color: "#000000", width: 2, dasharray: "2,2", opacity: "0.8"}).move(box.x,box.y).fill("none");
+    var path = 'M'+box.x+','+box.y+'L'+(box.x+box.width)+','+box.y+'L'+(box.x+box.width)+','+(box.y+box.height)+'L'+box.x+','+(box.y+box.height)+'z';
+    var rect1 = selector.path(path).stroke({color: "#000000", width: 2, dasharray: "2,2", opacity: "0.8"}).fill("none").attr("id","container_path_"+id);
+    positionSelector(id);
     return selector;
 }
 
 // Function splits path string to coordinates array
-function path_string_to_array(path_str)
-{
+function path_string_to_array(path_str){
     var patt1=/[mzlhvcsqta]|-?[0-9.]+/gi;
     var path_arr=path_str.match(patt1);
     patt1=/[mzlhvcsqta]/i;
@@ -686,8 +752,7 @@ function path_string_to_array(path_str)
 }
 
 // Function joins array coordinates back to string
-function path_array_to_string(path_arr)
-{
+function path_array_to_string(path_arr){
     var path_str=path_arr.toString();
     path_str=path_str.replace(/([0-9]),([-0-9])/g, "$1 $2");
     path_str=path_str.replace(/([0-9]),([-0-9])/g, "$1 $2"); // for some reason have to do twice
@@ -695,8 +760,7 @@ function path_array_to_string(path_arr)
     return path_str;
 }
 
-function transferPoint (xI, yI, source, destination)
-{
+function transferPoint (xI, yI, source, destination){
     var ADDING = 0.001; // to avoid dividing by zero
 
     var xA = source[0].x;
@@ -817,19 +881,34 @@ function distort_path(path_str,source,destination){
     return path_str;
 }
 
+positionSelector3D = function(id){
+    var s = "circle_", e = "_"+id;
+    var c0 = positionPoint(SVG.get(s+0+e).cx(), SVG.get(s+0+e).cy());
+    var c1 = positionPoint(SVG.get(s+1+e).cx(), SVG.get(s+1+e).cy());
+    var c2 = positionPoint(SVG.get(s+2+e).cx(), SVG.get(s+2+e).cy());
+    var c3 = positionPoint(SVG.get(s+3+e).cx(), SVG.get(s+3+e).cy());
+    var path = 'M'+c0.x+','+c0.y+'L'+c1.x+','+c1.y+'L'+c2.x+','+c2.y+'L'+c3.x+','+c3.y+'z';
+    SVG.get("container_path_"+id).plot(path);
+}
+
 buildSelector3D = function(parent, id){
     var r = 10;
     var box = SVG.get(id).bbox();
     var selector = parent.group().attr("id","box_"+id).attr("selected",id).attr("type","3D");
     var container = selector.group().attr("id","container_"+id);
+    //var point = positionPoint(box.x, box.y);
+    //var x = point[0]; var y = point[1];
+    //var w = box.width*getScale(); var h = box.height*getScale();
+    //var path = 'M'+x+','+y+'L'+(x+w)+','+y+'L'+(x+w)+','+(y+h)+'L'+x+','+(y+h)+'z';
+    box = transformBox(box);
     var path = 'M'+box.x+','+box.y+'L'+(box.x+box.width)+','+box.y+'L'+(box.x+box.width)+','+(box.y+box.height)+'L'+box.x+','+(box.y+box.height)+'z';
     var rect = container.path(path).stroke({color: "#000000", width: 2, dasharray: "2,2", opacity: "0.8"}).fill("none").attr("id","container_path_"+id);
     var circles = [];
     for(i = 0 ; i < 4 ; i++)
         circles[i] = buildCircle(container,"circle_"+i+"_"+id,r,i);
-    var s = "circle_", e = "_"+id;
     var x = box.x; var y = box.y;
     var w = box.width; var h = box.height;
+    var s = "circle_", e = "_"+id;
     SVG.get(s+0+e).cx(x).cy(y);
     SVG.get(s+1+e).cx(x + w).cy(y);
     SVG.get(s+2+e).cx(x + w).cy(y + h);
@@ -847,12 +926,12 @@ buildSelector3D = function(parent, id){
                 shift = true;
         });
         circles[i].on('beforedrag', function(event){
-            global_oro_variables.svgPan.removeHandlers()
+            disablePan();
             event.stopPropagation();
             event.preventDefault();
         });
         circles[i].on('dragstart', function(event){
-            global_oro_variables.svgPan.removeHandlers()
+            disablePan();
             event.stopPropagation();
             event.preventDefault();
         });
@@ -878,7 +957,8 @@ buildSelector3D = function(parent, id){
             SVG.get(id).plot(path_destination);
         });
         circles[i].on('dragend', function(event){
-                enablePan();
+                //enablePan();
+                togglePanZoom();
                 event.stopPropagation();
                 event.preventDefault();
                 saveItemLocalisation(id);
@@ -936,12 +1016,12 @@ buildAttractors = function(p, points, hinge, id, attrs, midds){
             this.opacity(0.6);
         });
         index[k[i]].attr.on('beforedrag', function(event){
-            global_oro_variables.svgPan.removeHandlers()
+            disablePan();
             event.stopPropagation();
             event.preventDefault();
         });
         index[k[i]].attr.on('dragstart', function(event){
-            global_oro_variables.svgPan.removeHandlers()
+            disablePan();
             event.stopPropagation();
             event.preventDefault();
         });
@@ -951,12 +1031,12 @@ buildAttractors = function(p, points, hinge, id, attrs, midds){
             points.subpath[n.p][n.y] = this.cy();
             points = updatePathArray(points);
             SVG.get(id).plot(points.path);
-            saveItemLocalisation(id);
             attrs[p]["attr"+this.attr("no")].line.attr("x1", this.cx()).attr("y1", this.cy()); 
             positionMidd(midds[p-2+Number(this.attr("no"))], p-2+Number(this.attr("no")), points);  
         });
         index[k[i]].attr.on('dragend', function(event){
-            enablePan();
+            //enablePan();
+            togglePanZoom();
             event.stopPropagation();
             event.preventDefault();
             saveItemLocalisation(id);
@@ -1009,12 +1089,12 @@ buildHinge = function(p, points, hinge, midd, id, hinges, midds, attr){
         global_oro_variables.selected.add(sel);
     });
     newhinge.on('beforedrag', function(event){
-        global_oro_variables.svgPan.removeHandlers()
+        disablePan();
         event.stopPropagation();
         event.preventDefault();
     });
     newhinge.on('dragstart', function(event){
-        global_oro_variables.svgPan.removeHandlers()
+        disablePan();
         event.stopPropagation();
         event.preventDefault();
     });
@@ -1025,8 +1105,6 @@ buildHinge = function(p, points, hinge, midd, id, hinges, midds, attr){
         if(attr[p]){
             var dx = this.cx() - points.subpath[p][x];
             var dy = this.cy() - points.subpath[p][y];
-            console.log(dx); console.log(dy);
-            console.log(attr[p]);
             if(attr[p].attr1){
                 var n = attr[p].attr1;
                 var newx = points.subpath[n.p][n.x] + dx;
@@ -1065,7 +1143,8 @@ buildHinge = function(p, points, hinge, midd, id, hinges, midds, attr){
             SVG.get('hingeLine').attr("x1", this.cx()).attr("y1", this.cy());
     });
     newhinge.on('dragend', function(event){
-        enablePan();
+        //enablePan();
+        togglePanZoom();
         event.stopPropagation();
         event.preventDefault();
         saveItemLocalisation(id);
@@ -1119,22 +1198,48 @@ buildSubPathPoints = function(points, hinge, midd, id){
         points.subpath.splice(0,0,'null')
         points.subpath.push('null')
     }
+    //points.subpath = positionPath(points.subpath);
     for(p = 1; p < points.subpath.length-1; p++){
         hinges[p] = buildHinge(p, points, hinge, midd, id, hinges, midds, attr);
         midds[p] = buildMidd(p, points, hinge, midd, id, hinges, midds);
     }
 }
+
+positionPath = function(pathArray){
+    for(p in pathArray){
+        if(pathArray[p][0] != 'Z'){
+            var point = positionPoint(pathArray[p][1], pathArray[p][2]);
+            pathArray[p][1] = point.x;
+            pathArray[p][2] = point.y;
+        }
+    }
+    return pathArray;
+}
  
 buildSelectorPoints = function(parent, id){
     var subpaths = getSubPaths(SVG.get(id));
+    console.log(subpaths);
     var selector = parent.group().attr("id", "box_"+id).attr("selected", id).attr("type", 'pathPoints');
     var midd = selector.group().attr("id", "middPoints");
     var hinge = selector.group().attr("id", "hingePoints");
-    for(var p in subpaths)
+    for(var p in subpaths){
+        //subpaths[p].subpath = positionPath(subpaths[p].subpath);
         buildSubPathPoints(subpaths[p], hinge, midd, id);
+    }
     return selector;
 }
 
+buildSelectorLocked = function(id){
+    var parent = SVG.get('svgEditor');
+    var box = SVG.get(id).bbox();
+    var selector = parent.group().attr("id","locked_"+id).attr("selected",id).attr("type","locked").opacity(0.7);
+    var path = 'M'+box.x+','+box.y+'L'+(box.x+box.width)+','+box.y+'L'+(box.x+box.width)+','+(box.y+box.height)+'L'+box.x+','+(box.y+box.height)+'z';
+    var rect = selector.path(path).stroke({color: random_pastels(), width: 2, dasharray: "2,2"}).fill("none").attr("id","container_path_"+id);
+    //var rect1 = selector.rect(box.width,box.height).stroke({color: random_pastels(), width: 2, dasharray: "2,2"}).move(box.x,box.y).fill("none");
+    positionSelectorL(id);
+    return selector;
+}
+/*
 showMenu = function(){
     if(global_oro_variables.selected.members){
         console.log(global_oro_variables.selected.members.length);
@@ -1174,20 +1279,38 @@ showMenu = function(){
                         }
                     }
                 }
-            }/*
+            }
             else
                 if(members.length == 1){
                     if(type == 'text' || type == 'rasterImage')
-                        buildMenu(SVG.get("svgEditor"));
-                }*/
+                        buildMenu(SVG.get("svgEditor"), m+'image');
+                }
         }
     }
 }
-
+*/
 showDatGui = function(){
-    global_oro_variables.gui = new dat.GUI();
-    var item = SVG.get(global_oro_variables.selected.members[0].attr("selected"));
-    buildDatGui(global_oro_variables.gui, item);
+    if(global_oro_variables.gui != undefined)
+        removeGui();
+    global_oro_variables.gui = new dat.GUI({width: 150});
+    if(global_oro_variables.selected === undefined || global_oro_variables.selected.members.length == 0)
+        buildDatGui(global_oro_variables.gui);
+    else{
+        var item = SVG.get(global_oro_variables.selected.members[0].attr("selected"));
+        if(global_oro_variables.selected.members.length > 1){
+            var mb = global_oro_variables.selected.members;
+            var type = item.attr("type");
+            var no = 0;
+            for(i in mb){
+                if(type != SVG.get(mb[i].attr("selected")).attr("type"))
+                    type = "multiple_subjects";
+                no ++;
+            }
+        }   
+        else
+            var type, no;
+        buildDatGui(global_oro_variables.gui, item, type, no);
+    }
 }
 
 saveItemLocalisation = function(id){
@@ -1207,7 +1330,7 @@ saveItemLocalisation = function(id){
     }
     else
         if(item.attr("type") == "text")
-            val = item.x() + ',' + item.y();
+            val = item.attr('x') + ',' + item.attr('y');
         else
             if(item.attr("type") == "rasterImage")
                 val = item.x() + ',' + item.y() + ',' + item.width() + ',' + item.height();
@@ -1284,31 +1407,62 @@ updateFont = function(item, font){
         item.attr('font-family', font.family)
     if(font.size)
         item.attr('font-size', font.size)
+    if(font.textAnchor)
+        item.attr('text-anchor', font.textAnchor)
 }
 
 updateItem = function(id, fields){
     var item = SVG.get(id);
-    if(fields.type)
-        item.attr("type", fields.type);
-    if(fields.palette)
-        updatePalette(item, fields.palette);
-    if(fields.text){
-        if(item.type == "text"){
-            item.text(fields.text);
+    if(fields.type){
+        if(fields.groupId)
+            if(SVG.get(fields.groupId))
+                var parent = SVG.get(fields.groupId);
+            else
+                console.log('parent group does not exist');
+        else
+            var parent = item.parent;
+        item.remove();
+        build_group_client(parent, Item.findOne({_id: id}));
+    }
+    else
+        if(SVG.get(id).type == 'foreignObject'){
+            SVG.get(id).remove();
+            build_item(SVG.get(id).parent, Item.findOne({_id:id}));
+        }
+        else{
+            if(fields.palette)
+                updatePalette(item, fields.palette);
             if(fields.font)
                 updateFont(item, fields.font);
-        }
-        else if(item.type == "image")
-                item.attr("href", fields.text);
+            if(fields.text){
+                if(item.attr("type") == 'text'){
+                //if(item.type == "text"){
+                    item.text(fields.text);
+                }
+                else{
+                    //if(item.type == "image")
+                    if(item.attr("type") == 'image')
+                        item.attr("href", fields.text);
+                }
+            }
+            if(fields.pointList)
+                updatePointList(item, fields.pointList);
+            if(fields.groupId){
+                SVG.get(fields.groupId).add(SVG.get(id));
+            }
     }
-    if(fields.pointList)
-        updatePointList(item, fields.pointList);
 }
 
 removeItem = function(id){
     if(SVG.get("box_"+id))
         deselectItem(id);
     SVG.get(id).remove();
+    if(Session.get('lockedItems').indexOf(id) != -1){
+        SVG.get("locked_"+id).remove();
+        var locked = Session.get('lockedItems');
+        locked.splice(Session.get('lockedItems').indexOf(id), 1);
+        Session.set('lockedItems',locked);
+    }
 }
 
 deselectItem = function(id, notremove){
@@ -1318,10 +1472,29 @@ deselectItem = function(id, notremove){
             SVG.get(id).fixed();
             global_oro_variables.selected.members.splice(index,1);  
             SVG.get("box_"+id).remove();
+            Meteor.call('update_document', 'Item', id, {selected: 'null'});
         }
     }
     if(!notremove)
-        removeGui();
+        showDatGui()
+    //removeGui();
+}
+
+markSelected = function(){
+    var selected = global_oro_variables.selected.members;
+    var ids = [];
+    for(s in selected)
+        ids.push(selected[s].attr("selected"));
+    Meteor.call('update_collection', 'Item', ids, {selected: Meteor.userId()});
+}
+
+unlockItems = function(){
+    var items = Item.find({selected: { $ne: 'null' }}).fetch();
+    var ids = [];
+    for(i in items)
+        ids.push(items[i]._id);
+    if(ids.length > 0)
+        Meteor.call('update_collection', 'Item', ids, {selected: 'null'});
 }
 
 build_item = function(g,it){
@@ -1330,7 +1503,8 @@ build_item = function(g,it){
         var item = g[type](it.text).attr("id", it._id);
         var points = split_oro_points(it.pointList);
         item.move(points[0],points[1]);
-        updateFont(item, it.font);
+        if(it.font)
+            updateFont(item, it.font);
     }
     else
         if(type == 'rasterImage'){
@@ -1338,8 +1512,7 @@ build_item = function(g,it){
             var item = g["image"](it.text).attr("id", it._id).move(points[0],points[1]).size(points[2],points[3]);
         }
         else
-            if(type == 'simple_path'){
-                
+            if(type == 'simple_path'|| type == 'para_simple_path'){
                 if(it.closed)
                     if(it.closed == "false"){
                         var points = split_oro_path_points(it.pointList, true);
@@ -1352,11 +1525,11 @@ build_item = function(g,it){
                 else{
                     var points = split_oro_path_points(it.pointList);
                     var closed = "false";
-                }
+                    }
                 var item = g.path(points).attr("id", it._id).attr("closed", closed);
             }
             else
-                if(type == 'complex_path'){
+                if(type == 'complex_path' || type == 'para_complex_path'){
                     var item = g.path(it.pointList).attr("id",it._id);
                 }
                 else
@@ -1367,11 +1540,16 @@ build_item = function(g,it){
                             item.appendChild('iframe', {id: 'embedediFrame_'+it._id, src: it.text, frameborder: "0", xmlns:"http://www.w3.org/1999/xhtml", width: points[2], height: points[3]});
                         if(type == 'embededCanvas')
                             item.appendChild('xhtml:canvas', {id: 'embededCanvas_'+it._id, width: points[2], height: points[3]});
-                    }  
+                    }
         item.attr("type", it.type);    
         updatePalette(item, it.palette);
         item.on('click', function(event){
-            if(this.parent.parent.attr("type") != "menu_button" && this.parent.attr("type") != "linkedGroup"){
+            var it = Item.findOne({_id: this.attr("id")});
+            var locked = false;
+            if(it.selected)
+                if(it.selected != 'null')
+                    var locked = true;
+            if(this.parent.parent.attr("type") != "menu_button" && this.parent.attr("type") != "linkedGroup" && locked == false && Session.get("enableEdit") == 'true'){
                 var box = this.bbox();
                 var dragg = this.attr("type");
                 if (event.shiftKey) {
@@ -1394,59 +1572,69 @@ build_item = function(g,it){
                         var results = buildSelectorSimple(SVG.get("svgEditor"), this.attr("id"));
                         global_oro_variables.selected.add(results);
                         this.draggable();
+                        Session.set("selected", "true");
                     }
                 }
                 else{
-                    //if(!SVG.get("box_"+this.attr("id"))){
                         deselect();
-                        var results = buildSelector(SVG.get("svgEditor"), this.attr("id"), dragg);
-                        /*
-                        var selected = global_oro_variables.selected.members;
-                        for(var s in selected){
-                            SVG.get(selected[s].attr("selected")).fixed();
-                            selected[s].remove();
+                        if(this.attr("type").indexOf('para') == -1){
+                            var results = buildSelector(SVG.get("svgEditor"), this.attr("id"), dragg);
+                            this.draggable();
                         }
-                        global_oro_variables.selected.clear();*/
+                        else
+                            var results = buildSelectorSimple(SVG.get("svgEditor"), this.attr("id"));
                         global_oro_variables.selected.add(results);
-                    //}
-                    this.draggable();
+                        Session.set("selected", "true");
                 }
-                showMenu();
+                //showMenu();
                 showDatGui();
+                markSelected();
             }
         });
         item.on('dragmove', function(event){
-            var selected = SVG.get("box_"+this.attr("id"));
-            var box = this.bbox();
-            selected.move(box.x, box.y);
+            positionSelector(this.attr("id"));
         });
         item.on('dragend', function(event){
-            var elem = document.getElementById('svgEditor');
-            global_oro_variables.svgPan = SVGPan(elem, {
-                enablePan: true,
-                enableZoom: true,
-                enableDrag: false,
-                zoomScale: 0.2,
-                callback: panCallback
-            });
+            positionSelector(this.attr("id"));
+            saveItemLocalisation(this.attr("id"));
+            togglePanZoom();
             event.stopPropagation();
             event.preventDefault();
-            var selected = SVG.get("box_"+this.attr("id"));
-            var box = this.bbox();
-            selected.move(box.x, box.y);
-            saveItemLocalisation(this.attr("id"));
         });
         item.on('dragstart', function(event){
-            global_oro_variables.svgPan.removeHandlers();
+            disablePan();
             event.stopPropagation();
             event.preventDefault();
         });
         item.on('beforedrag', function(event){
-            global_oro_variables.svgPan.removeHandlers()
+            disablePan();
             event.stopPropagation();
             event.preventDefault();
         });
     item.doc();
+}
+
+removeGroup = function(id){
+    var items = Item.find({groupId: id}).fetch();
+    for(i in items)
+        Meteor.call('remove_document', 'Item', items[i]._id);
+    var subgroups = Group.find({groupId: id}).fetch();
+    for(g in subgroups)
+        removeGroup(subgroups[g]._id);
+    var deps = Dependency.find({$or: [{fileId1: id}, {fileId2: id}] }).fetch();
+    for(d in deps)
+        Meteor.call('remove_document', 'Dependency', deps[d]._id);
+    Meteor.call('remove_document', 'Group', id);
+}
+
+removeFile = function(id){
+    var groups = Group.find({fileId: id}).fetch();
+    for(g in groups)
+        removeGroup(groups[g]._id);
+    var deps = Dependency.find({$or: [{fileId1: id}, {fileId2: id}] }).fetch();
+    for(d in deps)
+        Meteor.call('remove_document', 'Dependency', deps[d]._id);
+    Meteor.call('remove_document', 'File', id);
 }
 
 build_group_client = function (g, group){
@@ -1459,10 +1647,12 @@ build_group_client = function (g, group){
 recursive = 0;
 recursive_group_client = function (parent, group, linkedgs){
     //console.log("recursive: ", recursive);
-    if(recursive > 500) return;
-    recursive = recursive + 1;
+    //if(recursive > 500) return;
+    //recursive = recursive + 1;
     var subgroups = Group.find({ groupId: group._id }, { sort: { ordering:1 }}).fetch();
-    var subparent = parent.group().attr("id", group._id).attr("type", group.type).attr("function", group.uuid);
+    var subparent = parent.group().attr("id", group._id).attr("type", group.type);
+    if(group.uuid)
+        subparent.attr("function", group.uuid);
     if(group.transparency)
         subparent.opacity(group.transparency);
     var linkedgroups = null;
@@ -1486,8 +1676,8 @@ recursive_group_client = function (parent, group, linkedgs){
     if(linkedgs != null && linkedgs != undefined){
         var links = subparent.group().attr("id","linked_groups_"+group._id);
         for(l in linkedgs){
-            if(recursive > 500) return;
-            recursive = recursive + 1;
+            //if(recursive > 500) return;
+            //recursive = recursive + 1;
             recursive_group_client(links, linkedgs[l]);
         }
     }
@@ -1501,8 +1691,8 @@ recursive_group_client = function (parent, group, linkedgs){
                 slinkedgroups.push(gr);
         }
         for(l in slinkedgroups){
-            if(recursive > 500) return;
-            recursive = recursive + 1;
+            //if(recursive > 500) return;
+            //recursive = recursive + 1;
             recursive_group_client(subparent, slinkedgroups[l]);
         }
     }
@@ -1535,18 +1725,24 @@ recursive_group_client = function (parent, group, linkedgs){
         //id for menu_group.multiple.common: pW4eF4gT67dYk2zDo
         //id for menu_group.multiple_subjects: BzPQYeEQ4TtufSEnF
         var common_group = Group.findOne({uuid: group.uuid.substring(0,group.uuid.lastIndexOf('.'))+".common"});
-        var common_group_items = Group.find({ groupId: common_group._id }, { sort: { ordering:1 }}).fetch();
-        var menu_button = subparent.group().attr("id","menu_main_button");
-        recursive_group_client(menu_button, common_group_items[0], linkedgroups);
-        var menu_content = subparent.group().attr("id","menu_content");
-        for(var i = 1 ; i < common_group_items.length ; i++){
-            recursive_group_client(menu_content, common_group_items[i], linkedgroups);
+        //console.log(group.uuid.substring(0,group.uuid.lastIndexOf('.'))+".common");
+        if(common_group){
+            var common_group_items = Group.find({ groupId: common_group._id }, { sort: { ordering:1 }}).fetch();
+            var menu_button = subparent.group().attr("id","menu_main_button");
+            recursive_group_client(menu_button, common_group_items[0], linkedgroups);
+            var menu_content = subparent.group().attr("id","menu_content");
+            for(var i = 1 ; i < common_group_items.length ; i++){
+                recursive_group_client(menu_content, common_group_items[i], linkedgroups);
+            }
         }
+        else
+            var menu_content = subparent.group().attr("id","menu_content");
         if(group.uuid.indexOf("multiple") != -1){
             var multiple_common = Group.find({ groupId: "pW4eF4gT67dYk2zDo" }, { sort: { ordering:1 }}).fetch();
-            for(var i = 0 ; i < multiple_common.length ; i++){
-                recursive_group_client(menu_content, multiple_common[i], linkedgroups);
-            }
+            if(multiple_common)
+                for(var i = 0 ; i < multiple_common.length ; i++){
+                    recursive_group_client(menu_content, multiple_common[i], linkedgroups);
+                }
         }
         for(var i = 0 ; i < subgroups.length ; i++){
             recursive_group_client(menu_content, subgroups[i], linkedgroups);
@@ -1554,8 +1750,8 @@ recursive_group_client = function (parent, group, linkedgs){
     }
     else{
         for(g in subgroups){
-            if(recursive > 500) return;
-            recursive = recursive + 1;
+            //if(recursive > 500) return;
+            //recursive = recursive + 1;
             recursive_group_client(subparent, subgroups[g], linkedgroups);
         }
     }
@@ -1574,7 +1770,6 @@ recursive_group_client = function (parent, group, linkedgs){
 
     if(group.transform)
         subparent.transform("matrix",group.transform);
-
 
     if(group.parameters){
         var item_size = global_oro_variables.menu_item_size;
@@ -1604,12 +1799,14 @@ recursive_group_client = function (parent, group, linkedgs){
     }
 
     if(group.type == "menu"){
-        var space = menu_button.first().bbox().width / 2;
-        menu_button.move(space,space);
+        var space = menu_content.first().bbox().width / 2;
+        if(menu_button)
+            menu_button.move(space,space);
         menu_content.move(space,space);
         if(group.parameters.hide)
             if(group.parameters.hide == "false")
-                menu_button.hide();
+                if(menu_button)
+                    menu_button.hide();
         if(group.parameters.hide == undefined || group.parameters.hide == "true"){
             menu_content.hide();
             menu_button.on('click', function(event){
@@ -1643,7 +1840,7 @@ recursive_group_ids = function (groupId, ids){
       tempids.push(linked[i]._id);
 
     if(tempids.length > 0){
-      ids.groups.concat(tempids);
+      ids.groups = ids.groups.concat(tempids);
 
       for(i in tempids){
           if(recursive > 2000) return;
@@ -1701,7 +1898,7 @@ getSimplePathArray = function (path, no_of_points) {
 getComplexity = function (path) {
     var no_of_points = path.array.value.length;
     var complexity = Math.log2(no_of_points);
-    console.log("COMPLEXITY: "+path.attr("name") + ": " + complexity);
+    //console.log("COMPLEXITY: "+path.attr("name") + ": " + complexity);
     return complexity;
 }
 
@@ -1774,16 +1971,12 @@ simplifyCPath = function(path) {
 simplifyPath = function (path) {
     path = simplifyCPath(path);
     if(checkPathType(path) == "simple"){
-        console.log("it's simple");
         return JSON.stringify(pathArraySvgOro(path.array.value));
     }
     else{
-        console.log("it's complex");
         var no_points = no_of_points(path);
         var points_array = getSimplePathArray(path, no_points);
-        console.log(points_array);
         points_array = pathArrayOroXY(points_array);
-        console.log(points_array);
         var new_path = ClipperLib.Clipper.SimplifyPolygon(points_array[0], ClipperLib.PolyFillType.pftNonZero);
         return JSON.stringify(pathArrayXYOro(new_path));
     }
@@ -1834,7 +2027,6 @@ getSubPaths = function(path){
         if(arr[i][0] == 'M'){
             newarr.push({path: arr, start: i});
             newarr[newarr.length-1].subpath = [ arr[i] ];
-            console.log(newarr);
         }
         else{
             var len = newarr[newarr.length-1].subpath.length;
@@ -1845,6 +2037,63 @@ getSubPaths = function(path){
     return newarr;
 }
 
+joinPaths = function(pathsArr){
+    var newarr = [], simple = true;
+    for(var p in pathsArr){
+        if(checkPathType(pathsArr[p]) == 'complex')
+            simple = false;
+        newarr = newarr.concat(pathsArr[p].array.value);
+    }
+    //if(simple)
+    //    return JSON.stringify(pathArraySvgOro(newarr))
+    //else{
+    //    var newpath = SVG.get('svgEditor').path(newarr);
+    //    newarr = newpath.attr('d');
+    //    newpath.remove();
+    //    return newarr;
+    //}
+    return newarr;
+}
+
+reversePath = function(path){
+    var arr = path.array.value;
+    if(arr[arr.length-1][0] == 'Z')
+        var e = 1;
+    else
+        var e = 0;
+    var temp = [], newarr = [];
+    var simple = true;
+    for(i = arr.length-1-e ; i >= 0; i--){
+        if(arr[i][0] == 'C')
+            temp.push(arr[i]);
+        else{
+            if(temp.length > 0){
+                simple = false;
+                newarr.push([ 'L', temp[0][5], temp[0][6] ]);
+                for(t=1; t < temp.length; t++){
+                    newarr.push([ 'C', temp[t-1][3], temp[t-1][4], temp[t-1][1], temp[t-1][2], temp[t][5], temp[t][6] ]);
+                }
+                newarr.push([ 'C', arr[i+1][3], arr[i+1][4], arr[i+1][1], arr[i+1][2], arr[i][1], arr[i][2] ]);
+                temp = [];
+            }
+            else
+                newarr.push([ 'L', arr[i][1], arr[i][2] ]);
+        }  
+    }
+    if(arr[arr.length-1][0] == 'Z')
+        newarr.push(['Z']);
+    newarr[0][0] = 'M';
+    /*
+    if(simple)
+        newarr = JSON.stringify(pathArraySvgOro(newarr));
+    else{
+        var newpath = SVG.get('svgEditor').path(newarr);
+        var newarr = newpath.attr("d");
+        newpath.remove();
+    }*/
+    return newarr;
+}
+
 circleToCPath = function circleToCPath(circle){
     var ell = ellipseToCPath(circle);
     ell.parameters.callback = circleToCPath;
@@ -1852,11 +2101,12 @@ circleToCPath = function circleToCPath(circle){
 }
 
 ellipseToCPath = function ellipseToCPath(ellipse){
-    var x = ellipse.x(), y= ellipse.y(), w = ellipse.width(), h = ellipse.height();
+    var x = ellipse.x(), y= ellipse.y();
     if(ellipse.attr("rx"))
         var rx = Number(ellipse.attr("rx")), ry = Number(ellipse.attr("ry"));
     else
         var rx = ellipse.attr("r"), ry = ellipse.attr("r");
+    var w = rx*2, h = ry*2;
     var cx = ellipse.attr("cx"), cy = ellipse.attr("cy");
     var delta = Math.sqrt(Math.sqrt(Math.sqrt(2)));
     var points = 
@@ -1916,11 +2166,11 @@ polylineToPath = function polylineToPath(line){
 }
 
 cloneItem = function cloneItem(it, groupId){
-    console.log(it);
     if(typeof it === 'string')
-        it = Group.findOne({_id: it});
+        it = Item.findOne({_id: it});
     delete it._id;
     it.groupId = groupId;
+    it.selected = 'null';
     console.log(it);
     Meteor.call('insert_document', 'Item', it, function(err, res){
         console.log(err); console.log('Item: '+res);
@@ -1939,38 +2189,32 @@ cloneGroup = function cloneGroup(gr, parentId, parent){
     Meteor.call('insert_document', 'Group', gr, function(err, res){
         if(err) console.log(err);
         if(res){
-            console.log('Group: '+res);
-            console.log(deps);
             for(d in deps){
                 deps[d].fileId1 = res;
                 delete deps[d]._id;
-                console.log(deps[d]);
                 Meteor.call('insert_document', 'Dependency', deps[d]);
             }
-            console.log(groups);
             for(g in groups)
                 cloneGroup(groups[g], res, 'groupId');
-            console.log(items);
             for(i in items)
                 cloneItem(items[i], res);
         }
     });
 }
 
-cloneFile = function cloneFile(id){
-    console.log(id)
+cloneFile = function cloneFile(id, callb){
     var f = File.findOne({_id: id});
     var deps = Dependency.find({fileId1: id}).fetch();
     var groups = Group.find({fileId: id}).fetch();
     delete f._id;
     f.creatorId = Meteor.userId();
     f.dateModified = new Date();
+    f.permissions.view = [];
+    f.permissions.edit = [Meteor.userId()];
     f.uuid = f.uuid+"_copy";
-    console.log(f);
     Meteor.call('insert_document', 'File', f, function(err, res){
         if(err) console.log(err);
         if(res){
-            console.log('File: '+res);
             for(d in deps){
                 deps[d].fileId1 = res;
                 delete deps[d]._id
@@ -1979,34 +2223,71 @@ cloneFile = function cloneFile(id){
             for(g in groups)
                 cloneGroup(groups[g], res, 'fileId');
             //return res;
-            window.open('/filem/'+res, '_blank');
+            if(callb)
+                callb(res);
+            //window.open('/filem/'+res, '_blank');
         }
     });
 }
 
-getPath = function getPath(id, path){
+getDependencyPath = function getDependencyPath(id, path){
     if(typeof path === 'undefined')
         path = [];
     //path.push(id);
     var d = Dependency.findOne({fileId1: id, type: 1});
     if(d){
         path.push(d);
-        path = getPath(d.fileId2, path);
+        path = getDependencyPath(d.fileId2, path);
     }
     return path;
 }
 
+getFilePath = function getFilePath(id){
+    var deps = getDependencyPath(id);
+    var ids = [id];
+    for(d in deps){
+        ids.push(deps[d].fileId2);
+    }
+    return ids;
+}
 
+getElementPath = function getElementPath(id, path){
+    if(typeof path === 'undefined')
+        path = [];
+    path.push(id)
+    var elem = Item.findOne({_id: id});
+    if(!elem)
+        var elem = Group.findOne({_id: id});
+    if(elem)
+        if(elem.groupId)
+            getElementPath(elem.groupId, path);
+        else
+            if(elem.fileId)
+                getElementPath(elem.fileId, path);
+    return path;
+}
 
-/*
-SVG.extend(SVG.Group, {
-  bbox: function() {
-    var box = this.first().bbox();
+deepClone = function(orig,i,clone){
+    if(typeof clone === 'undefined'){
+        var clone = orig.clone();
+        clone.attr("id", orig.attr("id").substring(0,orig.attr("id").lastIndexOf('_')+1)+i);
+    }
+    orig.each(function(j, children){
+        var elem = this.clone();
+        elem.attr("id", this.attr("id").substring(0,this.attr("id").lastIndexOf('_')+1)+i);
+        var parentid = this.parent.attr('id').substring(0,this.parent.attr("id").lastIndexOf('_')+1)+i;
+        SVG.get(parentid).add(elem);
+    }, true);
+    return clone;
+}
+
+groupBbox = function(group){
+    var box = group.first().bbox();
     var x = box.x, y = box.y, x2 = box.x2, y2 = box.y2, cx = box.cx, cy = box.cy, width, height;
     var yy = box.y, xx = box.x1, yy2 = box.y2, xx2 = box.x2;
-    this.each(function(i, kids){
+    group.each(function(i, kids){
         box = this.bbox();
-        if(box.x < x1){
+        if(box.x < x){
             x = box.x;
             y = box.y;
         }
@@ -2026,6 +2307,64 @@ SVG.extend(SVG.Group, {
 
     var result = {x: x, y: yy, x2: x2, y2: yy2, cx: x+(x2-x)/2, cy: yy+(yy2-yy)/2, width: x2-x, height: yy2-yy}
     return result;
-  }
-});
-*/
+}
+
+paraSquare = function(obj){
+    var points = [[[obj.x,obj.y],[obj.x+obj.width,obj.y],[obj.x+obj.width,obj.y+obj.width],[obj.x,obj.y+obj.width]]];
+    console.log(points);
+    return JSON.stringify(points);
+}
+
+paraRect = function(obj){
+    var delta = Math.sqrt(Math.sqrt(Math.sqrt(2)));
+    var x = Number(obj.x), y = Number(obj.y), w = Number(obj.width), h = Number(obj.height), rx = Number(obj.rx), ry = Number(obj.ry);
+    var points =
+        'M'+ x + ' ' + (y+ry)
+            + 'C' + x + ' ' + (y+ry-ry/2*delta) + ',' + (x+rx-rx/2*delta) + ' ' + y + ','
+            + (x+rx) + ' ' + y + 'L'
+            + (x+w-rx) + ' ' + y
+            + 'C' + (x+w-rx+rx/2*delta) + ' ' + y + ',' + (x+w) + ' ' + (y+ry-ry/2*delta) + ','
+            + (x+w) + ' ' + (y+ry) + 'L'
+            + (x+w) + ' ' + (y+h-ry)
+            + 'C' + (x+w) + ' ' + (y+h-ry+ry/2*delta) + ',' + (x+w-rx+rx/2*delta) + ' ' + (y+h) + ','
+            + (x+w-rx) + ' ' + (y+h) + 'L'
+            + (x+rx) + ' ' + (y+h)
+            + 'C' + (x+rx-rx/2*delta) + ' ' + (y+h) + ',' + x + ' ' + (y+h-ry+ry/2*delta) + ','
+            + x + ' ' + (y+h-ry) + 'Z';
+    return points;
+}
+
+paraEllipse = function(obj, val){
+    console.log(obj);
+    var delta = Math.sqrt(Math.sqrt(Math.sqrt(2)));
+    var x = Number(obj.x), y = Number(obj.y), rx,ry;
+    rx = Number(obj.rx);
+    ry = Number(obj.ry);
+    if(typeof val != 'undefined' && obj.maintainRatio)
+        if(Number(val))
+            if(rx == val)
+                ry = rx;
+            else
+                rx = ry;
+        else
+            if(val == "rx")
+                ry = rx;
+            else
+                rx = ry;
+    var w = rx*2, h = ry*2;
+    var points = 
+        'M' + (x+w/2) + ' ' + y
+            + 'C' + (x+w/2+rx/2*delta) + ' ' + y + ',' + (x+w) + ' ' + (y+h/2 -ry/2*delta) + ','
+            + (x+w) + ' ' + (y+h/2)
+            + 'C' + (x+w) + ' ' + (y+h/2+ry/2*delta) + ',' + (x+w/2+rx/2*delta) + ' ' + (y+h) + ','
+            + (x+w/2) + ' ' + (y+h)
+            + 'C' + (x+w/2-rx/2*delta) + ' ' + (y+h) + ',' + x + ' ' + (y+h/2+ry/2*delta) + ','
+            + x + ' ' + (y+h/2)
+            + 'C' + x + ' ' + (y+h/2-ry/2*delta) + ',' + (x+w/2-rx/2*delta) + ' ' + y + ','
+            + (x+w/2) + ' ' + y + 'Z';
+    return points;
+}
+
+paraCircle = function(obj){
+    return paraEllipse(obj);
+}

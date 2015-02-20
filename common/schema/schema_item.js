@@ -32,6 +32,8 @@ Schemas.Item = new SimpleSchema({
                 return [
                     {label:"Simple Path", value:"simple_path"},
                     {label:"Complex Path", value:"complex_path"},
+                    {label:"Parametrized SPath", value:"para_simple_path"},
+                    {label:"Parametrized CPath", value:"para_complex_path"},
                     {label:"Text", value:"text"},
                     {label:"Raster Image", value:"rasterImage"},
                     {label:"Embeded iFrame", value:"embedediFrame"},
@@ -53,7 +55,8 @@ Schemas.Item = new SimpleSchema({
     ordering: {
         type: Number,
         label: "Ordering",
-        optional: true
+        optional: true,
+        defaultValue: 100
     },
     palette:{
         type: Object,
@@ -190,6 +193,21 @@ Schemas.Item = new SimpleSchema({
         label: "Font Size",
         optional: true
     },
+    'font.textAnchor': {
+        type: String,
+        label: "Text Anchor",
+        optional: true,
+        autoform: {
+            type: "select",
+            options: function () {
+                return [
+                    {label:"start", value:"start"},
+                    {label:"middle", value:"middle"},
+                    {label:"end", value:"end"},
+                ];
+            }
+        }
+    },
     complexity: {
         type: Number,
         label: "Complexity",
@@ -224,12 +242,7 @@ Schemas.Item = new SimpleSchema({
         type: String,
         label: "Selected",
         optional: true,
-        autoValue: function(){
-            if(false)
-                return Meteor.userId();
-            else
-                return null;
-        }
+        defaultValue: 'null'
     },
     parameters: {
         type: Object,
