@@ -25,7 +25,7 @@ Template.show_meteor_file_svg.rendered = function(){
     var file = File.findOne({_id: this.data._id});
     var fileId = this.data._id;
     Session.set("fileId", this.data._id);
-    var groups = Group.find({fileId: this.data._id}).fetch();
+    var groups = Group.find({fileId: this.data._id}, { sort: { ordering:1 }}).fetch();
     var draw = SVG(this.data._id);//.size(file.width, file.height);
     draw.width(file.width);
     draw.height(file.height);
@@ -429,7 +429,14 @@ togglePanZoom = function(){
     }
 }
 
+buildWBackground = function(){
+    var background = SVG.get('viewport').rect(Session.get('fileWidth'), Session.get('fileHeight')).fill("#FFFFFF").move(0,0).attr("id", "background");
 
+    background.on('click', function(event){
+        if(!event.shiftKey)
+            deselect();  
+    });
+}
 
 Tracker.autorun(function(){
     var lock = Session.get('lockPanZoom');
@@ -492,12 +499,7 @@ Template.svgEditor.rendered = function(){
     **  white background for file:
     ********/
 
-    var background = viewport.rect(this.data.width, this.data.height).fill("#FFFFFF").move(0,0).attr("id", "background");
-
-    background.on('click', function(event){
-        if(!event.shiftKey)
-            deselect();  
-    });
+    buildWBackground();
 
     /*******
     **  database SVG file:

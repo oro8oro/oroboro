@@ -8,20 +8,21 @@ Router.map(function(){
             var file = File.findOne({_id: this.params._id});
             if(typeof file == 'undefined')
                 file = File.findOne({title: this.params._id});
-            if(typeof file != 'undefined'){        
+            if(typeof file != 'undefined'){      
                 if(file.fileType == 'image/jpeg'){
                     //var headers = {'Content-type': file.fileType, 'Access-Control-Allow-Origin' : '*', Location: file.script};
-                    this.response.writeHead(301, {Location: file.script});
+                    this.response.writeHead(302, {Location: file.script});
                     this.response.end();
                 }
                 else{
                     var headers = {'Content-type': file.fileType, 'Access-Control-Allow-Origin' : '*'};
                     this.response.writeHead(200, headers);
-                    if(file.fileType == 'application/javascript' || file.fileType == "text/css" || file.fileType == 'text/plain')
+                    if(['application/octet-stream', 'application/javascript', 'text/css', 'text/plain'].indexOf(file.fileType) != -1)
                         var script = file.script;
                     else
                         if(file.fileType == 'image/svg+xml')
-                            var script = Meteor.call('getFileScript', this.params._id);
+                            var script = Meteor.call('getFileScript', file._id);
+                    //console.log(script);
                     this.response.end(script);
                 }
             }
@@ -48,6 +49,7 @@ getDependencies = function(fileId, rel){
     var level_dep = [];
     var js_dep = [];
     level_dep = recursive_depends(fileId, rel, level_dep, 0);
+    console.log(level_dep);
     for(var i = level_dep.length-1; i >= 0; i--){
         js_dep = js_dep.concat(level_dep[i]);
     }
@@ -69,10 +71,17 @@ recursive_depends = function recursive_depends(fileId, rel){
 //GZxMGchzEkKFtakFh
 separate_deps = function separate_deps(js_dep,type){
     if(js_dep.length > 0){
+        var result = [];
+        for(j in js_dep){
+            var f = File.findOne({_id: js_dep[j], fileType: type});
+            if(f)
+                result.push(f);
+        }/*
         var select = {};
         select._id = { $in: js_dep };
         select.fileType = type;
-        return File.find(select).fetch();
+        return File.find(select).fetch();*/
+        return result;
     }
 }
 
@@ -101,10 +110,14 @@ Router.route('/filem/:_id', {
         //recursive_depends(this.params._id, 3);
         //recursive_depends("Yq9iqYhEma9z9mYrp", 3);
         var js_dep = getDependencies("Yq9iqYhEma9z9mYrp", 3);
+        console.log(js_dep);
         jsfiles = separate_deps(js_dep, "application/javascript");
         //js_dep = [];
+        console.log(jsfiles);
         for(var s in jsfiles){
-            scripts.push(IRLibLoader.load('http://192.168.1.106:3000/file/' + jsfiles[s]._id));
+            //http://oroboro.meteor.com/
+            //http://192.168.1.106:300
+            scripts.push(IRLibLoader.load('http://oroboro.meteor.com/file/' + jsfiles[s]._id)); 
         }
         return scripts;
     },
@@ -146,7 +159,7 @@ Router.route('/browse/:col/:_id/:start/:dim/:buttons', {
         return {start: this.params.start, dim: this.params.dim, id: this.params._id, col: this.params.col, buttons: this.params.buttons};
     },
      waitOn: function(){
-        return IRLibLoader.load('http://192.168.1.106:3000/file/GZxMGchzEkKFtakFh');
+        return IRLibLoader.load('http://oroboro.meteor.com/file/GZxMGchzEkKFtakFh');
     },
     action: function(){
         if(this.ready()){
@@ -154,6 +167,18 @@ Router.route('/browse/:col/:_id/:start/:dim/:buttons', {
         }
     }
 });
+
+
+Router.route('/browse/:col/:_id/', function () {
+  this.redirect('/browse/' + this.params.col + '/' + this.params._id + '/1/3/');
+})
+
+Router.route('/browse/:col/:_id/:start', function () {
+  this.redirect('/browse/' + this.params.col + '/' + this.params._id + '/' + this.params.start + '/3/');
+})
+
+
+
 
 Router.route('/browse/:col/:_id/:start/:dim', {
     path: '/browse/:col/:_id/:start/:dim',
@@ -169,7 +194,7 @@ Router.route('/browse/:col/:_id/:start/:dim', {
         return {start: this.params.start, dim: this.params.dim, id: this.params._id, col: this.params.col};
     },
      waitOn: function(){
-        return IRLibLoader.load('http://192.168.1.106:3000/file/GZxMGchzEkKFtakFh');
+        return IRLibLoader.load('http://oroboro.meteor.com/file/GZxMGchzEkKFtakFh');
     },
     action: function(){
         if(this.ready()){
@@ -189,7 +214,7 @@ Router.route('/browse/:_id/:dim', {
         return {id: this.params._id, dim: this.params.dim};   
     },
      waitOn: function(){
-        return IRLibLoader.load('http://192.168.1.106:3000/file/GZxMGchzEkKFtakFh');
+        return IRLibLoader.load('http://oroboro.meteor.com/file/GZxMGchzEkKFtakFh');
     },
     action: function(){
         if(this.ready()){

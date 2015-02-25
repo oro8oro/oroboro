@@ -1,5 +1,24 @@
 
 datGuiParam = function(item){
+    this.saveNew = menuItemSaveNew;
+    this.browse = menuItemBrowse;
+    this['unlock items'] = unlockItems;
+    this.reload = menuItemReload;
+    this.addElement = menuItemAddElement;
+    this.source = menuItemCode;
+    this.joinPaths = menuItemJoin;
+    this.reverse = menuItemReverse;
+    this.splitPaths = menuItemSplit;
+    this.union = menuItemUnionSS;
+    this.difference = menuItemDiffSS;
+    this.xor = menuItemXorSS;
+    this.intersect = menuItemIntersectSS;
+    this.group = menuItemGroup;
+    this.title = '';
+    this.toPath = menuItemDeparametrize;
+    this.permissions = '';
+    this.closeOpen = menuItemClosePath;
+    this.resetView = function(){SVG.get('viewport').transform("matrix", "1,0,0,1,0,0"); scaleMinimap("1,0,0,1,0,0");}
     if(item){
         this.box = menuItemBox;
         this.delete = menuItemDelete;
@@ -13,8 +32,30 @@ datGuiParam = function(item){
         this.pointType = '';
         this.pX = ''; this.pY = ''; this.ax = ''; this.ay = ''; this.bx = ''; this.by = '';
         this.rx = 0; this.ry = 0; this.r = 0;
-        if(item.attr("type") == 'embedediFrame'){
+        var box = item.bbox();
+        this.width = box.width;
+        this.height = box.height;
+        this.maintainRatio = true;
+        this.x = box.x;
+        this.y = box.y;
+        this.cx = box.cx;
+        this.cy = box.cy;
+        this.angle = 0;
+        this.reset = menuItemResetMatrix;
+        this.matrix = '1,0,0,1,0,0';
+        this.translateX = 0;
+        this.translatey = 0;
+        this.scaleX = 1;
+        this.scaleY = 1;
+        this.rotate = 0;
+        this.skewX = 0;
+        this.skewY = 0;
+        if(item.attr("type") == 'embedediFrame' || item.attr("type") == 'embededHtml'){
             this.content = Item.findOne({_id: item.attr("id")}).text;
+            this.x = item.attr("x");
+            this.y = item.attr("y");
+            this.width = item.attr("width");
+            this.height = item.attr("height");
         }
         if(item.attr("type") == 'simple_path'){
             this["mirrorH"] = menuItemReflecthSS;
@@ -26,7 +67,7 @@ datGuiParam = function(item){
             //this.simplify = menuItemSimplifySC;
             this.simplify = 0;
         }
-        if(['rasterImage', 'text'].indexOf(item.attr('type')) == -1){
+        if(['rasterImage', 'formulae', 'text'].indexOf(item.attr('type')) == -1){
             this.fillColor = '#000000';
             this.fillOpacity = 1;
             this.strokeColor = '#000000';
@@ -44,8 +85,12 @@ datGuiParam = function(item){
             this.fontSize = 15;
             this.anchor = 'start';
         }
-        if(item.attr('href'))
-            this.href = item.attr('href')
+        if(item.attr('href')){
+            if(item.attr("type") == 'formulae')
+                this.latex = item.attr('href').substring(item.attr('href').lastIndexOf("?")+1);
+            else
+                this.href = item.attr('href')
+        }
         if(item.attr('type') == 'text')
             this.text = item.text();
         if(item.attr('font-style'))
@@ -97,24 +142,6 @@ datGuiParam = function(item){
         if(item.attr('opacity'))
             if(item.attr('opacity') != 'null')
                 this.opacity = item.attr('opacity');
-        var box = item.bbox();
-        this.width = box.width;
-        this.height = box.height;
-        this.maintainRatio = true;
-        this.x = box.x;
-        this.y = box.y;
-        this.cx = box.cx;
-        this.cy = box.cy;
-        this.angle = 0;
-        this.reset = menuItemResetMatrix;
-        this.matrix = '1,0,0,1,0,0';
-        this.translateX = 0;
-        this.translatey = 0;
-        this.scaleX = 1;
-        this.scaleY = 1;
-        this.rotate = 0;
-        this.skewX = 0;
-        this.skewY = 0;
         if(item.attr("type") == 'simpleGroup'){
             var m = item.transform();
             this.matrix = [m.a, m.b, m.c, m.d, m.e, m.f].join(',');
@@ -141,22 +168,17 @@ datGuiParam = function(item){
         this['creator'] = '';
         this['resolution'] = '';
         this.path = '';
+        if(Session.get("enableEdit") == "true"){
+            var f = File.findOne({_id: Session.get('fileId')});
+            if(f.title)
+                this.title = f.title;
+            var perm = f.permissions.edit;
+            for(p in perm)
+                perm[p] = Meteor.users.findOne({_id: perm[p]}).email.address;
+            if(perm && perm.length > 0)
+                this.permissions = perm.join(',');
+        }
     }
-    this.permissions = menuItemPermissions;
-    this.saveNew = menuItemSaveNew;
-    this.browse = menuItemBrowse;
-    this['unlock items'] = unlockItems;
-    this.reload = menuItemReload;
-    this.addElement = menuItemAddElement;
-    this.source = menuItemCode;
-    this.joinPaths = menuItemJoin;
-    this.reverse = menuItemReverse;
-    this.splitPaths = menuItemSplit;
-    this.union = menuItemUnionSS;
-    this.difference = menuItemDiffSS;
-    this.xor = menuItemXorSS;
-    this.intersect = menuItemIntersectSS;
-    this.group = menuItemGroup;
 }
 
 buildDatGui = function(gui, item, type, no){
@@ -171,7 +193,6 @@ buildDatGui = function(gui, item, type, no){
         for(p in path)
             path[p] = shortType(SVG.get(path[p]).attr("type"))+'_'+path[p];
         var elempath = f5.add(param, 'path', path.slice(0,path.length-1)).onChange(function(value){
-            console.log(value);
             deselectItem(item.attr('id'));
             menuItemSelect(value.substring(value.indexOf('_')+1));
         })
@@ -190,9 +211,9 @@ buildDatGui = function(gui, item, type, no){
         var matrix = f4.add(param, 'matrix');
         var translateX = f4.add(param, 'translateX').step(1);
         var translateY = f4.add(param, 'translateY').step(1);
-        var ratio = f4.add(param, 'maintainRatio');
         var scaleX = f4.add(param, 'scaleX').step(0.1);
         var scaleY = f4.add(param, 'scaleY').step(0.1);
+        var ratio = f4.add(param, 'maintainRatio');
         var rotate = f4.add(param, 'rotate', -180, 180).step(10);
         var skewX = f4.add(param, 'skewX').step(0.1);
         var skewY = f4.add(param, 'skewY').step(0.1);
@@ -202,20 +223,28 @@ buildDatGui = function(gui, item, type, no){
         });
         translateX.onChange(function(value){
             var m = item.transform();
+            console.log(value);
             item.transform("matrix", [m.a,m.b,m.c,m.d,value,m.f].join(','));
+            console.log(item.transform().matrix);
+            console.log(item.node.getCTM());
             positionSelector(item.attr("id"));
         });
         translateX.onFinishChange(function(value){
             var m = item.transform();
+            console.log(value);
             Meteor.call('update_document', 'Group', item.attr("id"), {transform: [m.a,m.b,m.c,m.d,value,m.f].join(',')});
         });
         translateY.onChange(function(value){
             var m = item.transform();
+            console.log(value);
             item.transform("matrix", [m.a,m.b,m.c,m.d,m.e,value].join(','));
+            console.log(item.transform().matrix);
+            console.log(item.node.getCTM());
             positionSelector(item.attr("id"));
         });
         translateY.onFinishChange(function(value){
             var m = item.transform();
+            console.log(value);
             Meteor.call('update_document', 'Group', item.attr("id"), {transform: [m.a,m.b,m.c,m.d,m.e,value].join(',')});
         });
         scaleX.onChange(function(value){
@@ -266,21 +295,36 @@ buildDatGui = function(gui, item, type, no){
             item.transform("matrix", [m.a,m.b,value,m.d,m.e,m.f].join(','));
             positionSelector(item.attr("id"));
         });
-        skewX.onFinishChange(function(value){
+        skewY.onFinishChange(function(value){
             var m = item.transform();
             Meteor.call('update_document', 'Group', item.attr("id"), {transform: [m.a,m.b,value,m.d,m.e,m.f].join(',')});
         });
         var degrees = 0, temp;
         rotate.onChange(function(value){
+            console.log(value)
             var m = item.transform();
             temp = value;
             value = value - degrees;
             degrees = temp;
+            console.log(value)
             var rad = value/180*Math.PI;
-            item.transform("matrix", [m.a*Math.cos(rad),m.d*Math.sin(rad),-m.a*Math.sin(rad),m.d*Math.cos(rad),m.e,m.f].join(','));
+            var cx = item.cx();
+            var cy = item.cy();
+            m.e = m.e - cx;
+            m.f = m.f - cy;
+            item.transform("matrix", [m.a,m.b,m.c,m.d,m.e,m.f].join(','));
+            m = item.transform();
+            m = rotateMatrix([m.a, m.b, m.c, m.d, m.e, m.f], rad);
+            //m[4] = m[4] - item.cx();
+            //m[5] = m[5] - item.cy();
+            //item.transform("matrix", [m.a*Math.cos(rad),m.d*Math.sin(rad),-m.a*Math.sin(rad),m.d*Math.cos(rad),m.e,m.f].join(','));
+            item.transform("matrix", m.join(','));
+            m = item.transform();
+            m.e = m.e + cx;
+            m.f = m.f + cy;
+            item.transform("matrix", [m.a,m.b,m.c,m.d,m.e,m.f].join(','));
         });
         rotate.onFinishChange(function(value){
-            console.log(value);
             degrees = 0;
             //saveItemLocalisation(item.attr("id"));
             //item.rotate(value/180*Math.PI);
@@ -300,9 +344,9 @@ buildDatGui = function(gui, item, type, no){
         if(no)
             var group = f3.add(param, 'group');
         if(item.type == 'path'){
+            var close = f3.add(param, 'closeOpen');
             var points = gui.addFolder('Points');
             var step = points.add(param, 'step', item.array.value).onChange(function(value){
-                console.log(value);
                 var point = value.split(',');
                 var data = {}
                 if(point[0] == 'C')
@@ -385,7 +429,26 @@ buildDatGui = function(gui, item, type, no){
                     setItemsValue('text',value);
                 });
             }
-            if(['rasterImage', 'text', 'embedediFrame', 'embededCanvas'].indexOf(item.attr('type')) == -1){
+            if(item.attr('type') == 'formulae'){
+                var src = f1.add(param, 'latex');
+                src.onChange(function(value){
+                    var it = Item.findOne({_id: item.attr("id")});
+                    item.attr('href', window[it.parameters.callback](value));
+                });
+                src.onFinishChange(function(value){
+                    var it = Item.findOne({_id: item.attr("id")});
+                    var text = window[it.parameters.callback](value);
+                    $.ajax({
+                        url: text,
+                        success: function(data){
+                            console.log(data);
+                        }
+                    });
+                    it.parameters.latex = value;
+                    Meteor.call('update_document', 'Item', item.attr("id"), {text: text, parameters: it.parameters});
+                });
+            }
+            if(['rasterImage', 'formulae', 'text', 'embedediFrame', 'embededCanvas', 'embededHtml'].indexOf(item.attr('type')) == -1){
                 var fill = f1.addColor(param, 'fillColor')
                 var fillo = f1.add(param, 'fillOpacity', 0,1)
                 var stroke = f1.addColor(param, 'strokeColor')
@@ -405,16 +468,18 @@ buildDatGui = function(gui, item, type, no){
                     var angle = f2.add(param, 'angle', -180, 180).step(10)
             }
             var opac = f1.add(param, 'opacity', 0,1)
-            if(item.attr('type') != 'text' && item.attr("type").indexOf('para') == -1){
+            if(['embededHtml', 'text', 'para_simple_path', 'para_complex_path'].indexOf(item.attr('type')) == -1){
                 var w = f2.add(param, 'width').step(1)
                 var h = f2.add(param, 'height').step(1)
                 var ratio = f2.add(param, 'maintainRatio')
             }
-            if(item.attr("type").indexOf('para') == -1){
+            if(['para_simple_path', 'para_complex_path'].indexOf(item.attr('type')) == -1){
                 var x = f2.add(param, 'x').step(1)
                 var y = f2.add(param, 'y').step(1)
+                if(['embedediFrame', 'embededCanvas', 'embededHtml'].indexOf(item.attr('type')) == -1){
                 var cx = f2.add(param, 'cx').step(1)
                 var cy = f2.add(param, 'cy').step(1)
+                }
             }
 
             if(item.attr("type") == 'simple_path'){
@@ -431,19 +496,63 @@ buildDatGui = function(gui, item, type, no){
                 var subpath = f3.add(param, 'splitPaths');
             }
             if(item.attr("type") == 'embedediFrame'){
-                var content = f1.add(param, 'content').onFinishChange(function(value){
+                var content = f1.add(param, 'content').onChange(function(value){
+                    item.attr("src", value);
+                    item.node.childNodes[0].setAttribute("src", value);
+                }).onFinishChange(function(value){
                     Meteor.call('update_document', 'Item', item.attr("id"), {text: value});
                 });
+                w.onChange(function(value){
+                    if(param.maintainRatio){
+                        var diff = value / item.attr("width");
+                        item.attr("height", item.attr("height") * diff);
+                        item.node.childNodes[0].setAttribute("width", item.attr("height") * diff);
+                    }
+                    item.attr("width", value);
+                    item.node.childNodes[0].setAttribute("width",value);
+                })
                 w.onFinishChange(function(value){
-                    var points = [param["x"], param["y"], value, param["height"]].join(',');
+                    var points = [item.attr("x"), item.attr("y"), value, item.attr("height")].join(',');
                     Meteor.call('update_document', 'Item', item.attr("id"), {pointList: points});
                 })
+                h.onChange(function(value){
+                    if(param.maintainRatio){
+                        var diff = value / item.attr("height");
+                        item.attr("width", item.attr("width") * diff);
+                        item.node.childNodes[0].setAttribute("width", item.attr("width") * diff);
+                    }
+                    item.attr("height", value);
+                    item.node.childNodes[0].setAttribute("height",value);
+                })
                 h.onFinishChange(function(value){
-                    var points = [param["x"], param["y"], param["width"], value].join(',');
+                    var points = [item.attr("x"), item.attr("y"), item.attr("width"), value].join(',');
                     Meteor.call('update_document', 'Item', item.attr("id"), {pointList: points});
                 })
             }
-            if(['rasterImage', 'text', 'embedediFrame', 'embededCanvas'].indexOf(item.attr('type')) == -1){
+            if(item.attr("type") == 'embededHtml'){
+                var content = f1.add(param, 'content').onChange(function(value){
+                    $(item.node).html('');
+                    item.appendChild("div", {innerHTML: value});
+                }).onFinishChange(function(value){
+                    Meteor.call('update_document', 'Item', item.attr("id"), {text: value});
+                });
+                x.onChange(function(value){
+                        item.attr("x", value)
+                        positionSelector(item.attr("id"));}).onFinishChange(function(value){
+                        var points = [value, item.attr("y"), item.attr("width"), item.attr("height")].join(',');
+                        console.log(points);
+                        Meteor.call('update_document', 'Item', item.attr("id"), {pointList: points});
+                });
+                y.onChange(function(value){
+                        item.attr("y", value)
+                        positionSelector(item.attr("id"));}).onFinishChange(function(value){
+                        item.attr("y", value)
+                        var points = [item.attr("x"), value, item.attr("width"), item.attr("height")].join(',');
+                        console.log(points);
+                        Meteor.call('update_document', 'Item', item.attr("id"), {pointList: points});
+                });
+            }
+            if(['rasterImage', 'formulae', 'text', 'embedediFrame', 'embededCanvas', 'embededHtml'].indexOf(item.attr('type')) == -1){
                 fill.onChange(function(value){
                     item.attr('fill', value);
                     setFill(value);
@@ -530,7 +639,7 @@ buildDatGui = function(gui, item, type, no){
                 console.log(value);
                 setOpacity(value);
             });
-            if(item.attr('type') != 'text' && item.attr("type").indexOf('para') == -1 && item.attr("type") != 'embedediFrame'){
+            if(['text', 'embedediFrame', 'embededCanvas', 'embededHtml', 'para_simple_path', 'para_complex_path'].indexOf(item.attr('type')) == -1){
                 w.onChange(function(value){
                     var wg = item.width();
                     item.width(value);
@@ -554,7 +663,7 @@ buildDatGui = function(gui, item, type, no){
                     saveItemLocalisation(item.attr("id"));
                 });
             }
-            if(item.attr("type").indexOf('para') == -1){
+            if(item.attr("type").indexOf('para') == -1 && item.attr("type") != 'embededHtml'){
                 x.onChange(function(value){
                     console.log(value);
                         item.x(value);
@@ -573,22 +682,24 @@ buildDatGui = function(gui, item, type, no){
                     console.log(value);
                     saveItemLocalisation(item.attr("id"));
                 });
-                cx.onChange(function(value){
-                    item.cx(value);
-                    positionSelector(item.attr("id"));
-                });
-                cx.onFinishChange(function(value){
-                    console.log(value);
-                    saveItemLocalisation(item.attr("id"));
-                });
-                cy.onChange(function(value){
-                    item.cy(value);
-                    positionSelector(item.attr("id"));
-                });
-                cy.onFinishChange(function(value){
-                    console.log(value);
-                    saveItemLocalisation(item.attr("id"));
-                });
+                if(['embedediFrame','embededCanvas', 'embededHtml'].indexOf(item.attr("type")) == -1){
+                    cx.onChange(function(value){
+                        item.cx(value);
+                        positionSelector(item.attr("id"));
+                    });
+                    cx.onFinishChange(function(value){
+                        console.log(value);
+                        saveItemLocalisation(item.attr("id"));
+                    });
+                    cy.onChange(function(value){
+                        item.cy(value);
+                        positionSelector(item.attr("id"));
+                    });
+                    cy.onFinishChange(function(value){
+                        console.log(value);
+                        saveItemLocalisation(item.attr("id"));
+                    });
+                }
             }
             if(item.attr("type") == 'complex_path'){
                 if(item.attr("opacity"))
@@ -617,12 +728,35 @@ buildDatGui = function(gui, item, type, no){
             if(item.attr("type").indexOf('para') != -1){
                 var it = Item.findOne({_id: item.attr("id")});
                 var keys = Object.keys(it.parameters.params);
-                var pp = [];
+                var topath = f3.add(param, 'toPath');
+                var pp = [], rxi,ryi;
                 for(k in keys){
                     pp[k] = f2.add(param, keys[k]).onChange(function(value){
-                        var vals = {}
-                        for(k in keys)
+                        var vals = {}, rx,ry;
+                        for(k in keys){
                             vals[keys[k]] = param[keys[k]];
+                            if(param.maintainRatio){
+                                if(value == param[keys[k]])
+                                    if(keys[k] == 'rx'){
+                                        rx = param[keys[k]];
+                                        ry = ryi * rx / rxi
+                                        rxi = rx;
+                                        ryi = ry;
+                                    }
+                                    else
+                                        if(keys[k] == 'ry'){
+                                            ry = param[keys[k]];
+                                            rx = rxi + param.rx * ry / ryi;
+                                            rxi = rx;
+                                            ryi = ry;
+                                        }
+                            }
+                        }
+                        if(rx)
+                            vals.rx = rx;
+                        if(ry)
+                            vals.ry = ry;
+                        console.log(vals);
                         var points = window[it.parameters.callback](vals, value);
                         if(item.attr("type") == 'para_simple_path')
                             item.plot(split_oro_path_points(points));
@@ -635,6 +769,8 @@ buildDatGui = function(gui, item, type, no){
                             vals[keys[k]] = param[keys[k]];
                             par.params[keys[k]] = param[keys[k]];
                         }
+                        rxi = param.rx;
+                        ryi = param.ry;
                         var points = window[it.parameters.callback](vals, value);
                         Meteor.call('update_document', 'Item', item.attr("id"), {pointList: points, parameters: par});
                     });
@@ -643,11 +779,9 @@ buildDatGui = function(gui, item, type, no){
         }
     }
     else{
-        var browse = f3.add(param, 'browse');
-        var reload = f3.add(param, 'reload');
         var f = File.findOne({_id: Session.get('fileId')});
         var cr = Meteor.users.findOne({_id: f.creatorId});
-        var cr = f5.add(param, 'creator', [cr.profile.name]);
+        var cr = f5.add(param, 'creator', [cr.email.address.substring(0,cr.email.address.indexOf('@'))]);
         var res = f5.add(param, 'resolution',[f.width+'x'+f.height]);
         var path = getFilePath(Session.get('fileId'));
         var filepath = f5.add(param, 'path', path).onChange(function(value){
@@ -656,10 +790,28 @@ buildDatGui = function(gui, item, type, no){
         if(Session.get("enableEdit") == 'true'){
             var unlock = f3.add(param, 'unlock items');
             var code = f3.add(param, 'source');
-            var permis = f3.add(param, 'permissions');
             var savenew = f3.add(param, 'saveNew');
             var addElem = f3.add(param, 'addElement');
+            var title = f5.add(param, 'title').onFinishChange(function(value){
+                Meteor.call('update_document', 'Item', Session.get('fileId'), {title: value});
+            });
+            var permissions = f5.add(param, 'permissions').onFinishChange(function(value){
+                value = value.split(',');
+                var perms = [];
+                for(v in value)
+                    perms[v] = Meteor.users.findOne({'email.address': value[v]})._id;
+                f.permissions.edit = perms;
+                Meteor.call('update_document', 'File', f._id, {permissions: f.permissions});
+            });
         }
+        else
+            if(f.title)
+                var title = f5.add(param, 'title', [f.title]);
+            else
+                var title = f5.add(param, 'title', ['']);
+        var browse = f5.add(param, 'browse');
+        var reload = f5.add(param, 'reload');
+        var resetView = f5.add(param, 'resetView');
     }
     console.log(type);
     if(type == 'simple_path'){
@@ -674,13 +826,13 @@ buildDatGui = function(gui, item, type, no){
     }
     if(f3)
         f3.open();
-
+/*
     $('div.dg.main.a').on('mouseenter',function(){
         disablePan();
     })
     $('div.dg.main.a').on('mouseleave',function(){
         enablePan();
-    })
+    })*/
 }
 
 shortType = function(type){
@@ -703,20 +855,27 @@ shortType = function(type){
         case 'rasterImage':
             return 'i';
             break;
+        case 'formulae':
+            return 'f';
+            break;
         case 'embedediFrame':
             return 'iF';
             break;
         case 'embededCanvas':
-            return 'cv';
+            return 'c';
             break;
+        case 'embededHtml':
+            return 'h';
+            break
+        case 'nestedSvg':
+            return 'svg';
+            break
         default:
             return type;
     }
 }
 
 update = function(obj, data) {
-    console.log(obj)
-    console.log(data);
     return;
   requestAnimationFrame(update);
   var keys = Object.keys(data);

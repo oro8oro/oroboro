@@ -25,20 +25,20 @@ Schemas.UserProfile = new SimpleSchema({
     }
 });
 Schemas.User = new SimpleSchema({
-    emails: {
-        type: [Object],
+    email: {
+        type: Object,
         label: 'Email'
     },
     profile: {
         type: Schemas.UserProfile,
         optional: true
     },
-    "emails.$.address": {
+    "email.address": {
         type: String,
         label: 'Email',
         regEx: SimpleSchema.RegEx.Email
     },
-    "emails.$.verified": {
+    "email.verified": {
         type: Boolean
     },
     createdAt: {

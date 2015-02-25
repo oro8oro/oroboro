@@ -281,57 +281,59 @@ fileBMenu = function(){
             SVG.get("file_"+i).on('mouseover', function(){
                 Session.set("fileBIt", this.attr("fileId"));
             });
-        var subfiles = Dependency.find({fileId2: SVG.get("file_"+i).attr("fileId"), type: 1}).fetch()
-        if(subfiles.length > 0){
-            var fold = SVG.get("file_"+i).group().move(Number(vb[2])-300, Number(vb[3])-300).scale(0.2).fill('none');
-            var folder = Group.findOne({_id: "8pmQarpMhMqeReis3"});
-            var backgf = fold.rect(1024,1024).radius(512).fill('#cccccc').opacity(0.6);
-            recursive_group_client(fold, folder);
-            //fold.first().first().first().first().fill('#cccccc').stroke({color: '#FFFFFF', width: 2});
-            fold.on('mouseover',function(){
-                this.opacity(0.6);
-            });
-            fold.on('mouseout',function(){
-                this.opacity(1);
-            })
-            backgf.on('click',function(){
-                var func = this.parent.last().attr('function');
-                if(func.lastIndexOf('.') != -1)
-                    func = func.substring(func.lastIndexOf('.')+1);
-                console.log(func);
-                if(window[func])
-                    window[func](this, event);
-            });
-        }
-        var subs = [];
-        if(col == 'file')
-            subs = Group.find({fileId: SVG.get("file_"+i).attr("fileId")}).fetch();
-        else{
-            if(col == 'group')
-                subs = Group.find({groupId: SVG.get("file_"+i).attr("fileId")}).fetch();
-            if(col == 'item' || subs.length == 0)
-                subs = Item.find({groupId: SVG.get("file_"+i).attr("fileId")}).fetch();
-        }
-        if(subs.length > 0){
-            var disect = SVG.get("file_"+i).group().move(50, Number(vb[3])-300).scale(0.2).fill('none');
-            var disector = Group.findOne({_id: "M8RdemnXdmHcJZKwi"});
-            var backg = disect.rect(1024,1024).radius(512).fill('#cccccc').opacity(0.6);
-            recursive_group_client(disect, disector);
-            //disect.first().first().first().first().fill('#cccccc').stroke({color: '#FFFFFF', width: 2});
-            disect.on('mouseover',function(){
-                this.opacity(0.6);
-            });
-            disect.on('mouseout',function(){
-                this.opacity(1);
-            })
-            backg.on('click',function(){
-                var func = this.parent.last().attr('function');
-                if(func.lastIndexOf('.') != -1)
-                    func = func.substring(func.lastIndexOf('.')+1);
-                console.log(func);
-                if(window[func])
-                    window[func](this, event);
-            });
+        if(dim != 1){
+            var subfiles = Dependency.find({fileId2: SVG.get("file_"+i).attr("fileId"), type: 1}).fetch()
+            if(subfiles.length > 0){
+                var fold = SVG.get("file_"+i).group().move(Number(vb[2])-300, Number(vb[3])-300).scale(0.2).fill('none');
+                var folder = Group.findOne({_id: "8pmQarpMhMqeReis3"});
+                var backgf = fold.rect(1024,1024).radius(512).fill('#cccccc').opacity(0.6);
+                recursive_group_client(fold, folder);
+                //fold.first().first().first().first().fill('#cccccc').stroke({color: '#FFFFFF', width: 2});
+                fold.on('mouseover',function(){
+                    this.opacity(0.6);
+                });
+                fold.on('mouseout',function(){
+                    this.opacity(1);
+                })
+                backgf.on('click',function(){
+                    var func = this.parent.last().attr('function');
+                    if(func.lastIndexOf('.') != -1)
+                        func = func.substring(func.lastIndexOf('.')+1);
+                    console.log(func);
+                    if(window[func])
+                        window[func](this, event);
+                });
+            }
+            var subs = [];
+            if(col == 'file')
+                subs = Group.find({fileId: SVG.get("file_"+i).attr("fileId")}).fetch();
+            else{
+                if(col == 'group')
+                    subs = Group.find({groupId: SVG.get("file_"+i).attr("fileId")}).fetch();
+                if(col == 'item' || subs.length == 0)
+                    subs = Item.find({groupId: SVG.get("file_"+i).attr("fileId")}).fetch();
+            }
+            if(subs.length > 0){
+                var disect = SVG.get("file_"+i).group().move(50, Number(vb[3])-300).scale(0.2).fill('none');
+                var disector = Group.findOne({_id: "M8RdemnXdmHcJZKwi"});
+                var backg = disect.rect(1024,1024).radius(512).fill('#cccccc').opacity(0.6);
+                recursive_group_client(disect, disector);
+                //disect.first().first().first().first().fill('#cccccc').stroke({color: '#FFFFFF', width: 2});
+                disect.on('mouseover',function(){
+                    this.opacity(0.6);
+                });
+                disect.on('mouseout',function(){
+                    this.opacity(1);
+                })
+                backg.on('click',function(){
+                    var func = this.parent.last().attr('function');
+                    if(func.lastIndexOf('.') != -1)
+                        func = func.substring(func.lastIndexOf('.')+1);
+                    console.log(func);
+                    if(window[func])
+                        window[func](this, event);
+                });
+            }
         }
     }
 }
@@ -363,6 +365,7 @@ fileBcrumbs = function(fileid){
     var cols = [];
     console.log(lim);
     console.log(path);
+    var maxwidth = 0;
     for(i = path.length-1; i >= 0; i--){
         if(typeof lim === 'undefined' || i > lim){
             var f = File.findOne({_id: path[i]["fileId2"]});
@@ -383,6 +386,8 @@ fileBcrumbs = function(fileid){
         }
         console.log(imagepath); console.log(cols[i]);
         x = -f.width*scale-20;
+        if(maxwidth < f.width)
+            maxwidth = f.width;
         gr[i] = crumbs.group().opacity(0.3);
         gr[i].transform({"scaleX": scale,"scaleY": scale, x: x, y: y});
         gr[i].rect(Number(vb[2]),Number(vb[3])).attr({rx:20,ry:20, fill:"#eee", strokeWidth:6,stroke:"#000"});
@@ -415,6 +420,8 @@ fileBcrumbs = function(fileid){
             this.opacity(0.3);
         });
     }
+    for(i in path)
+        gr[i].cx(-maxwidth*scale/2 - 20)
 }
 
 editIt = function editIt(){

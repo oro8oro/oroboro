@@ -36,8 +36,11 @@ Schemas.Item = new SimpleSchema({
                     {label:"Parametrized CPath", value:"para_complex_path"},
                     {label:"Text", value:"text"},
                     {label:"Raster Image", value:"rasterImage"},
+                    {label:"Formulae", value:"formulae"},
                     {label:"Embeded iFrame", value:"embedediFrame"},
-                    {label:"Embeded Canvas", value:"embededCanvas"}
+                    {label:"Embeded Canvas", value:"embededCanvas"},
+                    {label:"Embeded Html", value:"embededHtml"},
+                    {label:"Nested SVG", value:"nestedSvg"}
                 ];
             }
         }

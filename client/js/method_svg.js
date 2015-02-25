@@ -1,3 +1,4 @@
+baselinePoints = [];
 panCallback = function(a){
         var matrix = a.a + ","+a.b + ","+a.c + ","+a.d + ","+a.e + ","+a.f;
         scaleMinimap(matrix);
@@ -191,6 +192,32 @@ resizeImage = function(img, dx, dy, sidex, sidey){
     }
 }
 
+transformGroup = function(item, distx, disty, sidex, sidey){
+    console.log(distx);console.log(disty);console.log(sidex);console.log(sidey);
+    var pp = item.transform();
+    var box = item.bbox();
+    var vals = [];
+    if(sidex == 'l'){
+        vals[4] = pp.e + distx;
+        vals[0] = pp.a - distx / box.width;
+    }
+    else{
+        vals[4] = pp.e;
+        vals[0] = pp.a + distx / box.width;
+    }
+    if(sidey == 't'){
+        vals[5] = pp.f + disty;
+        vals[3] = pp.d - disty / box.height;
+    }
+    else{
+        vals[5] = pp.f;
+        vals[3] = pp.d + disty / box.height;
+    }
+    vals[1] = pp.b; vals[2] = pp.c;
+    console.log(vals);
+    return vals.join(',');
+}
+
 reflectSPathp = function(points, x, y, coord){
     for(var p in points){
         if(x)
@@ -261,13 +288,12 @@ splitSPath = function(path){
 }
 
 buildCircle = function(parent,attr,r,i){
-    var circle = parent.circle(2*r).stroke({color: "#FFFFFF", width: 3}).attr("pointer-events","all").attr("id",attr).fill('#000000');
+    var circle = parent.circle(2*r).stroke({color: "#FFFFFF", width: 3}).attr("pointer-events","all").attr("id",attr).fill('#000000').opacity(0.4);
     return circle;
 }
 
 positionCircles = function(x,y,w,h,id,rotate){
     var s = "circle_", e = "_"+id;
-    if(SVG.get(s+7+e))
     SVG.get(s+0+e).cx(x + w/2).cy(y);
     SVG.get(s+1+e).cx(x + w).cy(y);
     SVG.get(s+2+e).cx(x + w).cy(y + h/2);
@@ -278,6 +304,20 @@ positionCircles = function(x,y,w,h,id,rotate){
     SVG.get(s+7+e).cx(x).cy(y);
     if(rotate)
         SVG.get("rotate_"+id).cx(x + w/2).cy(y - 30);
+}
+
+positionCirclesP = function(points, id){
+    var s = "circle_", e = "_"+id;
+    SVG.get(s+0+e).cx(points[0][0]).cy(points[0][1]);
+    SVG.get(s+1+e).cx(points[1][0]).cy(points[1][1]);
+    SVG.get(s+2+e).cx(points[2][0]).cy(points[2][1]);
+    SVG.get(s+3+e).cx(points[3][0]).cy(points[3][1]);
+    SVG.get(s+4+e).cx(points[4][0]).cy(points[4][1]);
+    SVG.get(s+5+e).cx(points[5][0]).cy(points[5][1]);
+    SVG.get(s+6+e).cx(points[6][0]).cy(points[6][1]);
+    SVG.get(s+7+e).cx(points[7][0]).cy(points[7][1]);
+    if(points[8])
+        SVG.get("rotate_"+id).cx(points[8][0]).cy(points[8][1]);
 }
 
 rotate_point = function(cx, cy, angle, p){
@@ -343,6 +383,22 @@ getAngle = function(center, p1) {
     return (2 * Math.atan2(p1.y - p0.y, p1.x - p0.x));// * 180 / Math.PI;
 }
 
+rotateMatrix = function (a, rad) {
+    if(a instanceof Array)
+        var a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3], a4 = a[4], a5 = a[5];
+    else
+        var a0 = a.a, a1 = a.b, a2 = a.c, a3 = a.d, a4 = a.e, a5 = a.f;
+    var s = Math.sin(rad),
+        c = Math.cos(rad), out = [];
+    out[0] = a0 *  c + a2 * s;
+    out[1] = a1 *  c + a3 * s;
+    out[2] = a0 * -s + a2 * c;
+    out[3] = a1 * -s + a3 * c;
+    out[4] = a4;
+    out[5] = a5;
+    return out;
+}
+/*
 positionPoint = function(x,y){
     var truematrix = SVG.get("viewport").node.getAttribute("transform");
     if(truematrix){
@@ -352,7 +408,75 @@ positionPoint = function(x,y){
     }
     else return {x:x,y:y};
 }
+*/
+/*
+positionPointInverse = function(x,y){
+    var m = SVG.get("viewport").node.getCTM().inverse();
+    if(m)
+        return {x: x*Number(m.a) + Number(m.e), y: y* Number(m.d) + Number(m.f)};
+    else return {x:x,y:y};
+}
+*/
+transformPath = function(pathArray, id){
+    var m = SVG.get(id).node.getCTM();
+    for(p in pathArray){
+        if(pathArray[p][0] != 'Z'){
+            var point = transformPoint(pathArray[p][1], pathArray[p][2], [m]);
+            pathArray[p][1] = point[0];
+            pathArray[p][2] = point[1];
+            if(pathArray[p][0] == 'C'){
+                var point2 = transformPoint(pathArray[p][3], pathArray[p][4], [m]);
+                pathArray[p][3] = point2[0];
+                pathArray[p][4] = point2[1];
+                var point3 = transformPoint(pathArray[p][5], pathArray[p][6], [m]);
+                pathArray[p][5] = point3[0];
+                pathArray[p][6] = point3[1];
+            }
+        }
+    }
+    return pathArray;
+}
+/*
 
+positionPath = function(pathArray){
+    for(p in pathArray){
+        if(pathArray[p][0] != 'Z'){
+            var point = positionPoint(pathArray[p][1], pathArray[p][2]);
+            pathArray[p][1] = point.x;
+            pathArray[p][2] = point.y;
+            if(pathArray[p][0] == 'C'){
+                var point2 = positionPoint(pathArray[p][3], pathArray[p][4]);
+                pathArray[p][3] = point2.x;
+                pathArray[p][4] = point2.y;
+                var point3 = positionPoint(pathArray[p][5], pathArray[p][6]);
+                pathArray[p][5] = point3.x;
+                pathArray[p][6] = point3.y;
+            }
+        }
+    }
+    return pathArray;
+}*/
+/*
+positionPathInverse = function(pathArray){
+    for(p in pathArray){
+        if(pathArray[p][0] != 'Z'){
+            var point = positionPointInverse(pathArray[p][1], pathArray[p][2]);
+            pathArray[p][1] = point.x;
+            pathArray[p][2] = point.y;
+            if(pathArray[p][0] == 'C'){
+                var point2 = positionPointInverse(pathArray[p][3], pathArray[p][4]);
+                pathArray[p][3] = point2.x;
+                pathArray[p][4] = point2.y;
+                var point3 = positionPointInverse(pathArray[p][5], pathArray[p][6]);
+                pathArray[p][5] = point3.x;
+                pathArray[p][6] = point3.y;
+            }
+        }
+    }
+    return pathArray;
+}
+ 
+*/
 positionPointIni = function(x,y){
     var truematrix = SVG.get("viewport").node.getAttribute("transform");
     if(truematrix){
@@ -373,6 +497,16 @@ getScale = function(){
     else return 1; 
 }
 
+transformMat2d = function(a, m) {
+    if(!(m instanceof Array))
+        m = [m.a, m.b, m.c, m.d, m.e, m.f];
+    var x = a[0],
+        y = a[1],
+        out = [];
+    out[0] = m[0] * x + m[2] * y + m[4];
+    out[1] = m[1] * x + m[3] * y + m[5];
+    return out;
+};
 
 transformBox = function(box){
     var truematrix = SVG.get("viewport").node.getAttribute("transform");
@@ -389,31 +523,85 @@ transformBox = function(box){
     }
     return box;
 }
+
+getViewportMatrix = function(){
+    var truematrix = SVG.get("viewport").node.getAttribute("transform");
+    if(truematrix){
+        truematrix = truematrix.substring(7,truematrix.length-1);
+        if(truematrix.indexOf(',') != -1)
+            var matrix = truematrix.split(",");
+        else
+            var matrix = truematrix.split(" ");
+        matrix = [Number(matrix[0]), Number(matrix[1]), Number(matrix[2]), Number(matrix[3]), Number(matrix[4]), Number(matrix[5])];
+    }
+    else
+        var matrix = [1,0,0,1,0,0];
+    return matrix;
+}
+
+transformPoint = function(x,y, matrices){
+    var point = [x,y];
+    for(m in matrices)
+        point = transformMat2d(point, matrices[m]);
+    return point;
+}
+
+createSelectorPath = function(id, type){
+    var box = SVG.get(id).bbox();
+    var p = [];
+    var matrix = SVG.get(id).node.getCTM();
+    var view  = getViewportMatrix();
+    p[0] = transformPoint(box.x, box.y, [matrix,view]);
+    p[1] = transformPoint(box.x+box.width, box.y, [matrix,view]);
+    p[2] = transformPoint(box.x+box.width, box.y+box.height, [matrix,view]);
+    p[3] = transformPoint(box.x, box.y+box.height, [matrix,view]);
+    if(type == "string")
+        return 'M'+p[0][0]+','+p[0][1]+'L'+p[1][0]+','+p[1][1]+'L'+p[2][0]+','+p[2][1]+'L'+p[3][0]+','+p[3][1]+'Z';
+    else
+        return p;
+}
+
 positionSelectorL = function(id){
-    var box = transformBox(SVG.get(id).bbox());   
-    var path = 'M'+box.x+','+box.y+'L'+(box.x+box.width)+','+box.y+'L'+(box.x+box.width)+','+(box.y+box.height)+'L'+box.x+','+(box.y+box.height)+'z';
+    var path = createSelectorPath(id, "string");
     SVG.get("container_path_"+id).plot(path);
 }
 
 positionSelector = function(id){
     if(['3D','pathPoints'].indexOf(SVG.get("box_"+id).attr("type")) == -1){
-        var box = transformBox(SVG.get(id).bbox());   
-        var path = 'M'+box.x+','+box.y+'L'+(box.x+box.width)+','+box.y+'L'+(box.x+box.width)+','+(box.y+box.height)+'L'+box.x+','+(box.y+box.height)+'z';
+        var p = createSelectorPath(id, "points");
         if(SVG.get("container_path_"+id)){
-            SVG.get("container_path_"+id).plot(path);
+            SVG.get("container_path_"+id).plot('M'+p[0][0]+','+p[0][1]+'L'+p[1][0]+','+p[1][1]+'L'+p[2][0]+','+p[2][1]+'L'+p[3][0]+','+p[3][1]+'Z');
             var newbox = SVG.get("container_path_"+id).bbox();
         }
-        if(SVG.get("box_"+id).attr("type") == 'draggable')
-            positionCircles(newbox.x,newbox.y,newbox.width,newbox.height, id, true);
+        if(SVG.get("box_"+id).attr("type") == 'draggable'){
+            var box = SVG.get(id).bbox();
+            var matrix = SVG.get(id).node.getCTM();
+            var view  = getViewportMatrix();
+            var rotate = transformPoint(box.x+box.width/2, box.y-30, [matrix,view]);
+            var points = [
+                [ p[0][0] + (p[1][0] - p[0][0]) / 2, p[0][1] + (p[1][1] - p[0][1]) / 2 ],
+                [ p[1][0], p[1][1]],
+                [ p[1][0] + (p[2][0] - p[1][0]) / 2, p[1][1] + (p[2][1] - p[1][1]) / 2],
+                [ p[2][0], p[2][1] ],
+                [ p[3][0] + (p[2][0] - p[3][0]) / 2, p[3][1] + (p[2][1] - p[3][1]) / 2],
+                [ p[3][0], p[3][1] ],
+                [ p[0][0] + (p[3][0] - p[0][0]) / 2, p[0][1] + (p[3][1] - p[0][1]) / 2 ],
+                [ p[0][0], p[0][1] ],
+                [ rotate[0], rotate[1] ]
+                ]
+            positionCirclesP(points, id)
+        }
         if(SVG.get("editPoints")) 
-            positionButtons(newbox);
+            positionButtons(newbox, id);
+
     }
-    //if(SVG.get("box_"+id).attr("type") == '3D'){
-    //    positionSelector3D(id);
-    //}
+    if(SVG.get("box_"+id).attr("type") == 'pathPoints')
+        positionSelectorPoints();
+    if(SVG.get("box_"+id).attr("type") == '3D')
+        positionSelector3D(id);
 }
 
-positionButtons = function(box){
+positionButtons = function(box, id){
     var but = 35;
     var sp = but/4;
     SVG.get("editPoints").size(but,but).move(box.x+box.width/2-but-sp, box.y+box.height+sp)
@@ -436,7 +624,7 @@ setButtons = function(id){
     }
     buttons[0].on('click', function(){
         SVG.get('box_'+id).remove();
-        var sel = buildSelectorPoints(SVG.get("svgEditor"), id);
+        var sel = buildSelectorPoints(id);
         global_oro_variables.selected.add(sel);
     });
     buttons[1].on('click', function(){
@@ -452,16 +640,14 @@ buildSelector = function(parent,id, dragg){
     var box = SVG.get(id).bbox();
     var selector = parent.group().attr("id","box_"+id).attr("selected",id).attr("type","draggable");
     var container = selector.group().attr("id","container_"+id);
-    var path = 'M'+box.x+','+box.y+'L'+(box.x+box.width)+','+box.y+'L'+(box.x+box.width)+','+(box.y+box.height)+'L'+box.x+','+(box.y+box.height)+'z';
+    var path = 'M'+box.x+','+box.y+'L'+(box.x+box.width)+','+box.y+'L'+(box.x+box.width)+','+(box.y+box.height)+'L'+box.x+','+(box.y+box.height)+'Z';
     var rect = container.path(path).stroke({color: "#000000", width: 2, dasharray: "2,2", opacity: "0.8"}).fill("none").attr("id","container_path_"+id);
     var circles = [];
     for(i = 0 ; i < 8 ; i++)
         circles[i] = buildCircle(container,"circle_"+i+"_"+id,r,i);
     circles[8] = buildCircle(selector, "rotate_"+id,r);
-    //positionCircles(box.x,box.y,box.width,box.height,id);
     circles[8].cx(box.x + box.width/2).cy(box.y - 30); 
     circles[8].attr("style","cursor:url(/icons/rotate.png) 12 12, auto;");
-    //circles[8].attr("style","cursor:url(/file/W6fHbEQiGTQ83k5tp) 12 12, auto;");
     if(['simple_path', 'complex_path'].indexOf(dragg) != -1) 
         setButtons(id);
 
@@ -489,8 +675,12 @@ buildSelector = function(parent,id, dragg){
     circles[8].on('dragmove', function(event){
         if(shift)
             var angle = 45 * Math.PI / 180;
-        else
-            var angle = getAngle({x: cx, y: cy}, {x: this.cx(), y: this.cy()});
+        else{
+            var invmatrix = SVG.get(id).node.getCTM().inverse();
+            var invview = SVG.get('viewport').node.getCTM().inverse();
+            var pp = transformPoint(this.cx(), this.cy(), [invview, invmatrix]);
+            var angle = getAngle({x: cx, y: cy}, {x: pp[0], y: pp[1]});
+        }
         var temp = startangle;
         startangle = angle;
         angle = angle - temp;
@@ -498,25 +688,31 @@ buildSelector = function(parent,id, dragg){
             rotateSPath(SVG.get(id), cx, cy, angle);
         if(dragg == 'complex_path')
             rotateCPath(SVG.get(id), cx, cy, angle);
-        rotate_selector(id, cx, cy, angle);
+        pp = transformPoint(cx, cy, [SVG.get(id).node.getCTM(), SVG.get('viewport').node.getCTM()]);
+        rotate_selector(id, pp[0], pp[1], angle);
     });
     circles[8].on('dragend', function(event){
         if(shift)
             var angle = 45 * Math.PI / 180;
-        else
-            var angle = getAngle({x: cx, y: cy}, {x: this.cx(), y: this.cy()});
+        else{
+            var invmatrix = SVG.get(id).node.getCTM().inverse();
+            var invview = SVG.get('viewport').node.getCTM().inverse();
+            var pp = transformPoint(this.cx(), this.cy(), [invview, invmatrix]);
+            var angle = getAngle({x: cx, y: cy}, {x: pp[0], y: pp[1]});
+        }
         angle = angle - startangle;
         if(dragg == 'simple_path')
             rotateSPath(SVG.get(id), cx, cy, angle);
         if(dragg == 'complex_path')
             rotateCPath(SVG.get(id), cx, cy, angle);
-        rotate_selector(id, cx, cy, angle);
-        //enablePan();
+        pp = transformPoint(cx, cy, [SVG.get(id).node.getCTM(), SVG.get('viewport').node.getCTM()]);
+        rotate_selector(id, pp[0], pp[1], angle);
+        saveItemLocalisation(id);
+        shift = false;
+        startangle = 0;
         togglePanZoom();
         event.stopPropagation();
         event.preventDefault();
-        saveItemLocalisation(id);
-        shift = false;
     });
     var x = box.x; var y = box.y;
     var w = box.width; var h = box.height;
@@ -551,14 +747,20 @@ buildSelector = function(parent,id, dragg){
                 disablePan();
                 event.stopPropagation();
                 event.preventDefault();
-                sx = startx = this.cx();
-                sy = starty = this.cy();
+                var invmatrix = SVG.get(id).node.getCTM().inverse();
+                var invview = SVG.get('viewport').node.getCTM().inverse();
+                var pp = transformPoint(this.cx(), this.cy(), [invview, invmatrix])
+                startx = pp[0];
+                starty = pp[1];
             });
             circles[i].on('dragmove', function(event){
-                var distx = this.cx() - startx;
-                var disty = this.cy() - starty;
-                startx = this.cx();
-                starty = this.cy();
+                var invmatrix = SVG.get(id).node.getCTM().inverse();
+                var invview = SVG.get('viewport').node.getCTM().inverse();
+                var pp = transformPoint(this.cx(), this.cy(), [invview, invmatrix])
+                var distx = pp[0] - startx;
+                var disty = pp[1] - starty;
+                startx = pp[0];
+                starty = pp[1];
                 i = Number(this.attr("id").substring(7,8));
                 if(shift || dragg == 'rasterImage'){
                     if(i % 2 == 0)
@@ -623,7 +825,7 @@ buildSelector = function(parent,id, dragg){
                     }
                 }
                 
-                positionCircles(rect.x(),rect.y(),rect.width(),rect.height(),id, true);
+                positionSelector(id);
                 var item = SVG.get(id);
                 if(dragg == 'simple_path'){
                     var points = pathArraySvgOro(item.array.value);
@@ -634,10 +836,17 @@ buildSelector = function(parent,id, dragg){
                     item.plot(resizeCPath(item.array.value, distx, disty, sidex, sidey));
                 if(dragg == 'rasterImage')
                     resizeImage(item, distx, disty, sidex, sidey);
+                if(dragg == 'simpleGroup')
+                    item.transform("matrix", transformGroup(item, distx, disty, sidex, sidey));
             });
             circles[i].on('dragend', function(event){
-                var distx = this.cx() - startx;
-                var disty = this.cy() - starty;
+                var invmatrix = SVG.get(id).node.getCTM().inverse();
+                var invview = SVG.get('viewport').node.getCTM().inverse();
+                var pp = transformPoint(this.cx(), this.cy(), [invview, invmatrix])
+                var distx = pp[0] - startx;
+                var disty = pp[1] - starty;
+                startx = 0;
+                starty = 0;
                 i = Number(this.attr("id").substring(7,8));
                 if(shift || dragg == 'rasterImage'){
                     if(i % 2 == 0)
@@ -701,8 +910,7 @@ buildSelector = function(parent,id, dragg){
                         sidey = "b";
                     }
                 }
-                
-                positionCircles(rect.x(),rect.y(),rect.width(),rect.height(),id, true);
+                //positionSelector(id);
                 var item = SVG.get(id);
                 if(dragg == 'simple_path'){
                     var points = pathArraySvgOro(item.array.value);
@@ -713,12 +921,15 @@ buildSelector = function(parent,id, dragg){
                     item.plot(resizeCPath(item.array.value, distx, disty, sidex, sidey));
                 if(dragg == 'rasterImage')
                     resizeImage(item, distx, disty, sidex, sidey);
-                //enablePan();
+                if(dragg == 'simpleGroup'){
+                    var matrix = transformGroup(item, distx, disty, sidex, sidey);
+                    Meteor.call("update_document", "Group", item.attr("id"), {transform: matrix});
+                }
+                saveItemLocalisation(id);
+                shift = false;
                 togglePanZoom();
                 event.stopPropagation();
                 event.preventDefault();
-                saveItemLocalisation(id);
-                shift = false;
             });
         }
 
@@ -730,7 +941,7 @@ buildSelector = function(parent,id, dragg){
 buildSelectorSimple = function(parent,id){
     var box = SVG.get(id).bbox();
     var selector = parent.group().attr("id","box_"+id).attr("selected",id).attr("type","simple");
-    var path = 'M'+box.x+','+box.y+'L'+(box.x+box.width)+','+box.y+'L'+(box.x+box.width)+','+(box.y+box.height)+'L'+box.x+','+(box.y+box.height)+'z';
+    var path = 'M'+box.x+','+box.y+'L'+(box.x+box.width)+','+box.y+'L'+(box.x+box.width)+','+(box.y+box.height)+'L'+box.x+','+(box.y+box.height)+'Z';
     var rect1 = selector.path(path).stroke({color: "#000000", width: 2, dasharray: "2,2", opacity: "0.8"}).fill("none").attr("id","container_path_"+id);
     positionSelector(id);
     return selector;
@@ -882,12 +1093,22 @@ function distort_path(path_str,source,destination){
 }
 
 positionSelector3D = function(id){
+    var view  = getViewportMatrix();
     var s = "circle_", e = "_"+id;
-    var c0 = positionPoint(SVG.get(s+0+e).cx(), SVG.get(s+0+e).cy());
-    var c1 = positionPoint(SVG.get(s+1+e).cx(), SVG.get(s+1+e).cy());
-    var c2 = positionPoint(SVG.get(s+2+e).cx(), SVG.get(s+2+e).cy());
-    var c3 = positionPoint(SVG.get(s+3+e).cx(), SVG.get(s+3+e).cy());
-    var path = 'M'+c0.x+','+c0.y+'L'+c1.x+','+c1.y+'L'+c2.x+','+c2.y+'L'+c3.x+','+c3.y+'z';
+    var p = baselinePoints;
+    var pp = [
+        transformPoint(baselinePoints[0][0], baselinePoints[0][1], [view]),
+        transformPoint(baselinePoints[1][0], baselinePoints[1][1], [view]),
+        transformPoint(baselinePoints[2][0], baselinePoints[2][1], [view]),
+        transformPoint(baselinePoints[3][0], baselinePoints[3][1], [view])
+        ]
+    SVG.get(s+0+e).cx(pp[0][0]).cy(pp[0][1]);
+    SVG.get(s+1+e).cx(pp[1][0]).cy(pp[1][1]);
+    SVG.get(s+2+e).cx(pp[2][0]).cy(pp[2][1]);
+    SVG.get(s+3+e).cx(pp[3][0]).cy(pp[3][1]);
+
+    var path = 'M'+pp[0][0]+','+pp[0][1]+'L'+pp[1][0]+','+pp[1][1]+'L'+pp[2][0]+','+pp[2][1]+'L'+pp[3][0]+','+pp[3][1]+'Z';
+
     SVG.get("container_path_"+id).plot(path);
 }
 
@@ -896,23 +1117,34 @@ buildSelector3D = function(parent, id){
     var box = SVG.get(id).bbox();
     var selector = parent.group().attr("id","box_"+id).attr("selected",id).attr("type","3D");
     var container = selector.group().attr("id","container_"+id);
-    //var point = positionPoint(box.x, box.y);
-    //var x = point[0]; var y = point[1];
-    //var w = box.width*getScale(); var h = box.height*getScale();
-    //var path = 'M'+x+','+y+'L'+(x+w)+','+y+'L'+(x+w)+','+(y+h)+'L'+x+','+(y+h)+'z';
-    box = transformBox(box);
-    var path = 'M'+box.x+','+box.y+'L'+(box.x+box.width)+','+box.y+'L'+(box.x+box.width)+','+(box.y+box.height)+'L'+box.x+','+(box.y+box.height)+'z';
+    var path = createSelectorPath(id, "string");
     var rect = container.path(path).stroke({color: "#000000", width: 2, dasharray: "2,2", opacity: "0.8"}).fill("none").attr("id","container_path_"+id);
     var circles = [];
     for(i = 0 ; i < 4 ; i++)
         circles[i] = buildCircle(container,"circle_"+i+"_"+id,r,i);
+    var matrix = SVG.get(id).node.getCTM();
+    var view  = getViewportMatrix();
+    baselinePoints = [
+        transformPoint(box.x, box.y, [matrix]),
+        transformPoint(box.x + box.width, box.y, [matrix]),
+        transformPoint(box.x + box.width, box.y + box.height, [matrix]),
+        transformPoint(box.x, box.y + box.height, [matrix])
+        ];
+    var pp = [
+        transformPoint(box.x, box.y, [matrix, view]),
+        transformPoint(box.x + box.width, box.y, [matrix, view]),
+        transformPoint(box.x + box.width, box.y + box.height, [matrix, view]),
+        transformPoint(box.x, box.y + box.height, [matrix, view])
+        ];
     var x = box.x; var y = box.y;
     var w = box.width; var h = box.height;
     var s = "circle_", e = "_"+id;
-    SVG.get(s+0+e).cx(x).cy(y);
-    SVG.get(s+1+e).cx(x + w).cy(y);
-    SVG.get(s+2+e).cx(x + w).cy(y + h);
-    SVG.get(s+3+e).cx(x).cy(y + h);
+
+    SVG.get(s+0+e).cx(pp[0][0]).cy(pp[0][1]);
+    SVG.get(s+1+e).cx(pp[1][0]).cy(pp[1][1]);
+    SVG.get(s+2+e).cx(pp[2][0]).cy(pp[2][1]);
+    SVG.get(s+3+e).cx(pp[3][0]).cy(pp[3][1]);
+    var path = 'M'+pp[0][0]+','+pp[0][1]+'L'+pp[1][0]+','+pp[1][1]+'L'+pp[2][0]+','+pp[2][1]+'L'+pp[3][0]+','+pp[3][1]+'Z';
 
     var source = new Array({x: x, y: y}, {x: x+w, y: y}, {x: x+w, y: y+h}, {x: x, y: y+h});
     var destination = [];
@@ -952,12 +1184,27 @@ buildSelector3D = function(parent, id){
             arr[i][1] = this.cx();
             arr[i][2] = this.cy();
             rect.plot(arr);
-            destination = [{x: arr[0][1], y: arr[0][2]}, {x: arr[1][1], y: arr[1][2]}, {x: arr[2][1], y: arr[2][2]}, {x: arr[3][1], y: arr[3][2]}];
+            var invmatrix = SVG.get(id).node.getCTM().inverse();
+            var invview = SVG.get('viewport').node.getCTM().inverse();
+            var pp = [
+                transformPoint(arr[0][1], arr[0][2], [invview, invmatrix]),
+                transformPoint(arr[1][1], arr[1][2], [invview, invmatrix]),
+                transformPoint(arr[2][1], arr[2][2], [invview, invmatrix]),
+                transformPoint(arr[3][1], arr[3][2], [invview, invmatrix])
+                ];
+            baselinePoints = [
+                transformPoint(pp[0][0], pp[0][1], [SVG.get(id).node.getCTM()]),
+                transformPoint(pp[1][0], pp[1][1], [SVG.get(id).node.getCTM()]),
+                transformPoint(pp[2][0], pp[2][1], [SVG.get(id).node.getCTM()]),
+                transformPoint(pp[3][0], pp[3][1], [SVG.get(id).node.getCTM()])
+                ];
+
+            destination = [{x: pp[0][0], y: pp[0][1]}, {x: pp[1][0], y: pp[1][1]}, {x: pp[2][0], y: pp[2][1]}, {x: pp[3][0], y: pp[3][1]}];
             var path_destination = distort_path(path_source,source,destination);
             SVG.get(id).plot(path_destination);
         });
         circles[i].on('dragend', function(event){
-                //enablePan();
+                shift = false;
                 togglePanZoom();
                 event.stopPropagation();
                 event.preventDefault();
@@ -973,14 +1220,12 @@ buildCirclePoint = function(parent,r, stroke, fill){
     return circle;
 }
 
-updatePathArray = function(points){
-    var temp = points.subpath.slice(1,points.subpath.length-1);
-    if(points.path[Number(points.end)][0] == 'Z')
-        var e = 1;
-    else
-        var e = 0;
-    points.path = points.path.slice(0, Number(points.start)).concat(temp).concat(points.path.slice(Number(points.end) + 1 - e));
-    points.end = Number(points.start) + temp.length - 1 + e;
+updatePoint = function(points,p,x,y,id){
+    var invview = SVG.get('viewport').node.getCTM().inverse();
+    var invmatrix = SVG.get(id).node.getCTM().inverse();
+    var draggedHinge = transformPoint(clone(points.subpath[p][x]), clone(points.subpath[p][y]), [invview, invmatrix]);
+    points.path[points.start+p-1][x] = clone(draggedHinge[0]);
+    points.path[points.start+p-1][y] = clone(draggedHinge[1]);
     return points;
 }
 
@@ -988,32 +1233,65 @@ buildAttractors = function(p, points, hinge, id, attrs, midds){
     var index = {};
     var attr1, attr2, line1, line2;
     if(points.subpath[p][0] == 'C'){
-        attr1 = buildCirclePoint(hinge, 5, "#FFFFFF", '#993300');
+        attr1 = buildCirclePoint(hinge, 10, "#FFFFFF", '#993300');
         attr1.cx(points.subpath[p][3]).cy(points.subpath[p][4]).attr("no", "1");
         line1 = hinge.line(points.subpath[p][3], points.subpath[p][4], points.subpath[p][5], points.subpath[p][6]).stroke({color: '#000000', width: 1}).opacity(0.6);
         var x = 5, y = 6;
-        index.attr1 = {p: p, x: 3, y:4 , attr: attr1, line: line1};
+        index.attr1 = {p: p, x: 3, y:4 , attr: attr1, line: line1, o: 2, p2: p, x2: 5, y2: 6};
     }
     else { var x = 1, y = 2; }
     if(points.subpath[p + 1][0] == 'C'){
-        attr2 = buildCirclePoint(hinge, 5, "#FFFFFF", '#993300');
+        attr2 = buildCirclePoint(hinge, 10, "#FFFFFF", '#993300');
         attr2.cx(points.subpath[p+1][1]).cy(points.subpath[p+1][2]).attr("no", "2");
         line2 = hinge.line(points.subpath[p+1][1], points.subpath[p+1][2], points.subpath[p][x], points.subpath[p][y]).stroke({color: '#000000', width: 1}).opacity(0.6);
-        index.attr2 = {p: p+1, x: 1, y:2, attr: attr2, line: line2};
+        index.attr2 = {p: p+1, x: 1, y:2, attr: attr2, line: line2, o: 1, p2: p, x2: x, y2: y};
     }
     var k = Object.keys(index);
     for(i in k){
         index[k[i]].attr.draggable();
         var shift = false;
+        var move = 0;
         index[k[i]].attr.on('mousedown', function(e){
             if(e.shiftKey)
                 shift = true;
+            this.opacity(0.3);
+            move = this.cx();
         });
         index[k[i]].attr.on('mouseover', function(e){
             this.opacity(1);
         });
         index[k[i]].attr.on('mouseout', function(e){
             this.opacity(0.6);
+        });
+        index[k[i]].attr.on('dblclick', function(e){
+            console.log('dblclick')
+            var n = attrs[p]["attr"+this.attr("no")];
+            if(n.p == 1){
+                points.subpath[n.p][0] = 'M'
+                points.path[points.start+n.p-1][0] = 'M'
+            }
+            else{
+                points.subpath[n.p][0] = 'L'
+                points.path[points.start+n.p-1][0] = 'L'
+            }
+            points.subpath[n.p][1] = points.subpath[n.p][5]
+            points.subpath[n.p][2] = points.subpath[n.p][6]
+            points.subpath[n.p].splice(3,4);
+            points.path[points.start+n.p-1][1] = points.path[points.start+n.p-1][5]
+            points.path[points.start+n.p-1][2] = points.path[points.start+n.p-1][6]
+            points.path[points.start+n.p-1].splice(3,4);
+            if(n.x == 3){
+                attrs[p-1].attr2.attr.remove();
+                attrs[p-1].attr2.line.remove();
+            }
+            else{
+                attrs[p+1].attr1.attr.remove();
+                attrs[p+1].attr1.line.remove();
+            }
+            this.remove();
+            n.line.remove();
+            SVG.get(id).plot(points.path);
+            saveItemLocalisation(id);
         });
         index[k[i]].attr.on('beforedrag', function(event){
             disablePan();
@@ -1029,64 +1307,72 @@ buildAttractors = function(p, points, hinge, id, attrs, midds){
             var n = attrs[p]["attr"+this.attr("no")];
             points.subpath[n.p][n.x] = this.cx();
             points.subpath[n.p][n.y] = this.cy();
-            points = updatePathArray(points);
+            points = updatePoint(points, n.p,n.x,n.y,id);
             SVG.get(id).plot(points.path);
             attrs[p]["attr"+this.attr("no")].line.attr("x1", this.cx()).attr("y1", this.cy()); 
             positionMidd(midds[p-2+Number(this.attr("no"))], p-2+Number(this.attr("no")), points);  
         });
         index[k[i]].attr.on('dragend', function(event){
-            //enablePan();
+            if(move != this.cx()){
+                saveItemLocalisation(id);
+                shift = false;
+                rebuildSelectorPoints(id);
+            }
             togglePanZoom();
             event.stopPropagation();
             event.preventDefault();
-            saveItemLocalisation(id);
-            shift = false;
         });
     }
 
     return index;
 }
 
-buildHinge = function(p, points, hinge, midd, id, hinges, midds, attr){
+buildHinge = function(p, points, hinge, midd, id, hinges, midds, attr, no){
     if(points.subpath[p][0] == 'M'){
-        var newhinge = buildCirclePoint(hinge, 5, "#FFFFFF", '#007fff');
+        var newhinge = buildCirclePoint(hinge, 10, "#FFFFFF", '#007fff').attr("type", "hinge").attr("hingeM", "hingeM");
         if(points.subpath[p+1][0] != 'C')
             var l = hinge.line(points.subpath[p][1],points.subpath[p][2],points.subpath[p+1][1],points.subpath[p+1][2]).stroke({color: '#007fff', width: 3}).opacity(0.6).attr("id", "hingeLine");
         else
             var l = hinge.line(points.subpath[p][1],points.subpath[p][2],points.subpath[p+1][5],points.subpath[p+1][6]).stroke({color: '#007fff', width: 3}).opacity(0.6).attr("id", "hingeLine");
     }
     else
-        var newhinge = buildCirclePoint(hinge, 5, "#FFFFFF", "#000000");
+        var newhinge = buildCirclePoint(hinge, 10, "#FFFFFF", "#000000").attr("type", "hinge");
     
     if(points.subpath[p][0] == 'C') { var x = 5, y = 6; }
     else{ var x = 1, y = 2; }
-
     if(points.subpath[p][0] == 'C' || points.subpath[p+1][0] == 'C')
         attr[p] = buildAttractors(p, points, hinge, id, attr, midds);
-
     newhinge.cx(points.subpath[p][x]).cy(points.subpath[p][y]);
     newhinge.draggable();
     var shift = false;
+    var move = 0;
     newhinge.on('mousedown', function(e){
         if(e.shiftKey)
             shift = true;
+        this.opacity(0.3);
+        move = this.cx();
     });
     newhinge.on('mouseover', function(e){
-        this.opacity(1);
+        this.opacity(0.8);
     });
     newhinge.on('mouseout', function(e){
         this.opacity(0.6);
     });
     newhinge.on('dblclick', function(e){
-        points.subpath.splice(p,1);
-        if(p == 1)
-            points.subpath[1][0] = 'M';
-        points = updatePathArray(points);
+        //points.subpath.splice(p,1);
+        points.path.splice(points.start+p-1,1);
+        if(p == 1){
+            if(points.path[points.start][0] == 'C'){
+                points.path[points.start][1] = points.path[points.start][5]
+                points.path[points.start][2] = points.path[points.start][6]
+                points.path[points.start].splice(3,4);
+            }
+            //points.subpath[1][0] = 'M';
+            points.path[points.start][0] = 'M';
+        }
         SVG.get(id).plot(points.path);
         saveItemLocalisation(id);      
-        SVG.get('box_'+id).remove();
-        var sel = buildSelectorPoints(SVG.get("svgEditor"), id);
-        global_oro_variables.selected.add(sel);
+        rebuildSelectorPoints(id);
     });
     newhinge.on('beforedrag', function(event){
         disablePan();
@@ -1113,6 +1399,7 @@ buildHinge = function(p, points, hinge, midd, id, hinges, midds, attr){
                 points.subpath[n.p][n.y] = newy;
                 attr[p].attr1.attr.cx(newx).cy(newy);
                 attr[p].attr1.line.attr("x1", newx).attr("y1", newy).attr("x2", this.cx()).attr("y2", this.cy());
+                points = updatePoint(points, n.p,n.x,n.y,id);
             }
             if(attr[p].attr2){
                 var n = attr[p].attr2;
@@ -1122,13 +1409,13 @@ buildHinge = function(p, points, hinge, midd, id, hinges, midds, attr){
                 points.subpath[n.p][n.y] = newy;
                 attr[p].attr2.attr.cx(newx).cy(newy);
                 attr[p].attr2.line.attr("x1", newx).attr("y1", newy).attr("x2", this.cx()).attr("y2", this.cy());
+                points = updatePoint(points, n.p,n.x,n.y,id);
             }
         }
         points.subpath[p][x] = this.cx();
         points.subpath[p][y] = this.cy();
-        points = updatePathArray(points);
+        points = updatePoint(points, p,x,y,id);
         SVG.get(id).plot(points.path);
-
         if(points.subpath[p-1] != 'null'){
             if(points.subpath[p-1][0] == 'M')
                  SVG.get('hingeLine').attr("x2", this.cx()).attr("y2", this.cy());
@@ -1143,14 +1430,15 @@ buildHinge = function(p, points, hinge, midd, id, hinges, midds, attr){
             SVG.get('hingeLine').attr("x1", this.cx()).attr("y1", this.cy());
     });
     newhinge.on('dragend', function(event){
-        //enablePan();
+        if(move != this.cx()){
+            saveItemLocalisation(id);
+            shift = false;
+            rebuildSelectorPoints(id);
+        }
         togglePanZoom();
         event.stopPropagation();
         event.preventDefault();
-        saveItemLocalisation(id);
-        shift = false;
     });
-
     return newhinge;
 }
 
@@ -1164,32 +1452,71 @@ positionMidd = function(newmidd, p, points){
     newmidd.cx(points.subpath[p][x] + (points.subpath[p+1][x2] - points.subpath[p][x]) /2).cy(points.subpath[p][y] + (points.subpath[p+1][y2] - points.subpath[p][y]) / 2);
 }
 
-buildMidd = function(p, points, hinge, midd, id, hinges, midds){
-    var newmidd = buildCirclePoint(midd, 5, '#000000', "#FFFFFF");
+buildMidd = function(p, points, hinge, midd, id, hinges, midds, attrs, no){
+    var newmidd = buildCirclePoint(midd, 7, '#000000', "#FFFFFF");
     positionMidd(newmidd, p, points);
-    var shift = false;
     newmidd.on('mouseover', function(e){
-        this.opacity(1);
+        this.opacity(0.8);
     });
     newmidd.on('mouseout', function(e){
         this.opacity(0.6);
     });
     newmidd.on('mousedown', function(e){
-        if(e.shiftKey)
-            shift = true;
-        points.subpath.splice(p+1, 0, ['L', this.cx(), this.cy()]);
-        points = updatePathArray(points);
+        var invview = SVG.get('viewport').node.getCTM().inverse();
+        var invmatrix = SVG.get(id).node.getCTM().inverse();
+        var pp = transformPoint(this.cx(), this.cy(), [invview, invmatrix]);
+        if(e.shiftKey){
+            var d = 10;
+            if(points.path[points.start+p-1][0] == 'C'){
+                var at1 = points.path[points.start+p][1];
+                var at2 = points.path[points.start+p][2];
+                var at11 = points.subpath[p-1][1];
+                var at22 = points.subpath[p-1][2];
+            }
+            else{
+                var at1 = points.path[points.start+p-1][1] + d;
+                var at2 = points.path[points.start+p-1][2] - d;
+                var at11 = points.subpath[p][1] + d;
+                var at22 = points.subpath[p][2] - d;
+            }
+            if(points.path[points.start+p][0] == 'C'){
+                points.path[points.start+p][1] = pp[0] + d;
+                points.path[points.start+p][2] = pp[1] - d;
+            }
+            else{
+                if(points.path[points.start+p][0] != 'Z'){
+                    points.path[points.start+p][0] = 'C';
+                    points.path[points.start+p][5] = points.path[points.start+p][1];
+                    points.path[points.start+p][6] = points.path[points.start+p][2];
+                    points.path[points.start+p][1] = pp[0] + d;
+                    points.path[points.start+p][2] = pp[1] - d;
+                    points.path[points.start+p][3] = points.path[points.start+p][5] - d;
+                    points.path[points.start+p][4] = points.path[points.start+p][6] - d;
+                }
+                else{
+                    points.subpath.splice(p+1,0, ['C', this.cx() + d, this.cy() - d, points.subpath[p+1][5] - d, points.subpath[p+1][6] - d, points.subpath[p+1][1], points.subpath[p+1][2]]);
+                    points.path.splice(points.start+p, 0, ['C', pp[0] + d, pp[1] - d, points.path[points.start][1] - d, points.path[points.start][2] - d, points.path[points.start][1], points.path[points.start][2]]);
+                }
+            }
+            points.subpath.splice(p+1,0, ['C', at11, at22, this.cx() - d, this.cy() - d, this.cx(), this.cy()]);
+            points.path.splice(points.start+p, 0, ['C', at1, at2, pp[0] - d, pp[1] - d, pp[0], pp[1]]);
+            attrs[p] = buildAttractors(p,points, hinge, id, attrs, midds);
+            attrs[p+1] = buildAttractors(p+1,points, hinge, id, attrs, midds);
+            attrs[p+2] = buildAttractors(p+2,points, hinge, id, attrs, midds);
+        }
+        else{
+            points.subpath.splice(p+1, 0, ['L', this.cx(), this.cy()]);
+            points.path.splice(points.start+p, 0, ['L', pp[0], pp[1]]);
+        }
         SVG.get(id).plot(points.path);
         saveItemLocalisation(id);
-        SVG.get('box_'+id).remove();
-        var sel = buildSelectorPoints(SVG.get("svgEditor"), id);
-        global_oro_variables.selected.add(sel);
+        rebuildSelectorPoints(id);
     });
     return newmidd;
 }
 
-buildSubPathPoints = function(points, hinge, midd, id){
-    var hinges = [], midds = [], attr = [];
+buildSubPathPoints = function(points, hinge, midd, id, hinges, midds, attr, no){
+    //var hinges = [], midds = [], attr = [];
     if(points.subpath[points.subpath.length-1][0] == 'Z'){
         points.subpath.splice(0,0,points.subpath[points.subpath.length-2])
         points.subpath.splice(points.subpath.length-1,1,points.subpath[1])
@@ -1198,42 +1525,115 @@ buildSubPathPoints = function(points, hinge, midd, id){
         points.subpath.splice(0,0,'null')
         points.subpath.push('null')
     }
-    //points.subpath = positionPath(points.subpath);
     for(p = 1; p < points.subpath.length-1; p++){
-        hinges[p] = buildHinge(p, points, hinge, midd, id, hinges, midds, attr);
-        midds[p] = buildMidd(p, points, hinge, midd, id, hinges, midds);
+        hinges[p] = buildHinge(p, points, hinge, midd, id, hinges, midds, attr, no);
+        midds[p] = buildMidd(p, points, hinge, midd, id, hinges, midds, attr, no);
     }
 }
-
-positionPath = function(pathArray){
-    for(p in pathArray){
-        if(pathArray[p][0] != 'Z'){
-            var point = positionPoint(pathArray[p][1], pathArray[p][2]);
-            pathArray[p][1] = point.x;
-            pathArray[p][2] = point.y;
-        }
-    }
-    return pathArray;
-}
- 
-buildSelectorPoints = function(parent, id){
-    var subpaths = getSubPaths(SVG.get(id));
-    console.log(subpaths);
-    var selector = parent.group().attr("id", "box_"+id).attr("selected", id).attr("type", 'pathPoints');
+allpoints = [];
+subpaths = []
+buildSelectorPoints = function(id){
+    baselinePoints = [];
+    var allhinges = [], allmidds = [], allattrs = [];
+    subpaths = getSubPaths(SVG.get(id));
+    var selector = SVG.get("svgEditor").group().attr("id", "box_"+id).attr("selected", id).attr("type", 'pathPoints');
     var midd = selector.group().attr("id", "middPoints");
     var hinge = selector.group().attr("id", "hingePoints");
     for(var p in subpaths){
-        //subpaths[p].subpath = positionPath(subpaths[p].subpath);
-        buildSubPathPoints(subpaths[p], hinge, midd, id);
+        allhinges[p] = [];
+        allmidds[p] = [];
+        allattrs[p] = [];
+        subpaths[p].subpath = transformPath(subpaths[p].subpath, id);
+        buildSubPathPoints(subpaths[p], hinge, midd, id, allhinges[p], allmidds[p], allattrs[p], p);
+        allpoints[p] =  allhinges[p].concat(allmidds[p]).concat(allattrs[p]);
     }
+    createbaselinePoints();
+    positionSelectorPoints(subpaths);
     return selector;
+}
+
+rebuildSelectorPoints = function(id){
+    global_oro_variables.selected.members.splice(global_oro_variables.selected.members.indexOf(SVG.get('box_'+id)),1);
+    SVG.get('box_'+id).remove();
+    buildSelectorPoints(id);
+    global_oro_variables.selected.add(SVG.get('box_'+id));
+}
+
+createbaselinePoints = function(){
+    for(i in allpoints){
+        baselinePoints[i] = [];
+        for(p in allpoints[i]){
+            if(allpoints[i][p].attr1 || allpoints[i][p].attr2){
+                baselinePoints[i][p] = {}
+                if(allpoints[i][p].attr1)
+                    baselinePoints[i][p].attr1 = [allpoints[i][p].attr1.attr.cx(), allpoints[i][p].attr1.attr.cy()];
+                if(allpoints[i][p].attr2)
+                    baselinePoints[i][p].attr2 = [allpoints[i][p].attr2.attr.cx(), allpoints[i][p].attr2.attr.cy()];
+            }
+            else
+                baselinePoints[i][p] = [allpoints[i][p].cx(), allpoints[i][p].cy()];
+        }
+    }
+}
+
+positionSelectorPoints = function(subpaths){
+    var view = SVG.get('viewport').node.getCTM();
+    for(i in allpoints)
+        for(p in allpoints[i]){
+            if(allpoints[i][p].attr1 || allpoints[i][p].attr2){
+                if(allpoints[i][p].attr1){
+                    var pp = [clone(baselinePoints[i][p].attr1[0]), clone(baselinePoints[i][p].attr1[1])];
+                    pp = transformPoint(pp[0], pp[1], [view]);
+                    allpoints[i][p].attr1.attr.cx(pp[0]).cy(pp[1]);
+                    allpoints[i][p].attr1.line.attr("x1",pp[0]).attr("y1",pp[1]);
+                    allpoints[i][p].attr1.line.attr("x2", allpoints[i][allpoints[i][p].attr1.p2].cx()).attr("y2", allpoints[i][allpoints[i][p].attr1.p2].cy());
+                    if(subpaths){
+                        subpaths[i].subpath[allpoints[i][p].attr1.p][allpoints[i][p].attr1.x] = pp[0];
+                        subpaths[i].subpath[allpoints[i][p].attr1.p][allpoints[i][p].attr1.y] = pp[1];
+                    }
+                }
+                if(allpoints[i][p].attr2){
+                    var pp = [clone(baselinePoints[i][p].attr2[0]), clone(baselinePoints[i][p].attr2[1])];
+                    pp = transformPoint(pp[0], pp[1], [view]);
+                    allpoints[i][p].attr2.attr.cx(pp[0]).cy(pp[1]);
+                    allpoints[i][p].attr2.line.attr("x1",pp[0]).attr("y1",pp[1]);
+                    allpoints[i][p].attr2.line.attr("x2", allpoints[i][allpoints[i][p].attr2.p2].cx()).attr("y2", allpoints[i][allpoints[i][p].attr2.p2].cy());
+                    if(subpaths){
+                        subpaths[i].subpath[allpoints[i][p].attr2.p][allpoints[i][p].attr2.x] = pp[0];
+                        subpaths[i].subpath[allpoints[i][p].attr2.p][allpoints[i][p].attr2.y] = pp[1];
+                    }
+                }
+            }
+            else{
+                var pp = [clone(baselinePoints[i][p][0]), clone(baselinePoints[i][p][1])];
+                pp = transformPoint(pp[0], pp[1], [view]);
+                allpoints[i][p].cx(pp[0]).cy(pp[1]);
+                if(allpoints[i][p-1] && allpoints[i][p-1].attr("hingeM"))
+                    SVG.get('hingeLine').attr("x1", allpoints[i][p-1].cx()).attr("y1", allpoints[i][p-1].cy()).attr("x2", pp[0]).attr("y2", pp[1])
+                if(subpaths){
+                    if(allpoints[i][p].attr("type") == "hinge"){
+                        if(subpaths[i].subpath[p][0] != 'C'){
+                            subpaths[i].subpath[p][1] = pp[0];
+                            subpaths[i].subpath[p][2] = pp[1];
+                        }
+                        else{
+                            subpaths[i].subpath[p][5] = pp[0];
+                            subpaths[i].subpath[p][6] = pp[1];
+                        }/*
+                        if(subpaths[i].subpath[p-1][0] == 'M'){
+                            SVG.get('hingeLine').attr("x1", subpaths[i].subpath[p-1][1]).attr("y1", subpaths[i].subpath[p-1][2]).attr("x2", pp[0]).attr("y2", pp[1])
+                        }*/
+                    }
+                }
+            }
+        }
 }
 
 buildSelectorLocked = function(id){
     var parent = SVG.get('svgEditor');
     var box = SVG.get(id).bbox();
     var selector = parent.group().attr("id","locked_"+id).attr("selected",id).attr("type","locked").opacity(0.7);
-    var path = 'M'+box.x+','+box.y+'L'+(box.x+box.width)+','+box.y+'L'+(box.x+box.width)+','+(box.y+box.height)+'L'+box.x+','+(box.y+box.height)+'z';
+    var path = 'M'+box.x+','+box.y+'L'+(box.x+box.width)+','+box.y+'L'+(box.x+box.width)+','+(box.y+box.height)+'L'+box.x+','+(box.y+box.height)+'Z';
     var rect = selector.path(path).stroke({color: random_pastels(), width: 2, dasharray: "2,2"}).fill("none").attr("id","container_path_"+id);
     //var rect1 = selector.rect(box.width,box.height).stroke({color: random_pastels(), width: 2, dasharray: "2,2"}).move(box.x,box.y).fill("none");
     positionSelectorL(id);
@@ -1316,7 +1716,6 @@ showDatGui = function(){
 saveItemLocalisation = function(id){
     var item = SVG.get(id);
     var upd = {}, val;
-    //todo: checkPathType
     if(item.type == 'path'){
         if(checkPathType(item) == 'simple'){
             val = JSON.stringify(pathArraySvgOro(item.array.value));
@@ -1326,13 +1725,17 @@ saveItemLocalisation = function(id){
             val = item.attr("d");
             upd.type = 'complex_path';
         }
-        upd.closed = 'true';
+        var p = item.array.value
+        if(p[p.length-1][0] == "Z")
+            upd.closed = 'true';
+        else
+            upd.closed = 'false';
     }
     else
         if(item.attr("type") == "text")
             val = item.attr('x') + ',' + item.attr('y');
         else
-            if(item.attr("type") == "rasterImage")
+            if(item.attr("type") == "rasterImage" || item.attr("type") == 'formulae')
                 val = item.x() + ',' + item.y() + ',' + item.width() + ',' + item.height();
     upd["pointList"] = val;
     Meteor.call('update_collection', "Item", [id], upd);
@@ -1381,19 +1784,32 @@ updatePointList = function(item, points){
         item.move(points[0],points[1]);
     }
     else
-        if(item.attr("type") == "rasterImage"){
+        if(item.attr("type") == "rasterImage" || item.attr("type") == 'formulae'){
             points = points.split(",");
             item.move(points[0],points[1]).size(points[2],points[3]);
         }
-        else{
-            if(item.attr("type") == 'simple_path')
-                if(item.attr("closed") == "true")
-                    points = split_oro_path_points(points);
+        else
+            if(item.attr("type") == "embedediFrame"){
+                points = points.split(",");
+                item.attr("x", points[0]).attr("y", points[1]).attr("width", points[2]).attr("height", points[3]);
+                item.node.childNodes[0].setAttribute("width",points[2]);
+                item.node.childNodes[0].setAttribute("height",points[3]);
+            }
+            else
+                if(item.attr("type") == "embededHtml"){
+                    points = points.split(",");
+                    item.attr("x", points[0]).attr("y", points[1]).attr("width", points[2]).attr("height", points[3]);
+                }
                 else
-                    points = split_oro_path_points(points, true);
-            item.plot(points);
+                    {
+                    if(item.attr("type") == 'simple_path')
+                        if(item.attr("closed") == "true")
+                            points = split_oro_path_points(points);
+                        else
+                            points = split_oro_path_points(points, true);
+                    item.plot(points);
 
-        }
+                }
     if(SVG.get("box_"+item.attr("id")))
         positionSelector(item.attr("id"));
 }
@@ -1421,15 +1837,11 @@ updateItem = function(id, fields){
                 console.log('parent group does not exist');
         else
             var parent = item.parent;
-        item.remove();
-        build_group_client(parent, Item.findOne({_id: id}));
+        removeItem(id);
+        build_item(parent, Item.findOne({_id: id}));
     }
     else
-        if(SVG.get(id).type == 'foreignObject'){
-            SVG.get(id).remove();
-            build_item(SVG.get(id).parent, Item.findOne({_id:id}));
-        }
-        else{
+        {
             if(fields.palette)
                 updatePalette(item, fields.palette);
             if(fields.font)
@@ -1439,16 +1851,35 @@ updateItem = function(id, fields){
                 //if(item.type == "text"){
                     item.text(fields.text);
                 }
-                else{
-                    //if(item.type == "image")
+                else
                     if(item.attr("type") == 'image')
                         item.attr("href", fields.text);
-                }
+                    else
+                        if(item.attr("type") == 'embedediFrame'){
+                            item.attr("src", fields.text);
+                            item.node.childNodes[0].setAttribute("src", fields.text);
+                        }
+                        else
+                            if(item.attr("type") == 'embededHtml'){
+                                $(item.node).html('');
+                                item.appendChild("div", {innerHTML: fields.text});
+                            }
             }
             if(fields.pointList)
                 updatePointList(item, fields.pointList);
             if(fields.groupId){
                 SVG.get(fields.groupId).add(SVG.get(id));
+            }
+            if(fields.closed){
+                var p = SVG.get(id).array.value;
+                if(fields.closed == 'true' && p[p.length-1][0] != 'Z'){
+                    p.push(['Z']);
+                    SVG.get(id).plot(p).attr("closed", "true");
+                }
+                if(fields.closed == 'false' && p[p.length-1][0] == 'Z'){
+                    p.pop();
+                    SVG.get(id).plot(p).attr("closed", "false");
+                }
             }
     }
 }
@@ -1469,6 +1900,7 @@ deselectItem = function(id, notremove){
     if(SVG.get("box_"+id)){
         var index = global_oro_variables.selected.members.indexOf(SVG.get("box_"+id));
         if( index != -1){
+            SVG.get(id).draggable();
             SVG.get(id).fixed();
             global_oro_variables.selected.members.splice(index,1);  
             SVG.get("box_"+id).remove();
@@ -1507,7 +1939,7 @@ build_item = function(g,it){
             updateFont(item, it.font);
     }
     else
-        if(type == 'rasterImage'){
+        if(type == 'rasterImage' || type == 'formulae'){
             var points = split_oro_points(it.pointList);
             var item = g["image"](it.text).attr("id", it._id).move(points[0],points[1]).size(points[2],points[3]);
         }
@@ -1539,8 +1971,18 @@ build_item = function(g,it){
                         if(type == 'embedediFrame')
                             item.appendChild('iframe', {id: 'embedediFrame_'+it._id, src: it.text, frameborder: "0", xmlns:"http://www.w3.org/1999/xhtml", width: points[2], height: points[3]});
                         if(type == 'embededCanvas')
-                            item.appendChild('xhtml:canvas', {id: 'embededCanvas_'+it._id, width: points[2], height: points[3]});
+                            item.appendChild('canvas', {id: 'embededCanvas_'+it._id, width: points[2], height: points[3]});
                     }
+                    else
+                        if(type == 'embededHtml'){
+                            var points = split_oro_points(it.pointList);
+                            var item = g.foreignObject(points[2],points[3]).attr("id", it._id).move(points[0], points[1]).appendChild("div", {id: "html_"+it._id, innerHTML: it.text});
+                        }
+                        else
+                            if(type == 'nestedSvg'){
+                                var points = split_oro_points(it.pointList);
+                                var item = g.nested().attr("id", it._id).attr("x", points[0]).attr("y", points[1]).attr("width", points[2]).attr("height", points[3]);
+                            }
         item.attr("type", it.type);    
         updatePalette(item, it.palette);
         item.on('click', function(event){
@@ -1564,10 +2006,8 @@ build_item = function(g,it){
                         if(global_oro_variables.selected.members.length == 1)
                             if(global_oro_variables.selected.members[0].attr("type") != "simple"){
                                 var itemid = global_oro_variables.selected.members[0].attr("selected");
-                                var box = SVG.get(itemid).bbox();
-                                id = global_oro_variables.selected.members[0].attr("id");
-                                SVG.get(id).remove();
-                                global_oro_variables.selected.members[0] = buildSelectorSimple(SVG.get("svgEditor"), box.width, box.height, box.x, box.y, itemid);
+                                SVG.get('box_'+itemid).remove();
+                                global_oro_variables.selected.members[0] = buildSelectorSimple(SVG.get("svgEditor"), itemid);
                             }
                         var results = buildSelectorSimple(SVG.get("svgEditor"), this.attr("id"));
                         global_oro_variables.selected.add(results);
@@ -1577,7 +2017,7 @@ build_item = function(g,it){
                 }
                 else{
                         deselect();
-                        if(this.attr("type").indexOf('para') == -1){
+                        if(['embedediFrame', 'para_simple_path', 'para_complex_path', 'embededCanvas', 'embededHtml'].indexOf(this.attr("type")) == -1){
                             var results = buildSelector(SVG.get("svgEditor"), this.attr("id"), dragg);
                             this.draggable();
                         }
@@ -1637,11 +2077,27 @@ removeFile = function(id){
     Meteor.call('remove_document', 'File', id);
 }
 
-build_group_client = function (g, group){
+build_group_client = function (g, group, subgroups){
     var items = Item.find({groupId: group._id}, {sort: {ordering:1}}).fetch();
-    if(items.length > 0)
-        for(var i in items)
-            build_item(g, items[i]);
+    if(items.length > 0){
+        //if(typeof subgroups === 'undefined' || subgroups.length > 0) //add subgroups when calling
+            for(var i in items)
+                build_item(g, items[i]);
+        /*
+        else{
+            var all = items.concat(subgroups);
+            all.sort(function(a, b){
+                return a.ordering - b.ordering
+            })
+            console.log(JSON.stringify(all));
+            for(i in all){
+                if(all[i].pointList)
+                    build_item(g, all[i]);
+                else
+                    recursive_group_client(g, all[i]);
+            }
+        }*/
+    }
 }
 
 recursive = 0;
@@ -1649,12 +2105,23 @@ recursive_group_client = function (parent, group, linkedgs){
     //console.log("recursive: ", recursive);
     //if(recursive > 500) return;
     //recursive = recursive + 1;
+
     var subgroups = Group.find({ groupId: group._id }, { sort: { ordering:1 }}).fetch();
     var subparent = parent.group().attr("id", group._id).attr("type", group.type);
     if(group.uuid)
         subparent.attr("function", group.uuid);
     if(group.transparency)
         subparent.opacity(group.transparency);
+
+    // todo: if linked groups, ordering should include them
+    //if(parent.get(group.ordering) && parent.get(group.ordering) != subparent){
+        //subparent.before(parent.get(group.ordering));
+    //    parent.each(function(i,children){
+    //        if(parent.index(this) == group.ordering && this != subparent)
+    //            this.front();
+    //    });
+    //}
+
     var linkedgroups = null;
     //see if it has links for its descendants:
     var linked = Dependency.find({fileId1: group._id, type:2}).fetch();
@@ -1717,7 +2184,7 @@ recursive_group_client = function (parent, group, linkedgs){
         }
     }
     else
-        build_group_client(subparent, group);
+        build_group_client(subparent, group); // ,subgroups
     
     if(group.type == "menu"){
         //id for menu_group.common: Fzs7EZBDemi6kXphg
@@ -2025,13 +2492,13 @@ getSubPaths = function(path){
     var newarr = [];
     for(i in arr){
         if(arr[i][0] == 'M'){
-            newarr.push({path: arr, start: i});
-            newarr[newarr.length-1].subpath = [ arr[i] ];
+            newarr.push({path: arr, start: Number(i)});
+            newarr[newarr.length-1].subpath = [ clone(arr[i]) ];
         }
         else{
             var len = newarr[newarr.length-1].subpath.length;
-            newarr[newarr.length-1].subpath.push(arr[i]);
-            newarr[newarr.length-1].end = i;
+            newarr[newarr.length-1].subpath.push(clone(arr[i]));
+            newarr[newarr.length-1].end = Number(i);
         }
     }
     return newarr;
@@ -2171,7 +2638,6 @@ cloneItem = function cloneItem(it, groupId){
     delete it._id;
     it.groupId = groupId;
     it.selected = 'null';
-    console.log(it);
     Meteor.call('insert_document', 'Item', it, function(err, res){
         console.log(err); console.log('Item: '+res);
     });
@@ -2311,13 +2777,13 @@ groupBbox = function(group){
 
 paraSquare = function(obj){
     var points = [[[obj.x,obj.y],[obj.x+obj.width,obj.y],[obj.x+obj.width,obj.y+obj.width],[obj.x,obj.y+obj.width]]];
-    console.log(points);
     return JSON.stringify(points);
 }
 
-paraRect = function(obj){
+paraRect = function(obj, val){
     var delta = Math.sqrt(Math.sqrt(Math.sqrt(2)));
     var x = Number(obj.x), y = Number(obj.y), w = Number(obj.width), h = Number(obj.height), rx = Number(obj.rx), ry = Number(obj.ry);
+    if(typeof val != 'undefined' && obj.maintainRatio)
     var points =
         'M'+ x + ' ' + (y+ry)
             + 'C' + x + ' ' + (y+ry-ry/2*delta) + ',' + (x+rx-rx/2*delta) + ' ' + y + ','
@@ -2340,17 +2806,6 @@ paraEllipse = function(obj, val){
     var x = Number(obj.x), y = Number(obj.y), rx,ry;
     rx = Number(obj.rx);
     ry = Number(obj.ry);
-    if(typeof val != 'undefined' && obj.maintainRatio)
-        if(Number(val))
-            if(rx == val)
-                ry = rx;
-            else
-                rx = ry;
-        else
-            if(val == "rx")
-                ry = rx;
-            else
-                rx = ry;
     var w = rx*2, h = ry*2;
     var points = 
         'M' + (x+w/2) + ' ' + y
@@ -2367,4 +2822,8 @@ paraEllipse = function(obj, val){
 
 paraCircle = function(obj){
     return paraEllipse(obj);
+}
+
+paraFormulae = function(latex){
+    return 'http://latex.codecogs.com/svg.latex?'+latex;
 }

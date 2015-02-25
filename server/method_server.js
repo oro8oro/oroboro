@@ -32,10 +32,10 @@ addAtributes = function addAtributes(palette){
 }
 
 build_item = function build_item(item){
-    if(item.type == 'rasterImage'){
+    if(item.type == 'rasterImage' || item.type == 'formulae'){
             var points = split_oro_points(item.pointList);
             var itemscript = '<image xlink:href="' + item.text + '" id="' + item._id + '" height="' + points[3] + '" width="' + points[2] + '" x="' + points[0] + '" y="' + points[1] + '"/>';
-        }
+    }
         else 
             if(item.type == 'text'){
                 var points = item.pointList.split(",");
@@ -75,14 +75,23 @@ build_item = function build_item(item){
                         else
                             if(item.type == 'embedediFrame'){
                                 var points = split_oro_points(item.pointList);
-                                var itemscript = '<foreignObject x="' + points[0] + '" y="' + points[1] + '" height="' + points[3] + '" width="' + points[2] + '" id="' + item._id + '" type="' + item.type + '"><div xmlns="http://www.w3.org/1999/xhtml"><iframe xmlns="http://www.w3.org/1999/xhtml" width="' + points[2] + '" height="' + points[3] + '" src="' + item.text + '" frameborder="0" ></iframe></div></foreignObject>';
+                                var itemscript = '<foreignObject x="' + points[0] + '" y="' + points[1] + '" height="' + points[3] + '" width="' + points[2] + '" id="' + item._id + '" type="' + item.type + '"><div xmlns="http://www.w3.org/1999/xhtml"><iframe xmlns="http://www.w3.org/1999/xhtml" id="embedediFrame_' + item._id + '" width="' + points[2] + '" height="' + points[3] + '" src="' + item.text + '" frameborder="0" ></iframe></div></foreignObject>';
                             }
                             else
                                 if(item.type == 'embededCanvas'){
-                                    //var points = split_oro_points(item.pointList);
-                                    //var itemscript = '<foreignObject x="' + points[0] + '" y="' + points[1] + '" width="' + points[2] + '" height="' + points[3] + '" id="' + item._id + '" type="' + item.type + '"><div xmlns="http://www.w3.org/1999/xhtml"><xhtml:canvas width="' + points[2] + '" height="' + points[3] + '" ></xhtml:canvas></div></foreignObject>';
-                                    var itemscript = '';
-                                }   
+                                    var points = split_oro_points(item.pointList);
+                                    var itemscript = '<foreignObject x="' + points[0] + '" y="' + points[1] + '" width="' + points[2] + '" height="' + points[3] + '" id="' + item._id + '" type="' + item.type + '"><div xmlns="http://www.w3.org/1999/xhtml"><canvas xmlns="http://www.w3.org/1999/xhtml" id="embededCanvas_' + item._id + '" width="' + points[2] + '" height="' + points[3] + '" ></canvas></div></foreignObject>';
+                                }
+                                else
+                                    if(item.type == 'embededHtml'){
+                                        var points = split_oro_points(item.pointList);
+                                        var itemscript = '<foreignObject x="' + points[0] + '" y="' + points[1] + '" height="' + points[3] + '" width="' + points[2] + '" id="' + item._id + '" type="' + item.type + '"><div xmlns="http://www.w3.org/1999/xhtml" id="embededHtml_' + item._id + '">' + item.text + '</div></foreignObject>';
+                                    }
+                                    else
+                                        if(item.type == 'nestedSvg'){
+                                            var points = split_oro_points(item.pointList);
+                                            var itemscript = '<svg width="' + points[2] + '" height="' + points[3] + '" x="' + points[0] + '" y="' + points[1] + '" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="' + item._id + '"></svg>';
+                                        }
     return itemscript; 
 }
 
@@ -132,16 +141,17 @@ Meteor.methods({
             var result = '<svg width="' + file.width + '" height="' + file.height + '" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" onload="init()" id="' + fileId + '">';
             var end = '</svg>';
         }
-        scripts = '<script type="application/ecmascript" xlink:href="/require.js" /> ';
+        scripts = '';
+        //scripts = '<script type="application/ecmascript" xlink:href="/file/require.js" /> ';
         recursive_depends(fileId, 3);
         for(var s in js_dep){
             scripts = scripts + '<script type="application/ecmascript" xlink:href="' + '/file/' + js_dep[s] + '" />';
         }
         js_dep = [];
         if(file.script)
-            scripts = scripts + '<script type="application/javascript">function init(){' + file.script + '}</script>'
+            scripts = scripts + '<script type="application/javascript"> <![CDATA[ \n' + file.script + '\n ]]> </script>'
         else
-            scripts = scripts + '<script type="application/javascript">function init(){}</script>'
+            scripts = scripts + '<script type="application/javascript"> <![CDATA[ \nfunction init(){}\n ]]> </script>'
         result = result + scripts;
         //result = result + '<script type="application/javascript">' + file.script + '</script>';
         var groups = Group.find({fileId: fileId}, {sort: {ordering:1}}).fetch();

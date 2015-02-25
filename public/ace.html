@@ -3,7 +3,7 @@
 <head>
 <title>ACE</title>
 <style type="text/css" media="screen">
-    #editor { 
+    #editor1 { 
         position: absolute;
         top: 0;
         right: 0;
@@ -14,17 +14,32 @@
 </head>
 <body>
 
-<div id="editor">function foo(items) {
-    var x = "All this is syntax highlighted";
-    return x;
-}</div>
+<div id="editor1">
+// svg = SVG('KnNbAST2hzSa5mkBs').viewbox(0, 0, 1448, 1024);
+// svg object is defined
+
+</div>
     
 <script src="//cdn.jsdelivr.net/ace/1.1.8/min/ace.js" type="text/javascript" charset="utf-8"></script>
 <script>
-    var editor = ace.edit("editor");
+    
+    var editor = ace.edit("editor1");
     //editor.setTheme("ace/theme/monokai");
     editor.getSession().setMode("ace/mode/javascript");
     editor.getSession().setUseWrapMode(true);
+    editor.getSession().on('change', function() {
+        //console.log(editor.getSession().getValue())
+        parent.updater(editor.getSession().getValue());
+    });
+    editor.commands.addCommand({
+        name: 'Debug',
+        bindKey: {win: 'Ctrl-M',  mac: 'Command-M'},
+        exec: function(editor) {
+            parent.debug(editor);
+        },
+        readOnly: true // false if this command should not apply in readOnly mode
+    });
+
 </script>
 </body>
 </html>

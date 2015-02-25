@@ -4,6 +4,7 @@ TabularTables.Item = new Tabular.Table({
   collection: Item,
   pub: "tabular_items",
   columns: [
+    {data: "_id", title: "id"},
     //{data: "fileId", visible: false},
     //{data: "file", title: "File"},
     {data: "groupId", visible: false},

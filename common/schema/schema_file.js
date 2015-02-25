@@ -58,7 +58,8 @@ Schemas.File = new SimpleSchema({
                     {label: "png", value: "image/png"},
                     {label: "jpeg", value: "image/jpeg"},
                     {label: "css", value: "text/css"},
-                    {label: "txt", value: "text/plain"}
+                    {label: "txt", value: "text/plain"},
+                    {label: "stream", value: "application/octet-stream"}
                 ];
             }
         }
@@ -67,6 +68,7 @@ Schemas.File = new SimpleSchema({
         type: String,
         label: "Script",
         optional: true,
+        trim: false,
         autoform: {
           afFieldInput: {
             type: "textarea"

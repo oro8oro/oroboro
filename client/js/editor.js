@@ -39,7 +39,7 @@ menuItemBox = function menuItemBox(){
         console.log("Type: ", selected.attr("type"));
         if(selected.parent.attr("type") != 'layer'){
             deselect();
-            var selector = buildSelector(SVG.get('svgEditor'), selected.parent.attr("id"));
+            var selector = buildSelector(SVG.get('svgEditor'), selected.parent.attr("id"), "simpleGroup");
             global_oro_variables.selected.add(selector);
             showDatGui();
             Session.set("selected", "true");
@@ -525,20 +525,20 @@ menuItemReflecthSC = function menuItemReflecthSC(){
 }
 
 univClipper = function(cliptype){
-    var item1 = SVG.get(global_oro_variables.selected.members[0].attr("selected"));
-    var item2 = SVG.get(global_oro_variables.selected.members[1].attr("selected"));
-    var points1 = pathArraySvgXY(item1.array.value);
-    var points2 = pathArraySvgXY(item2.array.value);
-
-    var solution = new ClipperLib.Paths();
-    var c = new ClipperLib.Clipper();
-    c.AddPaths(points1, ClipperLib.PolyType.ptSubject, true);
-    c.AddPaths(points2, ClipperLib.PolyType.ptClip, true);
-    c.Execute(cliptype, solution);
-    solution = JSON.stringify(pathArrayXYOro(solution));
-
-    var palette = Item.findOne({_id: item1.attr("id")},{fields: {palette:1}}).pallette;
-    var doc = {groupId: item1.parent.attr("id"), type: "simple_path", pointList: solution, palette: palette};
+    var elems = global_oro_variables.selected.members;
+    var result = pathArraySvgXY(SVG.get(elems[0].attr("selected")).array.value);
+    for(i = 1; i < elems.length; i++){
+        var points2 = pathArraySvgXY(SVG.get(elems[i].attr("selected")).array.value);
+        var c = new ClipperLib.Clipper();
+        c.AddPaths(result, ClipperLib.PolyType.ptSubject, true);
+        c.AddPaths(points2, ClipperLib.PolyType.ptClip, true);
+        var solution = new ClipperLib.Paths();
+        c.Execute(cliptype, solution);
+        result = solution;
+    }
+    solution = JSON.stringify(pathArrayXYOro(result));
+    var palette = Item.findOne({_id: SVG.get(elems[0].attr("selected")).attr("id")},{fields: {palette:1}}).pallette;
+    var doc = {groupId: SVG.get(elems[0].attr("selected")).parent.attr("id"), type: "simple_path", pointList: solution, palette: palette};
     Meteor.call("insert_document", "Item", doc);
 }
 
@@ -591,7 +591,7 @@ menuItemClone = function menuItemClone(){
 menuItemBrowse = function menuItemBrowse(){
     var id = Session.get('fileId');
     var par = Dependency.findOne({fileId1: id});
-    window.open('/browse/file/'+ par.fileId2 + "/"+1+"/2", '_blank');
+    window.open('/browse/file/'+ par.fileId2 + "/"+1+"/3", '_blank');
 }
 
 menuItemToBack = function menuItemToBack(){
@@ -717,14 +717,11 @@ menuItemSplit = function menuItemSplit(){
 }
 
 menuItemReload = function menuItemReload(){
-    SVG.get(Session.get('fileId')).clear();
+    $(SVG.get(Session.get('fileId')).node).remove();
     Blaze.remove(renderedTemplates["show_meteor_file_svg"]);
     Blaze.renderWithData(Template.show_meteor_file_svg, {"_id": Session.get('fileId')}, document.getElementById("viewport"));
 }
 
-menuItemPermissions = function menuItemPermissions(){
-
-}
 
 menuItemSaveNew = function menuItemSaveNew(){
     Blaze.remove(renderedTemplates['show_meteor_file_svg']);
@@ -757,7 +754,7 @@ menuAddElemCallb = function menuAddElemCallb(id){
     if(!currentLayer)
         currentLayer =  SVG.get(Session.get('fileId')).first();
     if(File.findOne({_id: id})){
-        var g = Group.findOne({fileId: id, type: 'layer'});
+        var g = Group.findOne({fileId: id, type: 'layer'},{sort: {ordering: 1}});
         var elem = Group.findOne({groupId: g._id},{sort: {ordering: 1}});
         if(elem)
             cloneGroup(elem, currentLayer.attr("id"), 'groupId');
@@ -792,4 +789,49 @@ menuItemSelect = function menuItemSelect(id){
     SVG.get(id).draggable();
     Session.set("selected", "true");
     showDatGui();
+}
+
+menuItemDeparametrize = function menuItemDeparametrize(){
+    var selected = global_oro_variables.selected.members;
+    for(s in selected){
+        var it = Item.findOne({_id: selected[s].attr("selected")});
+        var points = window[it.parameters.callback](it.parameters.params);
+        var type = checkPathType(SVG.get(it._id));
+        if(type == "simple")
+            type = "simple_path"
+        else
+            type = "complex_path";
+        Meteor.call('update_document', 'Item', it._id, {pointList: points, type: type, parameters: null})
+    }
+}
+
+menuItemClosePath = function menuItemClosePath(){
+    var m = global_oro_variables.selected.members;
+    var upd;
+    for(i in m){
+        var path = Item.findOne({_id: m[i].attr('selected')});
+        if(path.closed == 'false') {
+            if(path.type == 'simple_path')
+                upd = {closed: "true"};
+            else{
+                var p = SVG.get(m[i].attr('selected')).array.value;
+                if(p[p.length-1][0] != 'Z')
+                    p.push(['Z']);
+                SVG.get(m[i].attr('selected')).plot(p);
+                upd = {closed: "true", pointList: SVG.get(m[i].attr('selected')).attr("d")};
+            }
+        }
+        else{
+            if(path.type == 'simple_path')
+                upd = {closed: "false"};
+            else{
+                var p = SVG.get(m[i].attr('selected')).array.value;
+                if(p[p.length-1][0] == 'Z')
+                    p.pop();
+                SVG.get(m[i].attr('selected')).plot(p);
+                upd = {closed: "false", pointList: SVG.get(m[i].attr('selected')).attr("d")};
+            }
+        }
+        Meteor.call('update_document', 'Item', m[i].attr('selected'), upd);
+    }
 }
