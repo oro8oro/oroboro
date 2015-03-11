@@ -71,23 +71,13 @@ Schemas.Group = new SimpleSchema({
         type: String,
         label: "Selected",
         optional: true,
-        autoValue: function(){
-            if(false)
-                return Meteor.userId();
-            else
-                return null;
-        }
+        defaultValue: 'null'
     },
     locked: {
         type: String,
         label: "Locked",
         optional: true,
-        autoValue: function(){
-            if(false)
-                return Meteor.userId();
-            else
-                return null;
-        }
+        defaultValue: 'null'
     },
     transform: {
         type: String,

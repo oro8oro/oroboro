@@ -109,18 +109,24 @@ Schemas.File = new SimpleSchema({
         type: String,
         label: "Creator",
         max: 200,
-        optional: true,
+        optional: true
     },
     locked: {
         type: String,
         label: "Locked",
-        optional: true,
+        optional: true
     },
     selected: {
         type: [String],
         label: "Selected",
         optional: true,
         defaultValue: []
+    },
+    noofchildren: {
+        type: Number,
+        label: "No of children",
+        optional: true,
+        defaultValue: 0
     }
 });
 

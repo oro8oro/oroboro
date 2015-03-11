@@ -16,11 +16,23 @@
 
 <div id="editor1">
 // svg = SVG('KnNbAST2hzSa5mkBs').viewbox(0, 0, 1448, 1024);
-// svg object is defined
+//regPoly(8,90);
+//goldens(6,350);
+//tree(240);
+//cover(15,5); 
+//roses(30, 5, 3);
+//fern(25,1);
+//lsys("F", {F: "G-F-G", G: "F+G+F"}, 9, 2, 1/6);
+//lsys("XYXYXYX+XYXYXYX+XYXYXYX+XYXYXYX",{X:"FX+FX+FXFY-FY-",Y:"+FX+FXFY-FY-FY", F:""},4,4,1/4)
+//lsys("F++F++F", {F: "F-F++F-F"}, 5, 3, 1/6);
+//lsys("L--F--L--F", {L: "+R-F-R+", R: "-L+F+L-"}, 9, 15, 1/8);
+//lsys("L--F-", {F: "F+F-F-F-G+F+F+F-F", G: "GGG"}, 4, 10, 1/4);
+//lsys("W", {W:"+++X--F--ZFX+", X: "---W++F++YFW-", Y: "+ZFX--F--Z+++", Z: "-YFW++F++Y---"}, 7, 8, 1/12);
 
 </div>
     
 <script src="//cdn.jsdelivr.net/ace/1.1.8/min/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="/file/wtjbgpTaFejHZCYrk" type="text/javascript" charset="utf-8"></script>
 <script>
     
     var editor = ace.edit("editor1");
@@ -36,6 +48,15 @@
         bindKey: {win: 'Ctrl-M',  mac: 'Command-M'},
         exec: function(editor) {
             parent.debug(editor);
+        },
+        readOnly: true // false if this command should not apply in readOnly mode
+    });
+
+    editor.commands.addCommand({
+        name: 'Help',
+        bindKey: {win: 'Ctrl-H',  mac: 'Command-H'},
+        exec: function(editor) {
+            parent.help(editor);
         },
         readOnly: true // false if this command should not apply in readOnly mode
     });

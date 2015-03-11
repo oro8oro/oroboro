@@ -29,14 +29,14 @@ addAtributes = function addAtributes(palette){
     if(palette.opacity)
         str = str + ' opacity="' + palette.opacity + '"';
     return str;
-}
+};
 
 build_item = function build_item(item){
     if(item.type == 'rasterImage' || item.type == 'formulae'){
             var points = split_oro_points(item.pointList);
             var itemscript = '<image xlink:href="' + item.text + '" id="' + item._id + '" height="' + points[3] + '" width="' + points[2] + '" x="' + points[0] + '" y="' + points[1] + '"/>';
     }
-        else 
+        else
             if(item.type == 'text'){
                 var points = item.pointList.split(",");
                 var itemscript = '<text xml:space="preserve"' + ' id="' + item._id + '" x="' + points[0] + '" y="' + points[1] + '"' + addAtributes(item.palette);
@@ -52,8 +52,7 @@ build_item = function build_item(item){
                     if(item.font.textAnchor)
                         itemscript = itemscript + ' text-anchor="' + item.font.textAnchor + '"';
                 }
-                itemscript = itemscript + '>' + '<tspan dy="' + (Number(item.font.size)*1.27) + '" x="' + points[0] + '">' + item.text + '</tspan>'
-                + '</text>';
+                itemscript = itemscript + '>' + '<tspan dy="' + (Number(item.font.size)*1.27) + '" x="' + points[0] + '">' + item.text + '</tspan>' + '</text>';
             }
             else
                 if(item.type == 'polyline'){
@@ -92,7 +91,7 @@ build_item = function build_item(item){
                                             var points = split_oro_points(item.pointList);
                                             var itemscript = '<svg width="' + points[2] + '" height="' + points[3] + '" x="' + points[0] + '" y="' + points[1] + '" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="' + item._id + '"></svg>';
                                         }
-    return itemscript; 
+    return itemscript;
 }
 
 build_group = function build_group(group){
@@ -143,15 +142,15 @@ Meteor.methods({
         }
         scripts = '';
         //scripts = '<script type="application/ecmascript" xlink:href="/file/require.js" /> ';
+        if(file.script)
+            scripts = scripts + '<script type="application/javascript"> <![CDATA[ \n' + file.script + '\n ]]> </script>'
+        else
+            scripts = scripts + '<script type="application/javascript"> <![CDATA[ \nfunction init(){}\n ]]> </script>'
         recursive_depends(fileId, 3);
         for(var s in js_dep){
             scripts = scripts + '<script type="application/ecmascript" xlink:href="' + '/file/' + js_dep[s] + '" />';
         }
         js_dep = [];
-        if(file.script)
-            scripts = scripts + '<script type="application/javascript"> <![CDATA[ \n' + file.script + '\n ]]> </script>'
-        else
-            scripts = scripts + '<script type="application/javascript"> <![CDATA[ \nfunction init(){}\n ]]> </script>'
         result = result + scripts;
         //result = result + '<script type="application/javascript">' + file.script + '</script>';
         var groups = Group.find({fileId: fileId}, {sort: {ordering:1}}).fetch();
@@ -181,15 +180,14 @@ Meteor.methods({
         js_dep = [];
         return scripts;
     },
-    /*
-    getGroup: function(groupId){
-        var group = Group.findOne({_id: groupId});
-        return recursive_group(group);
-    }*/
-    getFileItems: function(fileId){
-        return;
-    },
-    getGroupItems: function(groupId){
-        return;
+    buildFileNoOfChildren: function(filesIds){
+        if(filesIds)
+            var query = {_id: {$in: filesIds}};
+        else
+            var query = {};
+        File.find(query).forEach(function(file){
+            var count = Dependency.find({fileId2: file._id}).count();
+            File.update({_id: file._id}, {$set: {noofchildren: count} });
+        });
     }
 });

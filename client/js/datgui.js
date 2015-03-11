@@ -2,10 +2,24 @@
 datGuiParam = function(item){
     this.saveNew = menuItemSaveNew;
     this.browse = menuItemBrowse;
-    this['unlock items'] = unlockItems;
+    //this['unlock items'] = unlockItems;
     this.reload = menuItemReload;
     this.addElement = menuItemAddElement;
     this.source = menuItemCode;
+    //this.uploadCsv = menuItemCsvModal;
+    this.parameters = '';
+    this.callback = '';
+    this.behaviour = 'separate files';
+    this.uploadType = '';
+    this.itemType = '';
+    this.ok = menuItemParseCsv;
+    this.clearValues = function(){
+        var c = global_oro_variables.gui.__folders.Upload.__controllers;
+        for(var i = 3; i < c.length-1; i++){
+            c[i].setValue('');
+            c[i].updateDisplay();
+        }
+    }
     this.joinPaths = menuItemJoin;
     this.reverse = menuItemReverse;
     this.splitPaths = menuItemSplit;
@@ -14,24 +28,59 @@ datGuiParam = function(item){
     this.xor = menuItemXorSS;
     this.intersect = menuItemIntersectSS;
     this.group = menuItemGroup;
+    this.ungroup = menuItemUnGroup;
     this.title = '';
     this.toPath = menuItemDeparametrize;
     this.permissions = '';
     this.closeOpen = menuItemClosePath;
     this.resetView = function(){SVG.get('viewport').transform("matrix", "1,0,0,1,0,0"); scaleMinimap("1,0,0,1,0,0");}
+    this.morphpos = 0;
+    this.morphopt = 'simple';
+    this.toGroup = menuItemBox;
+    this.delete = menuItemDelete;
+    this.clone = menuItemClone;
+    this["toFront"] = menuItemToFront;
+    this["toBack"] = menuItemToBack;
+    this.noPoints = '';
+    this.path = '';
+    this.elemid = '';
+    this.step = '';
+    this.pointType = '';
+    this.pX = ''; this.pY = ''; this.ax = ''; this.ay = ''; this.bx = ''; this.by = '';
+    this.rx = 0; this.ry = 0; this.r = 0;
+    this.angle = 0;
+    this.reset = menuItemResetMatrix;
+    this.matrix = '1,0,0,1,0,0';
+    this.translateX = 0;
+    this.translatey = 0;
+    this.scaleX = 1;
+    this.scaleY = 1;
+    this.rotate = 0;
+    this.skewX = 0;
+    this.skewY = 0;
+    this.width = 0;
+    this.height = 0;
+    this.x = 0;
+    this.y = 0;
+    this.cx = 0;
+    this.cy = 0; 
+    this.fillColor = '#000000';
+    this.fillOpacity = 1;
+    this.strokeColor = '#000000';
+    this.strokeOpacity = 1;
+    this.strokeWidth = 1;
+    this.strokeDasharray = '';
+    this.strokeLinejoin = '';
+    this.strokeLinecap = '';
+    this.opacity = 1; 
+    this.fontStyle = 'normal';
+    this.fontWeight = 'normal';
+    this.fontFamily = 'Sans serif';
+    this.fontSize = 15;
+    this.anchor = 'start';
+    this.href = '';
+    this.text = '';
     if(item){
-        this.box = menuItemBox;
-        this.delete = menuItemDelete;
-        this.clone = menuItemClone;
-        this["toFront"] = menuItemToFront;
-        this["toBack"] = menuItemToBack;
-        this.noPoints = '';
-        this.path = '';
-        this.elemid = '';
-        this.step = '';
-        this.pointType = '';
-        this.pX = ''; this.pY = ''; this.ax = ''; this.ay = ''; this.bx = ''; this.by = '';
-        this.rx = 0; this.ry = 0; this.r = 0;
         var box = item.bbox();
         this.width = box.width;
         this.height = box.height;
@@ -39,17 +88,7 @@ datGuiParam = function(item){
         this.x = box.x;
         this.y = box.y;
         this.cx = box.cx;
-        this.cy = box.cy;
-        this.angle = 0;
-        this.reset = menuItemResetMatrix;
-        this.matrix = '1,0,0,1,0,0';
-        this.translateX = 0;
-        this.translatey = 0;
-        this.scaleX = 1;
-        this.scaleY = 1;
-        this.rotate = 0;
-        this.skewX = 0;
-        this.skewY = 0;
+        this.cy = box.cy;      
         if(item.attr("type") == 'embedediFrame' || item.attr("type") == 'embededHtml'){
             this.content = Item.findOne({_id: item.attr("id")}).text;
             this.x = item.attr("x");
@@ -64,26 +103,7 @@ datGuiParam = function(item){
         if(item.attr("type") == 'complex_path'){
             this["mirrorH"] = menuItemReflecthSC;
             this["mirrorV"] = menuItemReflectvSC;
-            //this.simplify = menuItemSimplifySC;
             this.simplify = 0;
-        }
-        if(['rasterImage', 'formulae', 'text'].indexOf(item.attr('type')) == -1){
-            this.fillColor = '#000000';
-            this.fillOpacity = 1;
-            this.strokeColor = '#000000';
-            this.strokeOpacity = 1;
-            this.strokeWidth = 1;
-            this.strokeDasharray = '';
-            this.strokeLinejoin = '';
-            this.strokeLinecap = '';
-            this.opacity = 1;
-        }
-        if(item.attr('type') == 'text'){
-            this.fontStyle = 'normal';
-            this.fontWeight = 'normal';
-            this.fontFamily = 'Sans serif';
-            this.fontSize = 15;
-            this.anchor = 'start';
         }
         if(item.attr('href')){
             if(item.attr("type") == 'formulae')
@@ -173,11 +193,36 @@ datGuiParam = function(item){
             if(f.title)
                 this.title = f.title;
             var perm = f.permissions.edit;
-            for(p in perm)
-                perm[p] = Meteor.users.findOne({_id: perm[p]}).email.address;
-            if(perm && perm.length > 0)
-                this.permissions = perm.join(',');
+            if(perm.length > 0){
+                for(p in perm)
+                    perm[p] = Meteor.users.findOne({_id: perm[p]}).emails[0].address;
+                if(perm && perm.length > 0)
+                    this.permissions = perm.join(',');
+            }
         }
+        this.rx = '0'; this.ry = '0'; this.r = '0';
+        this.width = '0';
+        this.height = '0';
+        this.x = '0';
+        this.y = '0';
+        this.cx = '0';
+        this.cy = '0'; 
+        this.fillColor = '#000000';
+        this.fillOpacity = '1';
+        this.strokeColor = '#000000';
+        this.strokeOpacity = '1';
+        this.strokeWidth = '1';
+        this.strokeDasharray = '';
+        this.strokeLinejoin = '';
+        this.strokeLinecap = '';
+        this.opacity = '1'; 
+        this.fontStyle = 'normal';
+        this.fontWeight = 'normal';
+        this.fontFamily = 'Sans serif';
+        this.fontSize = '15';
+        this.anchor = 'start';
+        this.href = '';
+        this.text = '';
     }
 }
 
@@ -218,13 +263,17 @@ buildDatGui = function(gui, item, type, no){
         var skewX = f4.add(param, 'skewX').step(0.1);
         var skewY = f4.add(param, 'skewY').step(0.1);
         matrix.onChange(function(value){
-            //item.transform("matrix", value);
+            item.transform("matrix", value);
+            positionSelector(item.attr("id"));
+        }).onFinishChange(function(value){
             Meteor.call('update_document', 'Group', item.attr("id"), {transform: value});
         });
         translateX.onChange(function(value){
             var m = item.transform();
             console.log(value);
-            item.transform("matrix", [m.a,m.b,m.c,m.d,value,m.f].join(','));
+            var matrix = [m.a,m.b,m.c,m.d,value,m.f].join(',');
+            item.transform("matrix", matrix);
+            //item.attr("transform", "matrix(" + matrix + ")");
             console.log(item.transform().matrix);
             console.log(item.node.getCTM());
             positionSelector(item.attr("id"));
@@ -237,7 +286,9 @@ buildDatGui = function(gui, item, type, no){
         translateY.onChange(function(value){
             var m = item.transform();
             console.log(value);
-            item.transform("matrix", [m.a,m.b,m.c,m.d,m.e,value].join(','));
+            var matrix = [m.a,m.b,m.c,m.d,m.e,value].join(',');
+            item.transform("matrix", matrix);
+            //item.attr("transform", "matrix(" + matrix + ")");
             console.log(item.transform().matrix);
             console.log(item.node.getCTM());
             positionSelector(item.attr("id"));
@@ -254,7 +305,7 @@ buildDatGui = function(gui, item, type, no){
             }
             else
                 item.transform("matrix", [value,m.b,m.c,m.d,m.e,m.f].join(','));
-            //positionSelector(item.attr("id"));
+            positionSelector(item.attr("id"));
         });
         scaleX.onFinishChange(function(value){
             var m = item.transform();
@@ -271,7 +322,7 @@ buildDatGui = function(gui, item, type, no){
             }
             else
                 item.transform("matrix", [m.a,m.b,m.c,value,m.e,m.f].join(','));
-            //positionSelector(item.attr("id"));
+            positionSelector(item.attr("id"));
         });
         scaleY.onFinishChange(function(value){
             var m = item.transform();
@@ -340,9 +391,10 @@ buildDatGui = function(gui, item, type, no){
         var front = f3.add(param, 'toFront');
         var back = f3.add(param, 'toBack');
         if(!no)
-            var box = f3.add(param, 'box');
-        if(no)
-            var group = f3.add(param, 'group');
+            var box = f3.add(param, 'toGroup');
+        var group = f3.add(param, 'group');
+        if(item.type == 'g')
+            var ungroup = f3.add(param, 'ungroup');
         if(item.type == 'path'){
             var close = f3.add(param, 'closeOpen');
             var points = gui.addFolder('Points');
@@ -384,6 +436,7 @@ buildDatGui = function(gui, item, type, no){
                 var anchor = f1.add(param, 'anchor', ancho);
                 txt.onChange(function(value){
                     item.text(value);
+                    positionSelector(item.attr("id"));
                 });
                 txt.onFinishChange(function(value){
                     setItemsValue('text',value);
@@ -491,7 +544,7 @@ buildDatGui = function(gui, item, type, no){
             if(item.attr("type") == 'complex_path'){
                 var reflecth = f3.add(param, "mirrorH");
                 var reflectv = f3.add(param, "mirrorV");
-                var simple = f3.add(param, 'simplify', 0, 10);
+                var simple = f3.add(param, 'simplify', 0, 20).step(0.5);
                 var reverse = f3.add(param, 'reverse');
                 var subpath = f3.add(param, 'splitPaths');
             }
@@ -710,6 +763,11 @@ buildDatGui = function(gui, item, type, no){
                     if(value > 0){
                         item.opacity(0);
                         menuItemSimplifySC(value);
+                        var elem = SVG.get(global_oro_variables.selected.members[0].attr("selected"));
+                        if(!SVG.get('simplify_noPoints'))   
+                            var noPoints = SVG.get('svgEditor').text(String(SVG.get('clone_'+elem.attr("id")).array.value.length)).move(0,0).attr("id", 'simplify_noPoints');
+                        else
+                            SVG.get('simplify_noPoints').text(String(SVG.get('clone_'+elem.attr("id")).array.value.length));
                     }
                 });
                 simple.onFinishChange(function(value){
@@ -723,6 +781,7 @@ buildDatGui = function(gui, item, type, no){
                     }
                     else
                         SVG.get('clone_'+id).remove();
+                    SVG.get('simplify_noPoints').remove();
                 });
             }
             if(item.attr("type").indexOf('para') != -1){
@@ -781,28 +840,65 @@ buildDatGui = function(gui, item, type, no){
     else{
         var f = File.findOne({_id: Session.get('fileId')});
         var cr = Meteor.users.findOne({_id: f.creatorId});
-        var cr = f5.add(param, 'creator', [cr.email.address.substring(0,cr.email.address.indexOf('@'))]);
+        var cr = f5.add(param, 'creator', [cr.emails[0].address.substring(0,cr.emails[0].address.indexOf('@'))]);
         var res = f5.add(param, 'resolution',[f.width+'x'+f.height]);
         var path = getFilePath(Session.get('fileId'));
         var filepath = f5.add(param, 'path', path).onChange(function(value){
             window.open('/filem/'+value, '_blank');
         });
         if(Session.get("enableEdit") == 'true'){
-            var unlock = f3.add(param, 'unlock items');
+            //var unlock = f3.add(param, 'unlock items');
             var code = f3.add(param, 'source');
             var savenew = f3.add(param, 'saveNew');
             var addElem = f3.add(param, 'addElement');
             var title = f5.add(param, 'title').onFinishChange(function(value){
                 Meteor.call('update_document', 'Item', Session.get('fileId'), {title: value});
             });
-            var permissions = f5.add(param, 'permissions').onFinishChange(function(value){
-                value = value.split(',');
-                var perms = [];
-                for(v in value)
-                    perms[v] = Meteor.users.findOne({'email.address': value[v]})._id;
-                f.permissions.edit = perms;
-                Meteor.call('update_document', 'File', f._id, {permissions: f.permissions});
+            if(f.permissions.edit.length > 0 || f.creatorId == Meteor.userId()){
+                var permissions = f5.add(param, 'permissions').onFinishChange(function(value){
+                    value = value.split(',');
+                    var perms = [];
+                    for(v in value)
+                        perms[v] = Meteor.users.findOne({'emails.address': value[v]})._id;
+                    f.permissions.edit = perms;
+                    Meteor.call('update_document', 'File', f._id, {permissions: f.permissions});
+                });
+            }
+            var f6 = gui.addFolder('Upload');
+            var behaviour = f6.add(param, 'behaviour', [ 'separate files', 'this file/separate layers', 'this file/this layer' ]);
+            var uploadType = f6.add(param, 'uploadType', [ 'select type', 'url', 'text' ]).onChange(function(value){
+                menuItemCsvModal();
             });
+            var clear = f6.add(param, 'clearValues');
+            var itemType = f6.add(param, 'itemType');
+            var path = f6.add(param, 'path');
+            var width = f6.add(param, 'width');
+            var height = f6.add(param, 'height');
+            var x = f6.add(param, 'x');
+            var y = f6.add(param, 'y');
+            var cx = f6.add(param, 'cx');
+            var cy = f6.add(param, 'cy');
+            var rx = f6.add(param, 'rx');
+            var ry = f6.add(param, 'ry');
+            var r = f6.add(param, 'r');
+            var fillColor = f6.add(param, 'fillColor');
+            var fillOpacity = f6.add(param, 'fillOpacity');
+            var strokeColor = f6.add(param, 'strokeColor');
+            var strokeOpacity = f6.add(param, 'strokeOpacity');
+            var strokeWidth = f6.add(param, 'strokeWidth');
+            var strokeDasharray = f6.add(param, 'strokeDasharray');
+            var strokeLinejoin = f6.add(param, 'strokeLinejoin');
+            var strokeLinecap = f6.add(param, 'strokeLinecap');
+            var opacity = f6.add(param, 'opacity'); 
+            var text = f6.add(param, 'text');
+            var fontStyle = f6.add(param, 'fontStyle');
+            var fontWeight = f6.add(param, 'fontWeight');
+            var fontFamily = f6.add(param, 'fontFamily');
+            var fontSize = f6.add(param, 'fontSize');
+            var anchor = f6.add(param, 'anchor');
+            var parameters = f6.add(param, 'parameters');
+            var callback = f6.add(param, 'callback');
+            var ok = f6.add(param, 'ok');
         }
         else
             if(f.title)
@@ -815,14 +911,99 @@ buildDatGui = function(gui, item, type, no){
     }
     console.log(type);
     if(type == 'simple_path'){
-        var join = f3.add(param, 'joinPaths');
         var union = f3.add(param, 'union');
         var diff = f3.add(param, 'difference');
         var xor = f3.add(param, 'xor');
         var inters = f3.add(param, 'intersect');
     }
-    if(type == 'complex_path'){
+    if(type == 'simple_path' || type == 'complex_path' || type == 'multiple_paths'){
         var join = f3.add(param, 'joinPaths');
+        var morphopt = f3.add(param, 'morphopt',['simple', 'align', 'ordered'])
+        var fillcolor, strokecolor;
+        var morphpos = f3.add(param, 'morphpos', 0, 1).onChange(function(pos){
+            if(!SVG.get('clonesource')){
+                var origsource = SVG.get(global_oro_variables.selected.members[0].attr("selected"));
+                var origdest = SVG.get(global_oro_variables.selected.members[1].attr("selected"));
+                var source = origsource.clone().attr("id", "clonesource").attr("clone", origsource.attr("id"));
+                var dest = origdest.clone().attr("id","clonedest").attr("clone", global_oro_variables.selected.members[1].attr("selected"));
+                if(param.morphopt == 'align'){
+                    var angle1 = getAngle({x:source.cx(), y: source.cy()}, {x: source.array.value[0][1], y: source.array.value[0][2]});
+                    var angle2 = getAngle({x:dest.cx(), y: dest.cy()}, {x: dest.array.value[0][1], y: dest.array.value[0][2]});
+                    //var secPoint1 = source.array.pointxy(1);
+                    //var secPoint2 = dest.array.pointxy(1);
+                    //var angle1s = getAngle({x:source.cx(), y: source.cy()}, {x: secPoint1.x, y: secPoint1.y});
+                    //var angle2s = getAngle({x:source.cx(), y: source.cy()}, {x: secPoint2.x, y: secPoint2.y}); 
+                    /*
+                    if(0 <= angle1s-angle1 <= 180 && (angle2s-angle2 > 180 || angle2s-angle2 < 0))
+                        source.plot(reversePath(source));
+                    else if(-180 <= angle1s-angle1 <= 0 && (angle1s-angle1 > 0 || angle1s-angle1 < -180))
+                        source.plot(reversePath(source));*/
+                    if(angle1 != angle2)
+                        if(checkPathType(source) == 'simple')
+                            rotateSPath(source, source.cx(), source.cy(), angle2-angle1)
+                        else
+                            rotateCPath(source, source.cx(), source.cy(), angle2-angle1)
+
+                    var angle1 = getAngle({x:source.cx(), y: source.cy()}, {x: source.array.value[0][1], y: source.array.value[0][2]});
+                    var angle2 = getAngle({x:dest.cx(), y: dest.cy()}, {x: dest.array.value[0][1], y: dest.array.value[0][2]});
+                    var secPoint1 = source.array.pointxy(1);
+                    var secPoint2 = dest.array.pointxy(1);
+                    var angle1s = getAngle({x:source.cx(), y: source.cy()}, {x: secPoint1.x, y: secPoint1.y});
+                    var angle2s = getAngle({x:dest.cx(), y: dest.cy()}, {x: secPoint2.x, y: secPoint2.y}); 
+
+                    if((angle1s-angle1) * (angle2s-angle2) < 0){
+                        source.plot(reversePath(source));
+                        var angle1 = getAngle({x:source.cx(), y: source.cy()}, {x: source.array.value[0][1], y: source.array.value[0][2]});
+                        var angle2 = getAngle({x:dest.cx(), y: dest.cy()}, {x: dest.array.value[0][1], y: dest.array.value[0][2]});
+                        if(angle1 != angle2)
+                            if(checkPathType(source) == 'simple')
+                                rotateSPath(source, source.cx(), source.cy(), angle2-angle1)
+                            else
+                                rotateCPath(source, source.cx(), source.cy(), angle2-angle1)
+                    }
+                }
+                if(param.morphopt == 'simple' || param.morphopt == 'align')
+                    source.array.morph(dest.array.value, 'simplemorph');
+                if(param.morphopt == 'ordered')
+                    source.array.morph(dest.array.value, 'orderedmorph');
+                fillcolor = new SVG.Color(source.attr('fill')).morph(dest.attr("fill"));
+                strokecolor = new SVG.Color(source.attr('stroke')).morph(dest.attr("stroke"));
+                source.hide();
+                dest.hide();
+                var frame = origsource.clone().attr("id", "frame");
+            }
+            SVG.get('frame').plot(SVG.get('clonesource').array.at(pos)).fill(fillcolor.at(pos)).stroke({color: strokecolor.at(pos)});
+            //source.animate(2000, '>', 1000).plot(source.array.destination)
+        }).onFinishChange(function(pos){
+            SVG.get('frame').plot(SVG.get('clonesource').array.at(pos));
+            var it = Item.findOne({_id: SVG.get('clonesource').attr("clone")});
+            delete it._id;
+            it.groupId = SVG.get(SVG.get('clonesource').attr("clone")).parent.attr("id");
+            it.selected = 'null';
+            if(checkPathType(SVG.get('frame')) == 'simple'){
+                it.pointList = JSON.stringify(pathArraySvgOro(SVG.get('frame').array.value));
+                it.type = 'simple_path';
+            }
+            else{
+                it.pointList = SVG.get('frame').attr("d");
+                it.type = 'complex_path';
+            }
+            it.palette.fillColor = SVG.get('frame').attr("fill");
+            it.palette.strokeColor = SVG.get('frame').attr("stroke");
+            SVG.get('clonesource').remove();
+            SVG.get('clonedest').remove();
+            SVG.get('frame').remove();
+            Meteor.call('insert_document', 'Item', it)
+
+            /*
+            cloneItem(SVG.get('clonesource').attr("clone"), SVG.get('clonesource').parent.attr("id"), function(id){
+                SVG.get(id).plot(SVG.get('frame').array.value);
+                saveItemLocalisation(id);
+                SVG.get('clonesource').remove();
+                SVG.get('clonedest').remove();
+                SVG.get('frame').remove();
+            });*/
+        })
     }
     if(f3)
         f3.open();

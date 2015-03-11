@@ -1,0 +1,28 @@
+{
+  "name": "oroboro",
+  "version": "0.0.3",
+  "description": "",
+  "author": "Loredana Cirstea <loredana.cirstea@gmail.com>",
+  "contributors": [{
+  "name": "Christian Tzurcanu",
+  "email": "christian.tzurcanu@gmail.com"
+}],
+  "repository": {
+  "type": "git",
+  "url": "https://github.com/loredanacirstea/meteor-svg-app"
+},
+  "bugs": {
+  "url": "https://github.com/loredanacirstea/meteor-svg-app/issues"
+},
+  "keywords": [
+  "svg",
+  "meteor",
+  "oroboro"
+],
+  "dependencies": {
+  },
+  "devDependencies": {
+  },
+  "analyze": true,
+  "license": "GPLv"
+}

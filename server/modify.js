@@ -1,5 +1,5 @@
 Meteor.methods({
-    update_collection: function(collection, ids, upd, callb){
+    update_collection: function(collection, ids, upd){
         check(collection, String);
         check(ids, [String]);
         check(upd, Object);
@@ -8,7 +8,7 @@ Meteor.methods({
         });
 
     },
-    insert_document: function(collection, upd, callb){
+    insert_document: function(collection, upd){
         check(collection, String);
         check(upd, Object);
         console.log(upd);
@@ -17,12 +17,23 @@ Meteor.methods({
             if(result) console.log(result);
         });
     },
-    update_document: function(collection, id, upd, callb){
+    update_document: function(collection, id, upd){
         check(collection, String);
         check(id, String);
         check(upd, Object);
         console.log(upd);
         return Collections[collection].update({_id: id}, {$set: upd}, {filter: false, validate: false}, function(error, result){
+        });
+    },
+    unset_document: function(collection, id, properties){
+        check(collection, String);
+        check(id, String);
+        check(properties, Array);
+        console.log(properties);
+        var upd = {};
+        for(var i in properties)
+            upd[properties[i]] = "";
+        return Collections[collection].update({_id: id}, {$unset: upd}, {filter: false, validate: false}, function(error, result){
         });
     },
     remove_document: function(collection, id, callb){

@@ -70,6 +70,14 @@ Template.show_meteor_file_svg.rendered = function(){
                         console.log("Group: " + JSON.stringify(doc) + " does not have a parent id")
                     else{
                         var idds = recursive_group_ids(doc._id, {items:[],groups:[]});
+                        for(var i in idds.items)
+                            if(SVG.get(idds.items[i]))
+                                SVG.get(idds.items[i]).remove();
+                        for(var i in idds.groups)
+                            if(SVG.get(idds.groups[i]))
+                                SVG.get(idds.groups[i]).remove();
+                        console.log(parentId);
+                        console.log(SVG.get(parentId));
                         recursive_group_client(SVG.get(parentId), doc);
                         if(doc.type == 'layer'){
                             removeLayerMenu();
@@ -85,9 +93,39 @@ Template.show_meteor_file_svg.rendered = function(){
                         }
                     }
                 }
-            },
+            }/*,
             changed: function(doc){
                 var group = SVG.get(doc._id);
+                var id = doc._id
+                console.log(id);
+                var locked = Session.get("lockedItems");
+                console.log(locked);
+                if(doc.selected != 'null'){
+                    if(doc.selected != Meteor.userId()){
+                        console.log(locked.indexOf(id));
+                        if(locked.indexOf(id) == -1){
+                            locked.push(id);
+                            console.log(locked);
+                            buildSelectorLocked(id);
+                            Session.set("lockedItems", locked);
+                        }
+                    }
+                    else
+                        if(global_oro_variables.selected.members)
+                            if(global_oro_variables.selected.members.indexOf(SVG.get("box_"+id)) == -1){
+                                locked.push(id);
+                                console.log(locked);
+                                buildSelectorLocked(id);
+                                Session.set("lockedItems", locked);
+                            }
+                }
+                else
+                    if(locked.indexOf(id) != -1){
+                        SVG.get('locked_'+id).remove();
+                        locked.splice(locked.indexOf(id),1);
+                        Session.set("lockedItems", locked);
+                    }
+
                 if(doc.groupId)
                     var parentId = doc.groupId;
                 else
@@ -103,12 +141,89 @@ Template.show_meteor_file_svg.rendered = function(){
                         createLayerMenu(win.w,win.h);
                     }
                 }
+                if(doc.ordering){}
             },
             removed: function(doc){
                 console.log('removed: ' + doc._id);
                 if(SVG.get(doc._id)){
                     var type = SVG.get(doc._id).attr("type");
                     SVG.get(doc._id).remove();
+                    if(type == "layer"){
+                        removeLayerMenu();
+                        createLayerMenu(win.w,win.h);
+                    }
+                }
+            }*/
+        });
+        Group.find({_id: {$in: ids.groups}}).observeChanges({
+            changed: function(id,doc){
+                var group = SVG.get(id);
+                console.log(id);
+                console.log(doc);
+                var locked = Session.get("lockedItems");
+                console.log(locked);
+                if(doc.selected){
+                    if(doc.selected != 'null'){
+                        if(doc.selected != Meteor.userId()){
+                            console.log(locked.indexOf(id));
+                            if(locked.indexOf(id) == -1){
+                                locked.push(id);
+                                console.log(locked);
+                                buildSelectorLocked(id);
+                                Session.set("lockedItems", locked);
+                            }
+                        }
+                        else
+                            if(global_oro_variables.selected.members)
+                                if(global_oro_variables.selected.members.indexOf(SVG.get("box_"+id)) == -1){
+                                    locked.push(id);
+                                    console.log(locked);
+                                    buildSelectorLocked(id);
+                                    Session.set("lockedItems", locked);
+                                }
+                    }
+                    else
+                        if(locked.indexOf(id) != -1){
+                            SVG.get('locked_'+id).remove();
+                            locked.splice(locked.indexOf(id),1);
+                            Session.set("lockedItems", locked);
+                        }
+                }
+
+                if(doc.groupId || doc.fileId){
+                    if(doc.groupId)
+                        var parentId = doc.groupId;
+                    else
+                        var parentId = doc.fileId;
+                    if(parentId == undefined)
+                        console.log("Group: " + JSON.stringify(doc) + " does not have a parent id")
+                    else{
+                        group.remove();
+                        recursive_group_client(SVG.get(parentId), doc);
+                        if(doc.type == 'layer'){
+                            removeLayerMenu();
+                            var win = Session.get("window");
+                            createLayerMenu(win.w,win.h);
+                        }
+                    }
+                }
+                if(doc.ordering){
+                    console.log(doc.ordering)
+                    console.log(SVG.get(id).parent.get(doc.ordering))
+                    //var pos = SVG.get(id).position()
+                    SVG.get(id).before(SVG.get(id).parent.get(doc.ordering));
+                }
+                if(doc.transform){
+                    SVG.get(id).transform("matrix", doc.transform);
+                    positionSelector(id);
+                }
+            },
+            removed: function(id){
+                console.log('removed: ' + id);
+                if(SVG.get(id)){
+                    deselectItem(id);
+                    var type = SVG.get(id).attr("type");
+                    SVG.get(id).remove();
                     if(type == "layer"){
                         removeLayerMenu();
                         createLayerMenu(win.w,win.h);
@@ -337,9 +452,12 @@ Template.svgEditor.events({
 
 deselect = function(){
     var selected = global_oro_variables.selected.members;
-    var ids = []
+    var ids = {items:[], groups:[]}
         for(var s in selected){
-            ids.push(selected[s].attr("selected"));
+            if(SVG.get(selected[s].attr("selected")).attr("type") == 'simpleGroup')
+                ids.groups.push(selected[s].attr("selected"));
+            else
+                ids.items.push(selected[s].attr("selected"));
             if(SVG.get(selected[s].attr("selected")).attr("type") != 'simpleGroup'){
                 SVG.get(selected[s].attr("selected")).draggable();
                 SVG.get(selected[s].attr("selected")).fixed();
@@ -347,7 +465,8 @@ deselect = function(){
             selected[s].remove();
         }
     global_oro_variables.selected.clear();
-    Meteor.call('update_collection', 'Item', ids, {selected: 'null'});
+    Meteor.call('update_collection', 'Item', ids.items, {selected: 'null'});
+    Meteor.call('update_collection', 'Group', ids.groups, {selected: 'null'});
     //if(SVG.get("svgMenu") != undefined)
     //    SVG.get("svgMenu").remove();
     //buildMenu(SVG.get("svgEditor"),"menu_group.unselected");
@@ -374,7 +493,7 @@ buildMinimap = function buildMinimap(x,y){
         SVG.get('minimapgr').scale(a / box.width, a / box.width);
     var b = SVG.get('minimap').bbox();
     SVG.get('minimap').dx(x-b.width-1-b.x).dy(y-b.height-1-b.y);
-}
+}/*
 buildColorPicker = function(){
     $('#FillPicker').jPicker({
             window:{
@@ -415,7 +534,7 @@ buildColorPicker = function(){
         }
     );
 }
-
+*/
 togglePanZoom = function(){
     if(Session.get("lockPanZoom") == "true"){
         SVG.get('locked').show();
@@ -444,14 +563,44 @@ Tracker.autorun(function(){
         togglePanZoom();
 });
 
+function keyControlls(key, callback){
+    document.addEventListener('keydown', function(e){
+        if(e.keyIdentifier == key && e.altKey && global_oro_variables.selected.members && global_oro_variables.selected.members.length > 0){
+            e.preventDefault();
+            e.stopPropagation();
+            if(callback)
+                callback();
+        }
+    })
+}
+
 renderedTemplates = [];
+g0 = undefined;
 Template.svgEditor.rendered = function(){ 
     window.windowType = 'svgEditor' 
+    window.onbeforeunload = function(e) {
+        unlockItems();
+    }
+    window.onunload = function(e) {
+        unlockItems();
+    }
+
+    keyControlls("U+0044", menuItemDelete);
+    keyControlls("U+0043", menuItemClone);
+    keyControlls("U+0047", menuItemGroup);
+    keyControlls("U+0055", menuItemUnGroup);
+    keyControlls("U+0041", menuItemAddElement);
+    keyControlls("U+0046", menuItemToFront);
+    keyControlls("U+0042", menuItemToBack);
+    keyControlls("Up", menuItemBox);
+
     var cssfiles = this.data.cssfiles;
+    var jsfiles = this.data.jsfiles;
     this.data = this.data.file;
     for(var i in jsfiles){
         $("head").append('<script type="application/javascript" src="/file/' + jsfiles[i]._id + '">');
     }
+    $("head").append('<script type="application/javascript" src="/svgextend.js">');
     for(var i in cssfiles){
         $("head").append('<link rel="stylesheet" type="text/css" href="/file/' + cssfiles[i]._id + '">');
     }
@@ -473,13 +622,15 @@ Template.svgEditor.rendered = function(){
     Session.set('fileHeight', this.data.height);
     console.log(file.permissions.edit);
     console.log(Meteor.userId());
-    console.log(String(file.permissions.edit.indexOf(Meteor.userId()) != -1));
-    var enableEdit = String(file.permissions.edit.indexOf(Meteor.userId()) != -1);
+    if(file.permissions.edit.indexOf(Meteor.userId()) != -1 || file.permissions.edit.length == 0)
+        var enableEdit = "true";
+    else
+        var enableEdit = "false";
     Session.set("enableEdit", enableEdit);
     //console.log(Session.get("enableEdit"));
 
     var editor = SVG("svgEditor").size(10000,10000);
-    
+
     /*******
     **  grey background for screen:
     ********/
@@ -506,7 +657,8 @@ Template.svgEditor.rendered = function(){
     ********/
 
     renderedTemplates["show_meteor_file_svg"] = Blaze.renderWithData(Template.show_meteor_file_svg, {"_id":this.data._id}, document.getElementById("viewport"));
-    var g0 = SVG(fileId);
+    //var g0 = SVG(fileId);
+    g0 = SVG(fileId);
 
     /*******
     **  minimap:
@@ -528,6 +680,10 @@ Template.svgEditor.rendered = function(){
 
     //buildMenu(SVG.get("svgEditor"),"menu_group.unselected");
     showDatGui();
+
+    //build fileBrowser in background
+
+    menuItemAddElement(true);
 
     /*******
     **  lock Pan and Zoom:
@@ -634,10 +790,24 @@ Template.svgEditor.rendered = function(){
         buildMinimap(win.w,win.h);
         grey.size(win.w,win.h);
         SVG.get("lockButton").move(win.w-30, win.h-30);
-        //SVG.get("chatButton").move(win.w-30,0);
-        //SVG.get("chatRect").size(win.w, win.h);
+        SVG.get("chatButton").move(win.w-30,0);
+        SVG.get("chatRect").move(win.w-iconsize-2, 30)
+        $('#filebrowserModalModal').css('width', String(win.w*9/10)+'px').css('height', String(win.h*9/10)+'px');
     });
 }
+
+Template.svgCodeEditor.helpers({
+    codeeditorheight: function(){
+        return Session.get('window').h - 150;
+    }
+});
+
+Template.csvModal.helpers({
+    csvmodalheight: function(){
+        return Session.get('window').h - 150;
+    }
+});
+
   
 /*
 Template.chatterModal.rendered = function(){

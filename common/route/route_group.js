@@ -23,3 +23,36 @@ Router.map(function(){
 });
 
 
+Router.route('/groupm/:_id', {
+    path: '/groupm/:_id',
+    template: 'svgEditor',
+    subscriptions: function(){
+        this.subscribe('files').wait();
+        this.subscribe('groups').wait();
+        this.subscribe('items').wait();
+        this.subscribe('dependencies').wait();
+        this.subscribe('users').wait();
+    },/*
+    waitOn: function(){
+        scripts = [];
+        var js_dep = getDependencies("Yq9iqYhEma9z9mYrp", 3);
+        jsfiles = separate_deps(js_dep, "application/javascript");
+        for(var s in jsfiles){
+            scripts.push(IRLibLoader.load('http://192.168.1.106:3000/file/' + jsfiles[s]._id));
+        }
+        return scripts;
+    },*/
+    data: function(){
+        var js_dep = getDependencies("Yq9iqYhEma9z9mYrp", 3);
+        cssfiles = separate_deps(js_dep,"text/css");
+        jsfiles = separate_deps(js_dep,"application/javascript");
+        return {file: File.findOne({_id:this.params._id}), cssfiles: cssfiles, jsfiles: jsfiles};
+    },
+    action: function(){
+        if(this.ready()){
+            this.render();
+        }
+    }
+});
+
+

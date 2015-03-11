@@ -1,40 +1,47 @@
 allfiles = {};
 
 reloadFilebrowser = function(params){
-    console.log('reload');
-    SVG.get('fileBrowse').clear();
+    console.log('reloadFilebrowser');
+    //SVG.get('fileBrowse').clear();
+    SVG.get('browserContent').clear();
     if(!params.buttons)
         params.buttons = Session.get("fileButtons");
     browserContent(params);
     navButtons(params);
     fileBMenu();
-    if(params.id == Session.get('fileId') && !SVG.get("Bcrumbs"))
-        fileBcrumbs(params.id)
-    else
-        Session.set('fileId', params.id);
+    Session.set('fileId', params.id);
 }
 
 Template.filebrowse.rendered = function(){
     console.log('start');
     window.windowType = 'fileBrowser';
+    $('body').css("background-color", "rgba(255, 255, 255, 0)");
     var start = Number(this.data.start);
     var dim = Number(this.data.dim);
     Session.set("fileButtons", this.data.buttons);
     var params = {start:start, dim:dim, col: this.data.col, id: this.data.id, buttons: this.data.buttons};
     Session.set('browseParams', JSON.stringify(params));
     var browser = SVG('fileBrowse'); 
+    var browserContent = browser.group().attr('id', 'browserContent');
+    defs = SVG.get('fileBrowse').defs();
+    defs.attr("id", "defs");
+    defs.group().attr('id','navdefs');
+    defs.group().attr('id','navigation');
+
     this.autorun(function(){
         var params = JSON.parse(Session.get('browseParams'));
+        console.log('start reloadFilebrowser')
         reloadFilebrowser(params);
-        console.log('reloadFilebrowser');
+        console.log('end reloadFilebrowser');
     });
 
     this.autorun(function(){
         var id = Session.get('fileId');
         if(SVG.get("Bcrumbs"))
             SVG.get("Bcrumbs").remove();
+        console.log('start autorun crumbs')
         fileBcrumbs(id);
-        console.log('reload crumbs');
+        console.log('end autorun crumbs');
     });
 
     this.autorun(function(){
@@ -44,7 +51,7 @@ Template.filebrowse.rendered = function(){
 }
 
 browserContent = function(params){
-    console.log('content');
+    console.log('browserContent');
     var start = params.start;
     var dim = params.dim;
     var col = params.col;
@@ -72,6 +79,7 @@ browserContent = function(params){
                     var q = {fileId: params.id}
                 allfiles[params.id] = Group.find(q, {sort: {ordering: 1}}).fetch();
                 //var items = Item.find({groupId: params.id}, {sort: {ordering: 1}}).fetch();
+                //console.log(items);
                 //if(items.length > 0){
                 //    var lim = allfiles[params.id].length;
                 //    allfiles[params.id] = allfiles[params.id].concat(items);
@@ -82,20 +90,23 @@ browserContent = function(params){
             }
         }
     }
+    Session.set('parentDims', {w: parent.width, h: parent.height});
+    //console.log(allfiles[params.id]);
     var files = allfiles[params.id].slice(start-1,dim*dim+start-1);
-
+    //console.log(files);
     $('body').attr({"class": "no_scroll"}).css({margin:0,padding:0});
     var browser = SVG.get('fileBrowse'); 
     browser.viewbox(0,0,parent.width,parent.height);
+    var browserContent = SVG.get('browserContent');
     var x, y=0;
-    var svg=[],gr=[];
+    var svg=[],gr=[], bkg=[];
     var cols = [];
     for(var i = 0 ; i < files.length ; i++){
         if (i % dim == 0) {
             x = 0;
             y = y + parent.height/dim;
         }
-        gr[i] = browser.group().attr("id", "group_"+i);
+        gr[i] = browserContent.group().attr("id", "group_"+i);
         gr[i].transform({"scaleX": (1/dim)*0.99,"scaleY": (1/dim)*0.99,x: x,y: y-parent.height/dim}); 
         if(col == "file"){
             var f = files[i];
@@ -128,7 +139,7 @@ browserContent = function(params){
         svg[i].attr({preserveAspectRatio: "xMidYMid meet"})
         svg[i].viewbox(0,0,f.width,f.height);
         svg[i].image(imagepath); 
-        svg[i].group().attr("id","container_"+i)
+        bkg[i] = gr[i].rect(parent.width,parent.height).fill('#FFFFFF').attr('id','background_'+i).opacity(0);
         x=x+parent.width/dim
         if(window.parent.windowType == 'svgEditor')
             gr[i].on('click',function(event){
@@ -142,24 +153,40 @@ browserContent = function(params){
                         window.parent.menuAddElemCallb(SVG.get("file_"+i).attr("fileId"));
                 }
             });
-        
+
+        gr[i].on('mouseover', function(){
+            var i = this.attr("id").substring(this.attr("id").lastIndexOf("_")+1);
+            if(!params.buttons || params.buttons != 'nobuttons'){ 
+                if(SVG.get("container_"+i))
+                        SVG.get("container_"+i).show();
+                else{
+                    var vb = SVG.get('fileBrowse').attr("viewBox").split(" ");
+                    var container = SVG.get('group_'+i).use(SVG.get('menu_defs')).attr("id", "container_"+i)
+                    container.scale(0.8 * Number(vb[2]) / container.bbox().width);
+                }
+            }
+            SVG.get("file_"+i).opacity(0.6);
+            Session.set("fileBIt", SVG.get("file_"+i).attr("fileId"));
+        })    
+        gr[i].on('mouseout', function(){
+            var i = this.attr("id").substring(this.attr("id").lastIndexOf("_")+1);
+            if(SVG.get("container_"+i))
+                SVG.get("container_"+i).hide();
+            SVG.get("file_"+i).opacity(1);
+        })
     }
-    //fileBMenu(parent, files.length);
+    console.log('/browserContent');
 }
 
 navButtons = function(params){
-    console.log('nav');
+    console.log('navButtons');
     var start = params.start;
     var dim = params.dim;
     var col = params.col;
-    var browser = SVG.get('fileBrowse'); 
-    if(col == "file")
-        var parent = File.findOne({_id: params.id});
-    else{
-        var path = getElementPath(params.id);
-        var parent = File.findOne({_id: path[path.length-1]});
-    }
-    var nav = {};
+    var browser = SVG.get('fileBrowse');
+    var dims = Session.get('parentDims');
+    console.log(dims);
+    var nav = {}, bscale = 0.1;
     if(Math.ceil(start/(dim*dim)) == 1)
         nav.p = false;
     else
@@ -168,18 +195,33 @@ navButtons = function(params){
         nav.n = false;
     else
         nav.n = true;
-    if(nav.p || nav.n){
-        var pages = browser.group().attr("id","pagination").opacity(0.3);
-        pages.text(Math.ceil(start/(dim*dim))+ '/' + (Math.ceil(allfiles[params.id].length / (dim*dim)))).move(parent.width+20, 20).font({size: 30, family: 'Sans-serif'});
+    if(!nav.p)
+        if(SVG.get('previousButtonUse'))
+            SVG.get('previousButtonUse').remove();
+    if(!nav.n)
+        if(SVG.get('nextButtonUse'))
+            SVG.get('nextButtonUse').remove();
+    if(!nav.p && !nav.p){
+        if(SVG.get('pagination'))
+            SVG.get('pagination').remove();
+        if(SVG.get('slider'))
+            SVG.get('slider').remove();
     }
-    if(nav.n || nav.p)
-        var buttons = browser.group().attr("id","sideMenu")
+
     if(nav.n){
-        var next = Group.findOne({_id: "Ka4qTJEBoLLLrmNK7"});
-        recursive_group_client(buttons, next);
-        var n = SVG.get("Ka4qTJEBoLLLrmNK7");
-        n.x(parent.width-20).y(parent.height-n.bbox().height*0.2);
-        n.scale(0.1).opacity(0.1);
+        if(!SVG.get('nextButton')){
+            var next = Group.findOne({_id: "Ka4qTJEBoLLLrmNK7"});
+            var n = recursive_group_client(SVG.get('navigation'), next);
+            n.attr('id', 'nextButton').attr({"dimsw":dims.w, "dimsh":dims.h});
+            n.x(dims.w-20).y(dims.h-n.bbox().height*0.2);
+            n.scale(bscale);
+        }
+        if(SVG.get('nextButtonUse'))
+            SVG.get('nextButtonUse').remove();
+        var n = SVG.get('fileBrowse').use(SVG.get('nextButton')).attr('id', 'nextButtonUse');
+        n.opacity(0.1);
+        n.x(dims.w-Number(SVG.get('nextButton').attr("dimsw"))).y(dims.h-Number(SVG.get('nextButton').attr("dimsh")));
+        
         n.on('click', function(event){
             var ini = start+dim*dim;
             Session.set('browseParams', JSON.stringify({start:ini, dim:dim, col: col, id: params.id, buttons: params.buttons}));
@@ -192,11 +234,19 @@ navButtons = function(params){
         })
     }
     if(nav.p){
-        var prev = Group.findOne({_id: "CrtnLmouQCC9eWWg8"});
-        recursive_group_client(buttons, prev);
-        var p = SVG.get("CrtnLmouQCC9eWWg8");
-        p.x(0-p.bbox().width*0.2).y(parent.height-p.bbox().height*0.2);
-        p.scale(0.1).opacity(0.1);
+        if(!SVG.get('previousButton')){
+            var prev = Group.findOne({_id: "CrtnLmouQCC9eWWg8"});
+            var p = recursive_group_client(SVG.get('navigation'), prev);
+            p.attr('id', 'previousButton').attr({"dimsw":dims.w, "dimsh":dims.h});
+            p.x(0-p.bbox().width*0.2).y(dims.h-p.bbox().height*0.2);
+            p.scale(bscale);
+        }
+        if(SVG.get('previousButtonUse'))
+            SVG.get('previousButtonUse').remove();
+        var p = SVG.get('fileBrowse').use(SVG.get("previousButton"));
+        p.opacity(0.1).attr('id', 'previousButtonUse');
+        p.x(dims.w-Number(SVG.get('previousButton').attr("dimsw"))).y(dims.h-Number(SVG.get('previousButton').attr("dimsh")));
+
         p.on('click', function(event){
             var ini = start-dim*dim;
             if(ini > 0){
@@ -210,26 +260,97 @@ navButtons = function(params){
             this.opacity(0.1);
         })
     } 
+    if(nav.p || nav.n){
+        if(!SVG.get('pagination'))
+            var pages = browser.group().attr("id","pagination").opacity(0.3);
+        var pages = SVG.get('pagination');
+        pages.clear();
+        var currentpg = Math.ceil(start/(dim*dim));
+        var allpg = Math.ceil(allfiles[params.id].length / (dim*dim));
+        pages.text(currentpg + '/' + allpg).move(dims.w+20, 20).font({size: 30, family: 'Sans-serif'}).attr('id', 'paginationtext');
+
+        var st = 100
+                , en = ((nav.p) ? SVG.get('previousButton').bbox().y : SVG.get('nextButton').bbox().y ) - 250
+                , step = Math.floor((en - st) / allpg);
+        console.log(en);
+        console.log(step);
+        if(!SVG.get('slider')){
+            var slider = browser.group().attr('id', 'slider');
+            var base = slider.group().attr('id', 'sliderbase');
+            var st = 100
+                , segs = []
+                , slidex = dims.w+50
+                , wd = SVG.get('browserContent').bbox().width / 65;
+
+            for(var i = 0 ; i < allpg; i++){
+                segs[i] = base.rect(wd , step).radius(wd/2).attr('id', 'base_'+i).move(slidex, st+step*i).fill('#cccccc').opacity(0.3);
+                segs[i].on('mouseover', function(e){
+                    this.opacity(0.7);
+                    var page = Math.floor((this.cy() - st) / step)+1;
+                    SVG.get('paginationtext').text(page + '/' + allpg);
+                })
+                segs[i].on('mouseout', function(e){
+                    this.opacity(0.3);
+                    var params = JSON.parse(Session.get('browseParams'));
+                    SVG.get('paginationtext').text(Math.ceil(params.start/(params.dim*params.dim)) + '/' + allpg);
+                })
+                segs[i].on('click', function(e){
+                    SVG.get('slidercontrol').cy(this.y()+this.height()/2);
+                    var page = Math.floor((this.cy() - st) / step);
+                    Session.set('browseParams', JSON.stringify({start: page*dim*dim+1, dim:dim, col: col, id: params.id, buttons: params.buttons}));
+                })
+            }
+            var cw = wd*2;
+            var sl = slider.circle(cw).center(slidex+wd/2, st+step/2).attr('id', 'slidercontrol').stroke({width:0}).fill('#000000').opacity(0.3).on('mouseover', function(){
+                    this.opacity(0.5)
+                }).on('mouseout', function(){
+                    this.opacity(0.3)
+                });
+
+            sl.draggable({ minX: slidex+wd/2 - cw/2, maxX: slidex+wd/2 + cw/2, minY: st, maxY: en });
+            var diff = 0;
+            sl.on('dragstart', function(e){
+                var invmatrix = SVG.get('slidercontrol').node.getCTM().inverse();
+                var pp = transformPoint(this.cx(), this.cy(), [invmatrix]);
+                diff = pp[1] - this.cy();
+            })
+            sl.on('dragmove', function(e){
+                var invmatrix = SVG.get('slidercontrol').node.getCTM().inverse();
+                var pp = transformPoint(this.cx(), this.cy(), [invmatrix]);
+                this.cy(pp[1]-diff);
+                var page = Math.floor((this.cy() - st) / step)+1;
+                SVG.get('paginationtext').text(page + '/' + allpg);
+            });
+            sl.on('dragend', function(e){
+                var page = Math.floor((this.cy() - st) / step);
+                Session.set('browseParams', JSON.stringify({start: page*dim*dim+1, dim:dim, col: col, id: params.id, buttons: params.buttons}));
+            });
+        }
+        else{
+            SVG.get('slidercontrol').cy(st + step * (currentpg-1) + step/2);
+        }
+    }
+    console.log('/navButtons');
 }
 
 fileBMenu = function(){
-    console.log('menu');
+    console.log('fileBMenu');
     var params = JSON.parse(Session.get('browseParams'));
     var start = params.start, dim = params.dim, col = params.col, id = params.id;
     var browser = SVG.get('fileBrowse');
-    if(col == "file")
-        var parent = File.findOne({_id: params.id});
-    else{
-        var path = getElementPath(params.id);
-        var parent = File.findOne({_id: path[path.length-1]});
-    }
-    var len = allfiles[params.id].slice(start-1,dim*dim+start-1).length;
-    var each = Group.findOne({_id: "hBKYCaWAxHGkMLBYF"});
-    var butt = [];
+    var partfiles = allfiles[params.id].slice(start-1,dim*dim+start-1);
+
     if(!params.buttons || params.buttons != 'nobuttons'){
-        recursive_group_client(SVG.get("container_0"), each);
+        if(!SVG.get('menu_defs')){
+            console.log('create menu_defs')
+            var each = Group.findOne({_id: "hBKYCaWAxHGkMLBYF"});
+            var menu = SVG.get('defs').group().attr("id", "menu_defs")
+            recursive_group_client(menu, each);
+            console.log('/created menu_defs')
+        }
+        /*
         var ids= [];
-        SVG.get("container_0").each(function(j, children) {
+        menu.each(function(j, children) {
             var id = this.attr("id");
             if(ids.indexOf(id) != -1){
                 var index = ids.reduce(function(total,x){return x==id ? total+1 : total}, 0)
@@ -238,106 +359,77 @@ fileBMenu = function(){
             ids.push(id);
             if(this.attr("id").lastIndexOf('_') == -1 || !Number(this.attr("id").substring(this.attr("id").lastIndexOf('_')+1)) )
                 this.attr("id", this.attr("id")+'_0');
-        }, true);
+        }, true);*/
     }
-
-    for(i = 0; i < len; i++){
-        var vb = SVG.get('file_'+i).attr("viewBox").split(" ");      
-        if(!params.buttons || params.buttons != 'nobuttons'){           
-            if(i != 0){
-                var container = deepClone(SVG.get("container_0"),i, SVG.get("container_"+i));
-                SVG.get('file_'+i).add(container);
-                container.attr("id","container_"+i);
-                container.each(function(j, children) {
-                    var id = this.attr("id").substring(0,this.attr("id").indexOf('_'));
-                    this.attr("id", id+"_"+i);
-                    if(this.attr('type') == 'menu_item')
-                        this.on('click',function(){
-                            if(this.attr("function").lastIndexOf('.') != -1)
-                                var func = this.attr("function").substring(this.attr("function").lastIndexOf('.')+1);
-                            else
-                                var func = this.attr("function");
-                            console.log(func);
-                            if(window[func])
-                                window[func](this, event);
-                        });
-                }, true);
+    
+    if(!SVG.get('navdefs'))
+        navdefs = SVG.get('defs').group().attr('id','navdefs')
+    if(!SVG.get('folder')){
+        console.log('create folder')
+        var foldergr = Group.findOne({_id: "8pmQarpMhMqeReis3"});
+        folder = recursive_group_client(SVG.get('navdefs'), foldergr);
+        folder.attr("id", 'folder');
+        folder.first().first().first().fill('#59534d');
+        console.log('/created folder')
+    }
+    if(!SVG.get('disector')){
+        console.log('create disector')
+        var disectorgr = Group.findOne({_id: "M8RdemnXdmHcJZKwi"});
+        disector = recursive_group_client(SVG.get('navdefs'), disectorgr);
+        disector.attr('id', 'disector');
+        disector.first().first().first().fill('#59534d');
+        console.log('/created disector')
+    }
+    var bscale = 0.3
+    //for(i = 0; i < len; i++){
+    for(i = 0; i < partfiles.length; i++){
+        var vb = SVG.get('fileBrowse').attr("viewBox").split(" ");
+        if(!params.buttons || params.buttons != 'nobuttons'){
+            var gbox = SVG.get('group_'+i).bbox();
+            var gm = SVG.get('group_'+i).transform();
+            if(col == 'file'){
+                if(partfiles[i].noofchildren > 0){
+                    var fold = SVG.get("group_"+i).group().scale(bscale).fill('none');
+                    //var backgf = fold.rect(1024,1024).radius(512).fill('#cccccc').opacity(0.6);
+                    fold.use(SVG.get('folder'));
+                    fold.rect(1024,1024).radius(512).fill('#cccccc').opacity(0.6);
+                    fold.x(vb[2] - fold.bbox().width).y(vb[3] - fold.bbox().height);
+                    fold.on('mouseover',function(){
+                        this.opacity(0.6);
+                    });
+                    fold.on('mouseout',function(){
+                        this.opacity(1);
+                    })
+                    fold.on('click',function(e){
+                        browseIt();
+                    });
+                }
             }
-            else
-                var container = SVG.get("container_0");
-            container.scale(0.8 * Number(vb[2]) / container.bbox().width);
-            container.hide();
-            SVG.get("file_"+i).on('mouseover', function(){
-                var i = this.attr("id").substring(this.attr("id").lastIndexOf("_")+1);
-                SVG.get("container_"+i).show();
-                Session.set("fileBIt", this.attr("fileId"));
-            })
-            SVG.get("file_"+i).on('mouseout', function(){
-                var i = this.attr("id").substring(this.attr("id").lastIndexOf("_")+1);
-                SVG.get("container_"+i).hide();
-            })
-        }
-        else
-            SVG.get("file_"+i).on('mouseover', function(){
-                Session.set("fileBIt", this.attr("fileId"));
-            });
-        if(dim != 1){
-            var subfiles = Dependency.find({fileId2: SVG.get("file_"+i).attr("fileId"), type: 1}).fetch()
-            if(subfiles.length > 0){
-                var fold = SVG.get("file_"+i).group().move(Number(vb[2])-300, Number(vb[3])-300).scale(0.2).fill('none');
-                var folder = Group.findOne({_id: "8pmQarpMhMqeReis3"});
-                var backgf = fold.rect(1024,1024).radius(512).fill('#cccccc').opacity(0.6);
-                recursive_group_client(fold, folder);
-                //fold.first().first().first().first().fill('#cccccc').stroke({color: '#FFFFFF', width: 2});
-                fold.on('mouseover',function(){
-                    this.opacity(0.6);
-                });
-                fold.on('mouseout',function(){
-                    this.opacity(1);
-                })
-                backgf.on('click',function(){
-                    var func = this.parent.last().attr('function');
-                    if(func.lastIndexOf('.') != -1)
-                        func = func.substring(func.lastIndexOf('.')+1);
-                    console.log(func);
-                    if(window[func])
-                        window[func](this, event);
-                });
+            if(col == 'group'){
+                var subs = Group.find({groupId: SVG.get("file_"+i).attr("fileId")}).count();
+                if(subs == 0)
+                    var subs = Item.find({groupId: SVG.get("file_"+i).attr("fileId")}).count()
             }
-            var subs = [];
-            if(col == 'file')
-                subs = Group.find({fileId: SVG.get("file_"+i).attr("fileId")}).fetch();
-            else{
-                if(col == 'group')
-                    subs = Group.find({groupId: SVG.get("file_"+i).attr("fileId")}).fetch();
-                if(col == 'item' || subs.length == 0)
-                    subs = Item.find({groupId: SVG.get("file_"+i).attr("fileId")}).fetch();
-            }
-            if(subs.length > 0){
-                var disect = SVG.get("file_"+i).group().move(50, Number(vb[3])-300).scale(0.2).fill('none');
-                var disector = Group.findOne({_id: "M8RdemnXdmHcJZKwi"});
-                var backg = disect.rect(1024,1024).radius(512).fill('#cccccc').opacity(0.6);
-                recursive_group_client(disect, disector);
-                //disect.first().first().first().first().fill('#cccccc').stroke({color: '#FFFFFF', width: 2});
+            if(col == 'file' || (col == 'group' && subs > 0)){
+                var disect = SVG.get("group_"+i).group().scale(bscale).fill('none');
+                //var backg = disect.rect(1024,1024).radius(512).fill('#cccccc').opacity(0.6);
+                disect.use(SVG.get('disector')).attr('id', 'disectorUse_'+i);
+                disect.rect(1024,1024).radius(512).fill('#cccccc').opacity(0.6);
+                disect.y(vb[3] - disect.bbox().height);
                 disect.on('mouseover',function(){
                     this.opacity(0.6);
                 });
                 disect.on('mouseout',function(){
                     this.opacity(1);
                 })
-                backg.on('click',function(){
-                    var func = this.parent.last().attr('function');
-                    if(func.lastIndexOf('.') != -1)
-                        func = func.substring(func.lastIndexOf('.')+1);
-                    console.log(func);
-                    if(window[func])
-                        window[func](this, event);
+                disect.on('click',function(e){
+                    disectIt()
                 });
             }
         }
     }
+    console.log('/fileBMenu');
 }
-
 fileBcrumbs = function(fileid){
     console.log('fileBcrumbs');
     var params = JSON.parse(Session.get('browseParams'));
@@ -363,8 +455,6 @@ fileBcrumbs = function(fileid){
     var vb = browser.attr("viewBox").split(" ");
     var crumbsarr = [], gr = [], y = 20, x;
     var cols = [];
-    console.log(lim);
-    console.log(path);
     var maxwidth = 0;
     for(i = path.length-1; i >= 0; i--){
         if(typeof lim === 'undefined' || i > lim){
@@ -384,7 +474,6 @@ fileBcrumbs = function(fileid){
             else
                 cols[i] = 'item';
         }
-        console.log(imagepath); console.log(cols[i]);
         x = -f.width*scale-20;
         if(maxwidth < f.width)
             maxwidth = f.width;
@@ -397,16 +486,14 @@ fileBcrumbs = function(fileid){
         crumbsarr[i].viewbox(0,0,f.width,f.height);
         crumbsarr[i].image(imagepath);
         if(cols[i] == 'file'){
-            var fold = crumbsarr[i].group().move(50, Number(vb[3])-300).scale(0.5).fill('none');
-            var folder = Group.findOne({_id: "8pmQarpMhMqeReis3"});
+            var fold = gr[i].group().move(50, Number(vb[3])-300).scale(0.5).fill('none');
             var backgf = fold.rect(1024,1024).radius(512).fill('#cccccc').opacity(1);
-            recursive_group_client(fold, folder);
+            fold.use(SVG.get('folder'));
         }
         else{
-            var disect = crumbsarr[i].group().move(50, Number(vb[3])-300).scale(0.5).fill('none');
-            var disector = Group.findOne({_id: "M8RdemnXdmHcJZKwi"});
+            var disect = gr[i].group().move(50, Number(vb[3])-300).scale(0.5).fill('none');
             var backg = disect.rect(1024,1024).radius(512).fill('#cccccc').opacity(1);
-            recursive_group_client(disect, disector);
+            disect.use(SVG.get('disector'));
         }
         crumbsarr[i].on('click', function(){
             i = this.attr("id").substring(this.attr("id").indexOf('_')+1);
@@ -422,6 +509,7 @@ fileBcrumbs = function(fileid){
     }
     for(i in path)
         gr[i].cx(-maxwidth*scale/2 - 20)
+    console.log('/fileBcrumbs');
 }
 
 editIt = function editIt(){
@@ -435,11 +523,13 @@ viewIt = function viewIt(){
 }
 
 editCloneIt = function editCloneIt(){
-    var params = JSON.parse(Session.get('browseParams'));
-    if(params.col == 'file')
-        cloneFile(Session.get("fileBIt"), function(res){window.open('/filem/'+res, '_blank');});
-    else
-        cloneGroupFile(Session.get("fileBIt"), function(res){window.open('/'+ params.col +'m/'+res, '_blank');});
+    if(Meteor.userId()){
+        var params = JSON.parse(Session.get('browseParams'));
+        if(params.col == 'file')
+            cloneFile(Session.get("fileBIt"), function(res){window.open('/filem/'+res, '_blank');});
+        else
+            cloneGroupFile(Session.get("fileBIt"), function(res){window.open('/'+ params.col +'m/'+res, '_blank');});
+    }
 }
 
 browseIt = function browseIt(){
@@ -460,16 +550,18 @@ disectIt = function disectIt(){
 }
 
 removeIt = function removeIt(){
-    var params = JSON.parse(Session.get('browseParams'));
-    if(params.col == 'file')
-        removeFile(Session.get("fileBIt"));
-    else
-        if(params.col == 'group'){
-            if(Group.findOne({_id: Session.get("fileBIt")}).fetch().length > 0)
-                removeGroup(Session.get("fileBIt"));
+    if(File.findOne({_id: Session.get("fileBIt")}).creatorId == Meteor.userId() || Meteor.user().profile.role == 'admin'){
+        var params = JSON.parse(Session.get('browseParams'));
+        if(params.col == 'file')
+            removeFile(Session.get("fileBIt"));
+        else
+            if(params.col == 'group'){
+                if(Group.findOne({_id: Session.get("fileBIt")}).fetch().length > 0)
+                    removeGroup(Session.get("fileBIt"));
+                else
+                    Meteor.call('remove_document', 'Item', Session.get("fileBIt"));
+            }
             else
                 Meteor.call('remove_document', 'Item', Session.get("fileBIt"));
-        }
-        else
-            Meteor.call('remove_document', 'Item', Session.get("fileBIt"));
+    }
 }

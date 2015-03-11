@@ -7,12 +7,12 @@ panCallback = function(a){
         truematrix = truematrix.substring(7,truematrix.length-1);
         SVG.get("viewport").transform("matrix",truematrix);
         var selected = global_oro_variables.selected.members;
-        for(s in selected)
+        for(var s in selected)
             positionSelector(selected[s].attr("selected"));
-        var locked = Session.get("lockedItems")
-        for(l in locked)
+        var locked = Session.get("lockedItems");
+        for(var l in locked)
             positionSelectorL(locked[l]);
-}
+};
 
 enablePan = function(){
     var elem = document.getElementById('svgEditor');
@@ -23,24 +23,24 @@ enablePan = function(){
         zoomScale: 0.2,
         callback: panCallback
     });
-}
+};
 
 disablePan = function(){
     global_oro_variables.svgPan.removeHandlers();
-}
+};
 
 
 removeGui = function() {
   global_oro_variables.gui.domElement.parentElement.removeChild(global_oro_variables.gui.domElement);
   global_oro_variables.gui = undefined;
-}
+};
 
 addGui = function(gui, parent) {
   if(!parent) {
     parent = document.getElementsByClassName('dg ac');
   }
   parent.appendChild(gui);
-}
+};
 
 findCoordCPath = function(points){
     var x1 = points[0][1];
@@ -77,7 +77,7 @@ findCoordCPath = function(points){
         }
     }
     return {xmin: {x: x1, y: y1}, xmax:{x: x2, y: y2}, ymin: {x: x3, y: y3}, ymax: {x: x4, y: y4}};       
-}
+};
 
 movePoint = function(point, dx, dy, coord, sidex, sidey){
     var x = point[0], y = point[1];
@@ -91,7 +91,7 @@ movePoint = function(point, dx, dy, coord, sidex, sidey){
     else
         point[1] = y + (coord.ymax.y - y) / (coord.ymax.y - coord.ymin.y) * dy;
     return point;
-}
+};
 
 resizeCPathp = function(points, dx, dy, coord, sidex, sidey){
     if(['Z','z'].indexOf(points[0]) == -1){
@@ -398,25 +398,7 @@ rotateMatrix = function (a, rad) {
     out[5] = a5;
     return out;
 }
-/*
-positionPoint = function(x,y){
-    var truematrix = SVG.get("viewport").node.getAttribute("transform");
-    if(truematrix){
-        truematrix = truematrix.substring(7,truematrix.length-1);
-        var matrix = truematrix.split(" ");
-        return {x: x*Number(matrix[0]) + Number(matrix[4]), y: y* Number(matrix[3]) + Number(matrix[5])};
-    }
-    else return {x:x,y:y};
-}
-*/
-/*
-positionPointInverse = function(x,y){
-    var m = SVG.get("viewport").node.getCTM().inverse();
-    if(m)
-        return {x: x*Number(m.a) + Number(m.e), y: y* Number(m.d) + Number(m.f)};
-    else return {x:x,y:y};
-}
-*/
+
 transformPath = function(pathArray, id){
     var m = SVG.get(id).node.getCTM();
     for(p in pathArray){
@@ -436,47 +418,7 @@ transformPath = function(pathArray, id){
     }
     return pathArray;
 }
-/*
 
-positionPath = function(pathArray){
-    for(p in pathArray){
-        if(pathArray[p][0] != 'Z'){
-            var point = positionPoint(pathArray[p][1], pathArray[p][2]);
-            pathArray[p][1] = point.x;
-            pathArray[p][2] = point.y;
-            if(pathArray[p][0] == 'C'){
-                var point2 = positionPoint(pathArray[p][3], pathArray[p][4]);
-                pathArray[p][3] = point2.x;
-                pathArray[p][4] = point2.y;
-                var point3 = positionPoint(pathArray[p][5], pathArray[p][6]);
-                pathArray[p][5] = point3.x;
-                pathArray[p][6] = point3.y;
-            }
-        }
-    }
-    return pathArray;
-}*/
-/*
-positionPathInverse = function(pathArray){
-    for(p in pathArray){
-        if(pathArray[p][0] != 'Z'){
-            var point = positionPointInverse(pathArray[p][1], pathArray[p][2]);
-            pathArray[p][1] = point.x;
-            pathArray[p][2] = point.y;
-            if(pathArray[p][0] == 'C'){
-                var point2 = positionPointInverse(pathArray[p][3], pathArray[p][4]);
-                pathArray[p][3] = point2.x;
-                pathArray[p][4] = point2.y;
-                var point3 = positionPointInverse(pathArray[p][5], pathArray[p][6]);
-                pathArray[p][5] = point3.x;
-                pathArray[p][6] = point3.y;
-            }
-        }
-    }
-    return pathArray;
-}
- 
-*/
 positionPointIni = function(x,y){
     var truematrix = SVG.get("viewport").node.getAttribute("transform");
     if(truematrix){
@@ -577,7 +519,7 @@ positionSelector = function(id){
             var box = SVG.get(id).bbox();
             var matrix = SVG.get(id).node.getCTM();
             var view  = getViewportMatrix();
-            var rotate = transformPoint(box.x+box.width/2, box.y-30, [matrix,view]);
+            var rotate = transformPoint(box.x+box.width/2, box.y - 4*(Number(SVG.get("rotate_"+id).attr('ry')) + Number(SVG.get("rotate_"+id).attr('stroke-width'))), [matrix,view]);
             var points = [
                 [ p[0][0] + (p[1][0] - p[0][0]) / 2, p[0][1] + (p[1][1] - p[0][1]) / 2 ],
                 [ p[1][0], p[1][1]],
@@ -602,18 +544,26 @@ positionSelector = function(id){
 }
 
 positionButtons = function(box, id){
+    var box = SVG.get(id).bbox();
     var but = 35;
     var sp = but/4;
-    SVG.get("editPoints").size(but,but).move(box.x+box.width/2-but-sp, box.y+box.height+sp)
-    SVG.get("3DPoints").size(but,but).move(box.x+box.width/2+sp, box.y+box.height+sp)
+    var matrix = SVG.get(id).node.getCTM();
+    var view  = getViewportMatrix();
+    var pp = transformPoint(box.x+box.width/2, box.y+box.height, [matrix,view]);
+    //var ep = transformPoint(box.x+box.width/2-but-sp, box.y+box.height+sp, [matrix,view]);
+    //var dd = transformPoint(box.x+box.width/2+sp, box.y+box.height+sp, [matrix,view]);
+    SVG.get("editPoints").size(but,but).move(pp[0]-but-sp, pp[1]+sp)
+    SVG.get("3DPoints").size(but,but).move(pp[0]+sp, pp[1]+sp)
 }
 
 setButtons = function(id){
-    var box = SVG.get(id).bbox();
-    var buttons = []
-    buttons[0] = SVG.get("container_"+id).image('/file/MeSC479WX69b9GATS').attr("id", "editPoints").opacity(0.6);
-    buttons[1] = SVG.get("container_"+id).image('/file/isqRsRCPhGeSPNhoh').attr("id", "3DPoints").opacity(0.6);
-    positionButtons(box);
+    if(!SVG.get('editPoints_defs')){
+        var b1 = SVG.get('svgEditor').defs().image('/file/MeSC479WX69b9GATS').attr("id", "editPoints_defs").opacity(0.6).size(35,35);
+        var b2 = SVG.get('svgEditor').defs().image('/file/isqRsRCPhGeSPNhoh').attr("id", "3DPoints_defs").opacity(0.6).size(35,35);
+    }
+    var buttons = [] 
+    buttons[0] = SVG.get("container_"+id).use(SVG.get('editPoints_defs')).attr("id", "editPoints");
+    buttons[1] = SVG.get("container_"+id).use(SVG.get('3DPoints_defs')).attr("id", "3DPoints");
     for(i in buttons){
         buttons[i].on('mouseover', function(){
             this.opacity(1);
@@ -626,15 +576,16 @@ setButtons = function(id){
         SVG.get('box_'+id).remove();
         var sel = buildSelectorPoints(id);
         global_oro_variables.selected.add(sel);
+        SVG.get(id).fixed();
     });
     buttons[1].on('click', function(){
         SVG.get('box_'+id).remove();
         var sel = buildSelector3D(SVG.get("svgEditor"), id);
         global_oro_variables.selected.add(sel);
-        SVG.get(id).draggable();
+        SVG.get(id).fixed();
     });
-}
 
+}
 buildSelector = function(parent,id, dragg){
     var r = 10;
     var box = SVG.get(id).bbox();
@@ -646,7 +597,7 @@ buildSelector = function(parent,id, dragg){
     for(i = 0 ; i < 8 ; i++)
         circles[i] = buildCircle(container,"circle_"+i+"_"+id,r,i);
     circles[8] = buildCircle(selector, "rotate_"+id,r);
-    circles[8].cx(box.x + box.width/2).cy(box.y - 30); 
+    circles[8].cx(box.x + box.width/2).cy(box.y - 4*(r + Number(circles[8].attr('stroke-width')))); 
     circles[8].attr("style","cursor:url(/icons/rotate.png) 12 12, auto;");
     if(['simple_path', 'complex_path'].indexOf(dragg) != -1) 
         setButtons(id);
@@ -719,14 +670,16 @@ buildSelector = function(parent,id, dragg){
     //if(dragg){
         for(i=0; i < 8 ; i++){
             if( i % 4 == 0){
+                var minx = circles[i].x(), maxx = circles[i].x()+ circles[i].attr('rx')*2;
                 circles[i].draggable({
-                    minX: x + w/2, maxX: x + w/2 
+                    minX: minx, maxX: maxx 
                 });
             }
             else
                 if( i % 2 == 0 && i % 4 != 0){
+                    var miny = circles[i].y(), maxy = circles[i].y() + circles[i].attr('ry')*2;
                     circles[i].draggable({
-                        minY: y + h/2, maxY: y + h/2
+                        minY: miny, maxY: maxy
                     });
                 }
                 else{
@@ -1329,15 +1282,15 @@ buildAttractors = function(p, points, hinge, id, attrs, midds){
 
 buildHinge = function(p, points, hinge, midd, id, hinges, midds, attr, no){
     if(points.subpath[p][0] == 'M'){
-        var newhinge = buildCirclePoint(hinge, 10, "#FFFFFF", '#007fff').attr("type", "hinge").attr("hingeM", "hingeM");
+        var newhinge = buildCirclePoint(hinge, 10, "#FFFFFF", '#007fff').attr("hingeM", "hingeM");
         if(points.subpath[p+1][0] != 'C')
             var l = hinge.line(points.subpath[p][1],points.subpath[p][2],points.subpath[p+1][1],points.subpath[p+1][2]).stroke({color: '#007fff', width: 3}).opacity(0.6).attr("id", "hingeLine");
         else
             var l = hinge.line(points.subpath[p][1],points.subpath[p][2],points.subpath[p+1][5],points.subpath[p+1][6]).stroke({color: '#007fff', width: 3}).opacity(0.6).attr("id", "hingeLine");
     }
     else
-        var newhinge = buildCirclePoint(hinge, 10, "#FFFFFF", "#000000").attr("type", "hinge");
-    
+        var newhinge = buildCirclePoint(hinge, 10, "#FFFFFF", "#000000");
+    newhinge.attr("type", "hinge").attr("p", p).attr("no", no);
     if(points.subpath[p][0] == 'C') { var x = 5, y = 6; }
     else{ var x = 1, y = 2; }
     if(points.subpath[p][0] == 'C' || points.subpath[p+1][0] == 'C')
@@ -1449,7 +1402,10 @@ positionMidd = function(newmidd, p, points){
         var x2 = 5, y2 = 6;
     }
     else{ var x2 = 1, y2 = 2; }
-    newmidd.cx(points.subpath[p][x] + (points.subpath[p+1][x2] - points.subpath[p][x]) /2).cy(points.subpath[p][y] + (points.subpath[p+1][y2] - points.subpath[p][y]) / 2);
+    var temppath = SVG.get(Session.get('fileId')).path([[ 'M', points.subpath[p][x], points.subpath[p][y] ], points.subpath[p+1]]);
+    var p = temppath.pointAt(temppath.length() / 2);
+    newmidd.cx(p.x).cy(p.y);
+    temppath.remove();
 }
 
 buildMidd = function(p, points, hinge, midd, id, hinges, midds, attrs, no){
@@ -1468,10 +1424,10 @@ buildMidd = function(p, points, hinge, midd, id, hinges, midds, attrs, no){
         if(e.shiftKey){
             var d = 10;
             if(points.path[points.start+p-1][0] == 'C'){
-                var at1 = points.path[points.start+p][1];
-                var at2 = points.path[points.start+p][2];
-                var at11 = points.subpath[p-1][1];
-                var at22 = points.subpath[p-1][2];
+                var at1 = points.path[points.start+p-1][5];
+                var at2 = points.path[points.start+p-1][6];
+                var at11 = points.subpath[p][5];
+                var at22 = points.subpath[p][6];
             }
             else{
                 var at1 = points.path[points.start+p-1][1] + d;
@@ -1529,6 +1485,8 @@ buildSubPathPoints = function(points, hinge, midd, id, hinges, midds, attr, no){
         hinges[p] = buildHinge(p, points, hinge, midd, id, hinges, midds, attr, no);
         midds[p] = buildMidd(p, points, hinge, midd, id, hinges, midds, attr, no);
     }
+    if(points.subpath[points.subpath.length-1] == 'null')
+        midds[points.subpath.length-2].remove();
 }
 allpoints = [];
 subpaths = []
@@ -1692,7 +1650,7 @@ showMenu = function(){
 showDatGui = function(){
     if(global_oro_variables.gui != undefined)
         removeGui();
-    global_oro_variables.gui = new dat.GUI({width: 150});
+    global_oro_variables.gui = new dat.GUI({width: 155});
     if(global_oro_variables.selected === undefined || global_oro_variables.selected.members.length == 0)
         buildDatGui(global_oro_variables.gui);
     else{
@@ -1703,7 +1661,10 @@ showDatGui = function(){
             var no = 0;
             for(i in mb){
                 if(type != SVG.get(mb[i].attr("selected")).attr("type"))
-                    type = "multiple_subjects";
+                    if(SVG.get(mb[i].attr("selected")).type != 'path')
+                        type = "multiple_subjects";
+                    else
+                        type = 'multiple_paths';
                 no ++;
             }
         }   
@@ -1812,6 +1773,8 @@ updatePointList = function(item, points){
                 }
     if(SVG.get("box_"+item.attr("id")))
         positionSelector(item.attr("id"));
+    if(SVG.get("locked_"+item.attr("id")))
+        positionSelectorL(item.attr("id"));
 }
 
 updateFont = function(item, font){
@@ -1828,7 +1791,14 @@ updateFont = function(item, font){
 }
 
 updateItem = function(id, fields){
+    console.log(fields);
     var item = SVG.get(id);
+    if(fields.groupId){
+        if(SVG.get(fields.groupId)){
+            removeItem(id);
+            build_item(SVG.get(fields.groupId), Item.findOne({_id: id}));
+        }
+    }
     if(fields.type){
         if(fields.groupId)
             if(SVG.get(fields.groupId))
@@ -1887,7 +1857,8 @@ updateItem = function(id, fields){
 removeItem = function(id){
     if(SVG.get("box_"+id))
         deselectItem(id);
-    SVG.get(id).remove();
+    if(SVG.get(id))
+        SVG.get(id).remove();
     if(Session.get('lockedItems').indexOf(id) != -1){
         SVG.get("locked_"+id).remove();
         var locked = Session.get('lockedItems');
@@ -1904,7 +1875,10 @@ deselectItem = function(id, notremove){
             SVG.get(id).fixed();
             global_oro_variables.selected.members.splice(index,1);  
             SVG.get("box_"+id).remove();
-            Meteor.call('update_document', 'Item', id, {selected: 'null'});
+            if(SVG.get(id).attr("type") != 'simpleGroup')
+                Meteor.call('update_document', 'Item', id, {selected: 'null'});
+            else
+                Meteor.call('update_document', 'Group', id, {selected: 'null'});
         }
     }
     if(!notremove)
@@ -2017,7 +1991,7 @@ build_item = function(g,it){
                 }
                 else{
                         deselect();
-                        if(['embedediFrame', 'para_simple_path', 'para_complex_path', 'embededCanvas', 'embededHtml'].indexOf(this.attr("type")) == -1){
+                        if(['embedediFrame', 'para_simple_path', 'para_complex_path', 'embededCanvas', 'embededHtml', 'text', 'rasterImage', 'formulae'].indexOf(this.attr("type")) == -1){
                             var results = buildSelector(SVG.get("svgEditor"), this.attr("id"), dragg);
                             this.draggable();
                         }
@@ -2031,7 +2005,26 @@ build_item = function(g,it){
                 markSelected();
             }
         });
+        item.on('beforedrag', function(event){
+            disablePan();
+            event.stopPropagation();
+            event.preventDefault();
+        });
+        var dif;
+        item.on('dragstart', function(event){
+            disablePan();
+            event.stopPropagation();
+            event.preventDefault();
+            var invmatrix = SVG.get('viewport').node.getCTM().inverse();
+            var p = transformPoint(event.detail.event.clientX, event.detail.event.clientY, [invmatrix]);
+            dif = {x: p[0]-this.x(), y: p[1] - this.y()}
+        });
         item.on('dragmove', function(event){
+            var invmatrix = SVG.get('viewport').node.getCTM().inverse();
+            var p = transformPoint(event.detail.event.clientX, event.detail.event.clientY, [invmatrix]);
+            //this.center(p[0],p[1]);
+            this.move(p[0]-dif.x, p[1]-dif.y);
+            //this.dx(p[0]-mouseini[0]).dy(p[1]-mouseini[1]);
             positionSelector(this.attr("id"));
         });
         item.on('dragend', function(event){
@@ -2041,17 +2034,7 @@ build_item = function(g,it){
             event.stopPropagation();
             event.preventDefault();
         });
-        item.on('dragstart', function(event){
-            disablePan();
-            event.stopPropagation();
-            event.preventDefault();
-        });
-        item.on('beforedrag', function(event){
-            disablePan();
-            event.stopPropagation();
-            event.preventDefault();
-        });
-    item.doc();
+    return item;
 }
 
 removeGroup = function(id){
@@ -2098,6 +2081,7 @@ build_group_client = function (g, group, subgroups){
             }
         }*/
     }
+    return g;
 }
 
 recursive = 0;
@@ -2286,6 +2270,7 @@ recursive_group_client = function (parent, group, linkedgs){
             });
         }
     }
+    return subparent;
     
 }
 
@@ -2380,10 +2365,10 @@ checkPathType = function(path) {
     return "simple";
 }
 
-//simplify complex paths with H and V, S, Q, T
+//simplify complex paths with H and V, S, Q, T, A
 simplifyCPath = function(path) {
     var svgArr = path.array.value;
-    for(var a in svgArr){
+    for(var a = 0; a < svgArr.length; a++){
         if(svgArr[a][0] == "H"){
             svgArr[a][0] = "L";
             if(svgArr[a-1][0] == 'C')
@@ -2391,47 +2376,161 @@ simplifyCPath = function(path) {
             else
                 svgArr[a][2] = svgArr[a-1][2];
         }
-        else
-            if(svgArr[a][0] == "V"){
-                svgArr[a][0] = "L";
-                svgArr[a][2] = svgArr[a][1];
-                if(svgArr[a-1][0] == 'C')
-                    svgArr[a][1] = svgArr[a-1][5];
-                else
-                    svgArr[a][1] = svgArr[a-1][1];
-            }
+        else if(svgArr[a][0] == "V"){
+            svgArr[a][0] = "L";
+            svgArr[a][2] = svgArr[a][1];
+            if(svgArr[a-1][0] == 'C')
+                svgArr[a][1] = svgArr[a-1][5];
             else
-                if(svgArr[a][0] == "S"){
-                    svgArr[a][0] = 'C';
-                    svgArr[a][5] = svgArr[a][3];
-                    svgArr[a][6] = svgArr[a][4];
-                    svgArr[a][3] = svgArr[a][1];
-                    svgArr[a][4] = svgArr[a][2];
-                    svgArr[a][1] = svgArr[a-1][5] + svgArr[a-1][5] - svgArr[a-1][3];
-                    svgArr[a][2] = svgArr[a-1][6] + svgArr[a-1][6] - svgArr[a-1][4];
-                }
-                else
-                    if(svgArr[a][0] == "Q"){
-                        svgArr[a][0] = 'C';
-                        svgArr[a][5] = svgArr[a][3];
-                        svgArr[a][6] = svgArr[a][4];
-                        svgArr[a][3] = svgArr[a][1];
-                        svgArr[a][4] = svgArr[a][2];
-                    }
-                    else
-                        if(svgArr[a][0] == "T"){
-                            svgArr[a][0] = 'C';
-                            svgArr[a][5] = svgArr[a][1];
-                            svgArr[a][6] = svgArr[a][2];
-                            svgArr[a][1] = svgArr[a-1][3] + svgArr[a-1][3] - svgArr[a-1][1];
-                            svgArr[a][2] = svgArr[a-1][4] + svgArr[a-1][4] - svgArr[a-1][2];
-                            svgArr[a][3] = svgArr[a][1];
-                            svgArr[a][4] = svgArr[a][2];
-                        }
+                svgArr[a][1] = svgArr[a-1][1];
+        }
+        else if(svgArr[a][0] == "S"){
+            svgArr[a][0] = 'C';
+            svgArr[a][5] = svgArr[a][3];
+            svgArr[a][6] = svgArr[a][4];
+            if(svgArr[a-1][0] != 'M'){
+                svgArr[a][3] = svgArr[a][1];
+                svgArr[a][4] = svgArr[a][2];
+                svgArr[a][1] = svgArr[a-1][5] + svgArr[a-1][5] - svgArr[a-1][3];
+                svgArr[a][2] = svgArr[a-1][6] + svgArr[a-1][6] - svgArr[a-1][4];
+            }
+            else{
+                svgArr[a][3] = svgArr[a-1][1];
+                svgArr[a][4] = svgArr[a-1][2];
+                svgArr[a][1] = svgArr[a-1][1];
+                svgArr[a][2] = svgArr[a-1][2];
+            }
+        }
+        else if(svgArr[a][0] == "Q"){
+            svgArr[a][0] = 'C';
+            svgArr[a][5] = svgArr[a][3];
+            svgArr[a][6] = svgArr[a][4];
+            svgArr[a][3] = svgArr[a][1] * 2/3 + svgArr[a][5] * 1/3;
+            svgArr[a][4] = svgArr[a][2] * 2/3 + svgArr[a][6] * 1/3;
+            svgArr[a][1] = svgArr[a][1] * 2/3 + svgArr[a-1][svgArr[a-1].length-2] * 1/3;
+            svgArr[a][2] = svgArr[a][2] * 2/3 + svgArr[a-1][svgArr[a-1].length-1] * 1/3;
+        }
+        else if(svgArr[a][0] == "T"){
+            svgArr[a][0] = 'C';
+            svgArr[a][5] = svgArr[a][1];
+            svgArr[a][6] = svgArr[a][2];
+            if(svgArr[a-1][0] != 'M'){
+                svgArr[a][1] = svgArr[a-1][5] + svgArr[a-1][5] - svgArr[a-1][3];
+                svgArr[a][2] = svgArr[a-1][6] + svgArr[a-1][6] - svgArr[a-1][4];
+                svgArr[a][3] = svgArr[a][5] * 1/3 + svgArr[a][1] - svgArr[a-1][5] / 3;
+                svgArr[a][4] = svgArr[a][6] * 1/3 + svgArr[a][2] - svgArr[a-1][6] / 3;
+            }
+            else{
+                svgArr[a][1] = svgArr[a-1][1]
+                svgArr[a][2] = svgArr[a-1][2]
+                svgArr[a][3] = svgArr[a-1][1]
+                svgArr[a][4] = svgArr[a-1][2]
+            } 
+        }
+        else if(svgArr[a][0] == "A"){
+            var x = svgArr[a-1][svgArr[a-1].length-2],
+                y = svgArr[a-1][svgArr[a-1].length-1];
+            var temp = a2c.apply(0, [x, y].concat(svgArr[a].slice(1)));
+            svgArr.splice(a,1);
+            for(var i = 0; i < temp.length; i = i + 6)
+                svgArr.splice(a + (Math.floor(i/6)), 0, ['C', temp[i], temp[i+1], temp[i+2], temp[i+3], temp[i+4], temp[i+5] ]);
+        }
     }
     path.plot(svgArr);
     return path;
 }
+
+function a2c(x1, y1, rx, ry, angle, large_arc_flag, sweep_flag, x2, y2, recursive) {
+        // https://github.com/adobe-webplatform/Snap.svg/blob/master/src/path.js
+        // for more information of where this math came from visit:
+        // http://www.w3.org/TR/SVG11/implnote.html#ArcImplementationNotes
+        var PI = Math.PI;
+        var _120 = PI * 90 / 180, //120 initial
+            rad = PI / 180 * (+angle || 0),
+            res = [],
+            xy,
+            rotate = function (x, y, rad) {
+                var X = x * Math.cos(rad) - y * Math.sin(rad),
+                    Y = x * Math.sin(rad) + y * Math.cos(rad);
+                return {x: X, y: Y};
+            };
+        if (!recursive) {
+            xy = rotate(x1, y1, -rad);
+            x1 = xy.x;
+            y1 = xy.y;
+            xy = rotate(x2, y2, -rad);
+            x2 = xy.x;
+            y2 = xy.y;
+            var cos = Math.cos(PI / 180 * angle),
+                sin = Math.sin(PI / 180 * angle),
+                x = (x1 - x2) / 2,
+                y = (y1 - y2) / 2;
+            var h = (x * x) / (rx * rx) + (y * y) / (ry * ry);
+            if (h > 1) {
+                h = Math.sqrt(h);
+                rx = h * rx;
+                ry = h * ry;
+            }
+            var rx2 = rx * rx,
+                ry2 = ry * ry,
+                k = (large_arc_flag == sweep_flag ? -1 : 1) *
+                    Math.sqrt(Math.abs((rx2 * ry2 - rx2 * y * y - ry2 * x * x) / (rx2 * y * y + ry2 * x * x))),
+                cx = k * rx * y / ry + (x1 + x2) / 2,
+                cy = k * -ry * x / rx + (y1 + y2) / 2,
+                f1 = Math.asin(((y1 - cy) / ry).toFixed(9)),
+                f2 = Math.asin(((y2 - cy) / ry).toFixed(9));
+
+            f1 = x1 < cx ? PI - f1 : f1;
+            f2 = x2 < cx ? PI - f2 : f2;
+            f1 < 0 && (f1 = PI * 2 + f1);
+            f2 < 0 && (f2 = PI * 2 + f2);
+            if (sweep_flag && f1 > f2) {
+                f1 = f1 - PI * 2;
+            }
+            if (!sweep_flag && f2 > f1) {
+                f2 = f2 - PI * 2;
+            }
+        } else {
+            f1 = recursive[0];
+            f2 = recursive[1];
+            cx = recursive[2];
+            cy = recursive[3];
+        }
+        var df = f2 - f1;
+        if (Math.abs(df) > _120) {
+            var f2old = f2,
+                x2old = x2,
+                y2old = y2;
+            f2 = f1 + _120 * (sweep_flag && f2 > f1 ? 1 : -1);
+            x2 = cx + rx * Math.cos(f2);
+            y2 = cy + ry * Math.sin(f2);
+            res = a2c(x2, y2, rx, ry, angle, 0, sweep_flag, x2old, y2old, [f2, f2old, cx, cy]);
+        }
+        df = f2 - f1;
+        var c1 = Math.cos(f1),
+            s1 = Math.sin(f1),
+            c2 = Math.cos(f2),
+            s2 = Math.sin(f2),
+            t = Math.tan(df / 4),
+            hx = 4 / 3 * rx * t,
+            hy = 4 / 3 * ry * t,
+            m1 = [x1, y1],
+            m2 = [x1 + hx * s1, y1 - hy * c1],
+            m3 = [x2 + hx * s2, y2 - hy * c2],
+            m4 = [x2, y2];
+        m2[0] = 2 * m1[0] - m2[0];
+        m2[1] = 2 * m1[1] - m2[1];
+        if (recursive) {
+            return [m2, m3, m4].concat(res);
+        } else {
+            res = [m2, m3, m4].concat(res).join().split(",");
+            var newres = [];
+            for (var i = 0, ii = res.length; i < ii; i++) {
+                newres[i] = i % 2 ? rotate(res[i - 1], res[i], rad).y : rotate(res[i], res[i + 1], rad).x;
+            }
+            return newres;
+        }
+    }
 
 //ex to_simple_path
 //simplifies complex paths (SVGjs complex Path) -> ORO path coord (String); if simple Path -> it returns unchanged
@@ -2567,6 +2666,7 @@ circleToCPath = function circleToCPath(circle){
     return ell;
 }
 
+
 ellipseToCPath = function ellipseToCPath(ellipse){
     var x = ellipse.x(), y= ellipse.y();
     if(ellipse.attr("rx"))
@@ -2575,16 +2675,16 @@ ellipseToCPath = function ellipseToCPath(ellipse){
         var rx = ellipse.attr("r"), ry = ellipse.attr("r");
     var w = rx*2, h = ry*2;
     var cx = ellipse.attr("cx"), cy = ellipse.attr("cy");
-    var delta = Math.sqrt(Math.sqrt(Math.sqrt(2)));
+    var delta = 4 * (Math.sqrt(2) - 1) / 3;
     var points = 
         'M' + (x+w/2) + ' ' + y
-            + 'C' + (x+w/2+rx/2*delta) + ' ' + y + ',' + (x+w) + ' ' + (y+h/2 -ry/2*delta) + ','
+            + 'C' + (x+w/2+rx*delta) + ' ' + y + ',' + (x+w) + ' ' + (y+h/2 -ry*delta) + ','
             + (x+w) + ' ' + (y+h/2)
-            + 'C' + (x+w) + ' ' + (y+h/2+ry/2*delta) + ',' + (x+w/2+rx/2*delta) + ' ' + (y+h) + ','
+            + 'C' + (x+w) + ' ' + (y+h/2+ry*delta) + ',' + (x+w/2+rx*delta) + ' ' + (y+h) + ','
             + (x+w/2) + ' ' + (y+h)
-            + 'C' + (x+w/2-rx/2*delta) + ' ' + (y+h) + ',' + x + ' ' + (y+h/2+ry/2*delta) + ','
+            + 'C' + (x+w/2-rx*delta) + ' ' + (y+h) + ',' + x + ' ' + (y+h/2+ry*delta) + ','
             + x + ' ' + (y+h/2)
-            + 'C' + x + ' ' + (y+h/2-ry/2*delta) + ',' + (x+w/2-rx/2*delta) + ' ' + y + ','
+            + 'C' + x + ' ' + (y+h/2-ry*delta) + ',' + (x+w/2-rx*delta) + ' ' + y + ','
             + (x+w/2) + ' ' + y + 'Z';
     
     return {pointList: points, type: "complex_path", parameters: {cx: cx, cy: cy, rx: rx, ry: ry, callback: ellipseToCPath}};
@@ -2596,19 +2696,19 @@ rectToPath = function rectToPath(rect){
     if(rect.attr("rx")){
         var rx = Number(rect.attr("rx"));
         var ry = Number(rect.attr("ry"));
-        var delta = Math.sqrt(Math.sqrt(Math.sqrt(2)));
+        var delta = 4 * (Math.sqrt(2) - 1) / 3;
         var points =
             'M'+ x + ' ' + (y+ry)
-                + 'C' + x + ' ' + (y+ry-ry/2*delta) + ',' + (x+rx-rx/2*delta) + ' ' + y + ','
+                + 'C' + x + ' ' + (y+ry-ry*delta) + ',' + (x+rx-rx*delta) + ' ' + y + ','
                 + (x+rx) + ' ' + y + 'L'
                 + (x+w-rx) + ' ' + y
-                + 'C' + (x+w-rx+rx/2*delta) + ' ' + y + ',' + (x+w) + ' ' + (y+ry-ry/2*delta) + ','
+                + 'C' + (x+w-rx+rx*delta) + ' ' + y + ',' + (x+w) + ' ' + (y+ry-ry*delta) + ','
                 + (x+w) + ' ' + (y+ry) + 'L'
                 + (x+w) + ' ' + (y+h-ry)
-                + 'C' + (x+w) + ' ' + (y+h-ry+ry/2*delta) + ',' + (x+w-rx+rx/2*delta) + ' ' + (y+h) + ','
+                + 'C' + (x+w) + ' ' + (y+h-ry+ry*delta) + ',' + (x+w-rx+rx*delta) + ' ' + (y+h) + ','
                 + (x+w-rx) + ' ' + (y+h) + 'L'
                 + (x+rx) + ' ' + (y+h)
-                + 'C' + (x+rx-rx/2*delta) + ' ' + (y+h) + ',' + x + ' ' + (y+h-ry+ry/2*delta) + ','
+                + 'C' + (x+rx-rx*delta) + ' ' + (y+h) + ',' + x + ' ' + (y+h-ry+ry*delta) + ','
                 + x + ' ' + (y+h-ry) + 'Z';
         params.rx = rx;
         params.ry = ry;
@@ -2632,7 +2732,7 @@ polylineToPath = function polylineToPath(line){
     return points;
 }
 
-cloneItem = function cloneItem(it, groupId){
+cloneItem = function cloneItem(it, groupId, callb){
     if(typeof it === 'string')
         it = Item.findOne({_id: it});
     delete it._id;
@@ -2640,18 +2740,22 @@ cloneItem = function cloneItem(it, groupId){
     it.selected = 'null';
     Meteor.call('insert_document', 'Item', it, function(err, res){
         console.log(err); console.log('Item: '+res);
+        if(callb)
+            callb(res);
     });
 }
 
 cloneGroup = function cloneGroup(gr, parentId, parent){
     if(typeof gr === 'string')
         gr = Group.findOne({_id: gr});
+    var no = Group.find({uuid: gr.uuid}).count();
+    no++;
     var deps = Dependency.find({fileId1: gr._id, type: {$in:[2,3,5]} }).fetch();
     var groups = Group.find({groupId: gr._id}).fetch();
     var items = Item.find({groupId: gr._id}).fetch();
     delete gr._id;
     gr[parent] = parentId;
-    gr.uuid = gr.uuid+"_copy";
+    gr.uuid = gr.uuid+no;
     Meteor.call('insert_document', 'Group', gr, function(err, res){
         if(err) console.log(err);
         if(res){
@@ -2670,6 +2774,7 @@ cloneGroup = function cloneGroup(gr, parentId, parent){
 
 cloneFile = function cloneFile(id, callb){
     var f = File.findOne({_id: id});
+    var no = File.find({uuid: f.uuid}).count();
     var deps = Dependency.find({fileId1: id}).fetch();
     var groups = Group.find({fileId: id}).fetch();
     delete f._id;
@@ -2677,7 +2782,7 @@ cloneFile = function cloneFile(id, callb){
     f.dateModified = new Date();
     f.permissions.view = [];
     f.permissions.edit = [Meteor.userId()];
-    f.uuid = f.uuid+"_copy";
+    f.uuid = f.uuid+(no+1);
     Meteor.call('insert_document', 'File', f, function(err, res){
         if(err) console.log(err);
         if(res){
@@ -2827,3 +2932,15 @@ paraCircle = function(obj){
 paraFormulae = function(latex){
     return 'http://latex.codecogs.com/svg.latex?'+latex;
 }
+
+
+/*
+SVG.extend(SVG.Set,{
+    drag: function(){
+        this.each(function(i, children){
+            if(this.attr("type") == "hinge")
+                dragHinge(this);
+        });
+    }
+})
+*/

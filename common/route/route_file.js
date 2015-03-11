@@ -22,7 +22,6 @@ Router.map(function(){
                     else
                         if(file.fileType == 'image/svg+xml')
                             var script = Meteor.call('getFileScript', file._id);
-                    //console.log(script);
                     this.response.end(script);
                 }
             }
@@ -30,9 +29,6 @@ Router.map(function(){
     });
 });
 
-
-//js_dep = [];
-//all_dep = {};
 
 recursive_depends = function recursive_depends(fileId, rel, level_dep, level){
     var deps = Dependency.find({fileId1: fileId, type: rel}).fetch();
@@ -49,7 +45,7 @@ getDependencies = function(fileId, rel){
     var level_dep = [];
     var js_dep = [];
     level_dep = recursive_depends(fileId, rel, level_dep, 0);
-    console.log(level_dep);
+    //console.log(level_dep);
     for(var i = level_dep.length-1; i >= 0; i--){
         js_dep = js_dep.concat(level_dep[i]);
     }
@@ -57,18 +53,6 @@ getDependencies = function(fileId, rel){
     return js_dep;
 }
 
-/*
-recursive_depends = function recursive_depends(fileId, rel){
-    var deps = Dependency.find({fileId1: fileId, type: rel}).fetch();
-    if(deps.length > 0)
-        for(var d in deps){
-            if(js_dep.indexOf(deps[d].fileId2) == -1){
-                recursive_depends(deps[d].fileId2, rel);
-                js_dep.push(deps[d].fileId2);
-            }
-        }
-}*/
-//GZxMGchzEkKFtakFh
 separate_deps = function separate_deps(js_dep,type){
     if(js_dep.length > 0){
         var result = [];
@@ -76,11 +60,7 @@ separate_deps = function separate_deps(js_dep,type){
             var f = File.findOne({_id: js_dep[j], fileType: type});
             if(f)
                 result.push(f);
-        }/*
-        var select = {};
-        select._id = { $in: js_dep };
-        select.fileType = type;
-        return File.find(select).fetch();*/
+        }
         return result;
     }
 }
@@ -96,7 +76,7 @@ path_points = function path_points(pointList){
 
 Router.route('/filem/:_id', {
     path: '/filem/:_id',
-    template: 'svgEditor',//'show_meteor_file_svg',
+    template: 'svgEditor',
     subscriptions: function(){
         this.subscribe('files').wait();
         this.subscribe('groups').wait();
@@ -104,35 +84,29 @@ Router.route('/filem/:_id', {
         this.subscribe('dependencies').wait();
         this.subscribe('users').wait();
     },
+    /*
     waitOn: function(){
         scripts = [];
-        //js_dep = [];
-        //recursive_depends(this.params._id, 3);
-        //recursive_depends("Yq9iqYhEma9z9mYrp", 3);
         var js_dep = getDependencies("Yq9iqYhEma9z9mYrp", 3);
         console.log(js_dep);
         jsfiles = separate_deps(js_dep, "application/javascript");
-        //js_dep = [];
-        console.log(jsfiles);
         for(var s in jsfiles){
-            //http://oroboro.meteor.com/
-            //http://192.168.1.106:300
-            scripts.push(IRLibLoader.load('http://oroboro.meteor.com/file/' + jsfiles[s]._id)); 
+            scripts.push(IRLibLoader.load('http://192.168.1.106:3000/file/' + jsfiles[s]._id)); 
         }
         return scripts;
-    },
+    },*/
+    //onBeforeAction: function(){
+
+    //},
     data: function(){
-        //if(js_dep.length == 0)
-            //recursive_depends("Yq9iqYhEma9z9mYrp", 3);
-            //recursive_depends(this.params._id, 3);
         var js_dep = getDependencies("Yq9iqYhEma9z9mYrp", 3);
         cssfiles = separate_deps(js_dep,"text/css");
         jsfiles = separate_deps(js_dep,"application/javascript");
-        //js_dep = [];
         return {file: File.findOne({_id:this.params._id}), cssfiles: cssfiles, jsfiles: jsfiles};
     },
     action: function(){
         if(this.ready()){
+
             this.render();
         }
     }
@@ -149,18 +123,24 @@ Router.route('/browse/:col/:_id/:start/:dim/:buttons', {
     data: function(){
         var dim = Number(this.params.dim);
         var limit = dim * dim;
-        /*
-        if(this.params.col == "file")
-            var files = Dependency.find({fileId2: this.params._id}, {skip: Number(this.params.start)-1, limit: limit}).fetch();
-        else
-            var files = Group.find({groupId: this.params._id}, {skip: Number(this.params.start)-1, limit: limit}).fetch();
-
-        return {files: files, start: this.params.start, dim: this.params.dim, id: this.params._id, col: this.params.col};  */
         return {start: this.params.start, dim: this.params.dim, id: this.params._id, col: this.params.col, buttons: this.params.buttons};
     },
-     waitOn: function(){
-        return IRLibLoader.load('http://oroboro.meteor.com/file/GZxMGchzEkKFtakFh');
+    onBeforeAction: function(){
+        //var script1 = IRLibLoader.load('http://192.168.1.106:3000/file/GZxMGchzEkKFtakFh');
+        var script1 = IRLibLoader.load('http://oroboro.meteor.com/file/GZxMGchzEkKFtakFh');
+
+        if(script1.ready()){
+            //var script2 = IRLibLoader.load('http://192.168.1.106:3000/file/6BdThBrHzGa8qe3nm');
+            var script2 = IRLibLoader.load('http://oroboro.meteor.com/file/6BdThBrHzGa8qe3nm');
+            if(script2.ready()){
+                this.next();
+            }
+        }
     },
+    /*
+     waitOn: function(){
+        return IRLibLoader.load('http://192.168.1.106:3000/file/GZxMGchzEkKFtakFh');
+    },*/
     action: function(){
         if(this.ready()){
             this.render();
@@ -193,16 +173,28 @@ Router.route('/browse/:col/:_id/:start/:dim', {
         var limit = dim * dim;
         return {start: this.params.start, dim: this.params.dim, id: this.params._id, col: this.params.col};
     },
+    onBeforeAction: function(){
+        var script1 = IRLibLoader.load('http://oroboro.meteor.com/file/GZxMGchzEkKFtakFh');
+
+       // var script1 = IRLibLoader.load('http://192.168.1.106:3000/file/GZxMGchzEkKFtakFh');
+        if(script1.ready()){
+            //var script2 = IRLibLoader.load('http://192.168.1.106:3000/file/6BdThBrHzGa8qe3nm');
+            var script2 = IRLibLoader.load('http://oroboro.meteor.com/file/6BdThBrHzGa8qe3nm');
+            if(script2.ready()){
+                this.next();
+            }
+        }
+    },/*
      waitOn: function(){
-        return IRLibLoader.load('http://oroboro.meteor.com/file/GZxMGchzEkKFtakFh');
-    },
+        return IRLibLoader.load('http://192.168.1.106:3000/file/GZxMGchzEkKFtakFh');
+    },*/
     action: function(){
         if(this.ready()){
             this.render();
         }
     }
 });
-
+/*
 Router.route('/browse/:_id/:dim', {
     path: '/browse/:_id/:dim',
     template: 'browser',
@@ -214,11 +206,11 @@ Router.route('/browse/:_id/:dim', {
         return {id: this.params._id, dim: this.params.dim};   
     },
      waitOn: function(){
-        return IRLibLoader.load('http://oroboro.meteor.com/file/GZxMGchzEkKFtakFh');
+        return IRLibLoader.load('http://192.168.1.106:3000/file/GZxMGchzEkKFtakFh');
     },
     action: function(){
         if(this.ready()){
             this.render();
         }
     }
-});
+});*/
