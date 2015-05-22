@@ -1,13 +1,12 @@
 /* for dat.gui color picker: */
 /*
 div.selector{
-    display: -webkit-box !important;      
-    display: -moz-box !important;        
-    display: -ms-flexbox !important;  
-    display: -webkit-flex !important;
-    display: flex !important;
+    display: -webkit-box; display: -moz-box; display: -ms-flexbox; display: -webkit-flex; display: flex;
 }
 */
+body{
+    margin: 0;
+}
 
 #content{
     max-width: 98%;
@@ -26,9 +25,10 @@ div.selector{
     display: block;
     margin: auto;
 }
+/*
 img{
     max-height: 25px;
-}
+}*/
 .flex{
     display: -webkit-box;      /* OLD - iOS 6-, Safari 3.1-6 */
     display: -moz-box;         /* OLD - Firefox 19- (buggy but mostly works) */

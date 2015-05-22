@@ -4,7 +4,7 @@ Meteor.publish(null, function (){
 });
 */
 
-
+/*
 Meteor.publish('images', function(){
     return Images.find();
 });
@@ -24,4 +24,4 @@ Images.allow({
   }
 });
 
-
+*/

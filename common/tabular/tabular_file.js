@@ -1,3 +1,4 @@
+/*
 TabularTables.File = new Tabular.Table({
   name: "File",
   collection: File,
@@ -37,3 +38,4 @@ TabularTables.File = new Tabular.Table({
     {data: "permissions", title: "Permissions"}
   ]
 });
+*/

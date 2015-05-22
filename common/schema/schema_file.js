@@ -27,6 +27,12 @@ Schemas.File = new SimpleSchema({
         defaultValue: new Date(),
         optional: true
     },
+    dateCreated: {
+        type: Date,
+        label: "Date Created",
+        defaultValue: new Date(),
+        optional: true
+    },
     version: {
         type: String,
         label: "Version",
@@ -34,6 +40,7 @@ Schemas.File = new SimpleSchema({
         defaultValue: "1",
         optional: true
     },
+    /*
     image: {
         type: String,
         label: "Image",
@@ -44,17 +51,19 @@ Schemas.File = new SimpleSchema({
                 collection: 'Images'
             }
         }
-    },
+    },*/
     fileType: {
         type: String,
         label: "File Type",
         max: 200,
+        allowedValues: ["application/javascript", "image/svg+xml", "image/png", "image/jpeg", "text/css", "text/plain", "application/octet-stream", "gcode"]
+        /*
         autoform: {
             type: "select",
             options: function () {
                 return [
-                    {label: "svg", value: "image/svg+xml"},
                     {label: "js", value: "application/javascript"},
+                    {label: "svg", value: "image/svg+xml"},
                     {label: "png", value: "image/png"},
                     {label: "jpeg", value: "image/jpeg"},
                     {label: "css", value: "text/css"},
@@ -62,43 +71,31 @@ Schemas.File = new SimpleSchema({
                     {label: "stream", value: "application/octet-stream"}
                 ];
             }
-        }
+        }*/
     },
     script: {
         type: String,
         label: "Script",
         optional: true,
         trim: false,
+        /*
         autoform: {
           afFieldInput: {
             type: "textarea"
           }
-        }
-    },/*
-    permissions: {
-        type: String,
-        label: "Permissions",
-        max: 200,
-        autoform: {
-            type: "select",
-            options: function () {
-                return [
-                    {label:"public", value:"public"},
-                    {label:"private", value:"private"}
-                ];
-            }
-        },
-        optional: true
-    },*/
+        }*/
+    },
     permissions: {
         type: Object,
         label: "Permissions",
-        optional: true
+        optional: true,
+        blackbox: true
     },
     'permissions.view': {
         type: [String],
         label: "View Permissions",
         optional: true,
+        defaultValue: []
     },
     'permissions.edit': {
         type: [String],
@@ -127,6 +124,39 @@ Schemas.File = new SimpleSchema({
         label: "No of children",
         optional: true,
         defaultValue: 0
+    },
+    structuralpath: {
+        type: [String],
+        label: "Structural Path",
+        optional: true,
+        defaultValue: []
+    },
+    dependencypath: {
+        type: [String],
+        label: "Dependency Path",
+        optional: true,
+        defaultValue: []
+    },
+    groupids: {
+        type: [String],
+        label: "Group Ids",
+        optional: true
+    },
+    itemids: {
+        type: [String],
+        label: "Item Ids",
+        optional: true
+    },
+    original: {
+        type: String,
+        label: "Original",
+        optional: true
+    },
+    parameters: {
+        type: Object,
+        label: "Parameters",
+        optional: true,
+        blackbox: true
     }
 });
 

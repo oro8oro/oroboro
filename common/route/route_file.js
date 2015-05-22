@@ -1,3 +1,14 @@
+/*
+Router.route('/file/:_id', function () {
+  this.redirect('/file/' + this.params._id + '/1');
+})
+*/
+
+//var server = 'http://oroboro.meteor.com'
+//var server = 'http://192.168.1.106:3000'
+//var server = 'http://192.168.2.2:3000'
+var server = ''
+
 
 Router.map(function(){
     this.route('/file/:_id', {
@@ -17,7 +28,7 @@ Router.map(function(){
                 else{
                     var headers = {'Content-type': file.fileType, 'Access-Control-Allow-Origin' : '*'};
                     this.response.writeHead(200, headers);
-                    if(['application/octet-stream', 'application/javascript', 'text/css', 'text/plain'].indexOf(file.fileType) != -1)
+                    if(['application/octet-stream', 'application/javascript', 'text/css', 'text/plain', 'gcode'].indexOf(file.fileType) != -1)
                         var script = file.script;
                     else
                         if(file.fileType == 'image/svg+xml')
@@ -29,118 +40,342 @@ Router.map(function(){
     });
 });
 
-
-recursive_depends = function recursive_depends(fileId, rel, level_dep, level){
-    var deps = Dependency.find({fileId1: fileId, type: rel}).fetch();
-    if(!level_dep[level])
-        level_dep[level] = [];
-    for(var d in deps){
-        level_dep[level].push(deps[d].fileId2);
-        recursive_depends(deps[d].fileId2, rel, level_dep, level + 1);
-    }
-    return level_dep;
-}
-
-getDependencies = function(fileId, rel){
-    var level_dep = [];
-    var js_dep = [];
-    level_dep = recursive_depends(fileId, rel, level_dep, 0);
-    //console.log(level_dep);
-    for(var i = level_dep.length-1; i >= 0; i--){
-        js_dep = js_dep.concat(level_dep[i]);
-    }
-    js_dep = js_dep.filter(onlyUnique);
-    return js_dep;
-}
-
-separate_deps = function separate_deps(js_dep,type){
-    if(js_dep.length > 0){
-        var result = [];
-        for(j in js_dep){
-            var f = File.findOne({_id: js_dep[j], fileType: type});
-            if(f)
-                result.push(f);
+Router.map(function(){
+    this.route('/file/:_id/:scale', {
+        where: 'server',
+        path: '/file/:_id/:scale',
+        template: 'show_file',
+        action: function(){
+            var file = File.findOne({_id: this.params._id});
+            if(typeof file == 'undefined')
+                file = File.findOne({title: this.params._id});
+            if(typeof file != 'undefined'){      
+                if(file.fileType == 'image/jpeg'){
+                    //var headers = {'Content-type': file.fileType, 'Access-Control-Allow-Origin' : '*', Location: file.script};
+                    this.response.writeHead(302, {Location: file.script});
+                    this.response.end();
+                }
+                else{
+                    var headers = {'Content-type': file.fileType, 'Access-Control-Allow-Origin' : '*'};
+                    this.response.writeHead(200, headers);
+                    if(['application/octet-stream', 'application/javascript', 'text/css', 'text/plain'].indexOf(file.fileType) != -1)
+                        var script = file.script;
+                    else
+                        if(file.fileType == 'image/svg+xml')
+                            var script = Meteor.call('getFileScript', file._id, this.params.scale);
+                    this.response.end(script);
+                }
+            }
         }
-        return result;
-    }
-}
+    });
+});
 
-path_points = function path_points(pointList){
-    var points = JSON.parse(pointList);
-    var path = "";
-    for(var l in points){
-        path = path + "M" + points[l].join(" ") + "z";
+Router.route('/viewer/:url', {
+    template: 'svgViewer',
+    path: '/viewer/:url',
+    onBeforeAction: function(){
+        var script1 = IRLibLoader.load(server + '/file/GZxMGchzEkKFtakFh');//svg.js
+        if(script1.ready()){
+            var script3 = IRLibLoader.load(server + '/file/9Za3SyDmhiBzmGYup');//svg.parse.js
+            if(script3.ready()){
+                var script4 = IRLibLoader.load(server + '/file/SvgoiuE2Ft5hPuA7s');//svg.import.js
+                if(script4.ready()){
+                    var script5 = IRLibLoader.load(server + '/file/ENoXS3yEwFhYhoXGS');//pan&zoom
+                    if(script5.ready()){
+                        this.next();
+                    }
+                }
+            }
+        }
+    },
+    data: function(){
+        return {url: decodeURIComponent(this.params.url)}
     }
-    return path;
-}
+})
+
+Router.route('/viewer', {
+    template: 'svgViewer',
+    path: '/viewer',
+    onBeforeAction: function(){
+        var script1 = IRLibLoader.load(server + '/file/GZxMGchzEkKFtakFh');//svg.js
+        if(script1.ready()){
+            var script3 = IRLibLoader.load(server + '/file/9Za3SyDmhiBzmGYup');//svg.parse.js
+            if(script3.ready()){
+                var script4 = IRLibLoader.load(server + '/file/SvgoiuE2Ft5hPuA7s');//svg.import.js
+                if(script4.ready()){
+                    var script5 = IRLibLoader.load(server + '/file/ENoXS3yEwFhYhoXGS');//pan&zoom
+                    if(script5.ready()){
+                        this.next();
+                    }
+                }
+            }
+        }
+    },
+    data: function(){
+        if(this.params.query)
+            return {url: this.params.query.url}
+    }
+})
+
+Router.map(function(){
+    this.route('/gcode/:_id/simulation', {
+        path: '/gcode/:_id/simulation',
+        template: 'gcodeSimulation',
+        subscriptions: function(){
+            this.subscribe('filepublish', this.params._id).wait();
+        },
+        onBeforeAction: function(){
+            var script1 = IRLibLoader.load(server + 'http://api.jscut.org/bower_components/platform/platform.js');
+            if(script1.ready()){
+                this.next();
+            }
+        },
+        action: function(){
+            if(this.ready()){
+                this.render();
+            }
+        }
+    });
+})
+
+Router.map(function(){
+    this.route('/gcode/:_id/', {
+        path: '/gcode/:_id/',
+        template: 'gcode',
+        subscriptions: function(){
+            this.subscribe('filepublish', this.params._id).wait();
+        },/*
+        waitOn: function(){
+            var root = '/gcode/js'
+            return [
+                IRLibLoader.load('/Cam.js'),
+                IRLibLoader.load('/path.js'),
+                IRLibLoader.load('/GcodeConversionViewModel.js'),
+                IRLibLoader.load('/MaterialViewModel.js'),
+                IRLibLoader.load('/OperationsViewModel.js'),
+                IRLibLoader.load('/SelectionViewModel.js'),
+                IRLibLoader.load('/SvgViewModel.js')
+                //IRLibLoader.load('/path.js'),
+                //IRLibLoader.load('/path.js'),
+                //IRLibLoader.load('/path.js'),
+                //IRLibLoader.load('/path.js')
+            ]
+        },*//*
+        onBeforeAction: function(){
+            //var script1 = IRLibLoader.load(server + 'http://api.jscut.org/bower_components/platform/platform.js');
+            var script1 = IRLibLoader.load(server + '/Cam.js');
+            if(script1.ready()){
+                this.next();
+            }
+        },*/
+        action: function(){
+            if(this.ready()){
+                this.render();
+            }
+        }
+    });
+})
+
+Router.map(function(){
+    this.route('/md/:_id', {
+        path: '/md/:_id',
+        template: 'markdownFileMd',
+        subscriptions: function(){
+            this.subscribe('filemd', this.params._id).wait();
+        },
+        action: function(){
+            if(this.ready()){
+                this.render();
+            }
+        }
+    });
+});
+
+Router.map(function(){
+    this.route('/file/:_id/:scale/notemplate', {
+        where: 'server',
+        path: '/file/:_id/:scale/notemplate',
+        template: 'show_file',
+        action: function(){
+            var file = File.findOne({_id: this.params._id});
+            if(typeof file == 'undefined')
+                file = File.findOne({title: this.params._id});
+            if(typeof file != 'undefined'){      
+                if(file.fileType == 'image/jpeg'){
+                    //var headers = {'Content-type': file.fileType, 'Access-Control-Allow-Origin' : '*', Location: file.script};
+                    this.response.writeHead(302, {Location: file.script});
+                    this.response.end();
+                }
+                else{
+                    var headers = {'Content-type': file.fileType, 'Access-Control-Allow-Origin' : '*'};
+                    this.response.writeHead(200, headers);
+                    if(['application/octet-stream', 'application/javascript', 'text/css', 'text/plain'].indexOf(file.fileType) != -1)
+                        var script = file.script;
+                    else
+                        if(file.fileType == 'image/svg+xml')
+                            var script = Meteor.call('getFileScript', file._id, this.params.scale, true);
+                    this.response.end(script);
+                }
+            }
+        }
+    });
+});
+
+
+cssfiles = null, jsfiles = null;
 
 Router.route('/filem/:_id', {
     path: '/filem/:_id',
     template: 'svgEditor',
     subscriptions: function(){
-        this.subscribe('files').wait();
-        this.subscribe('groups').wait();
-        this.subscribe('items').wait();
-        this.subscribe('dependencies').wait();
-        this.subscribe('users').wait();
-    },
-    /*
-    waitOn: function(){
-        scripts = [];
-        var js_dep = getDependencies("Yq9iqYhEma9z9mYrp", 3);
-        console.log(js_dep);
-        jsfiles = separate_deps(js_dep, "application/javascript");
-        for(var s in jsfiles){
-            scripts.push(IRLibLoader.load('http://192.168.1.106:3000/file/' + jsfiles[s]._id)); 
-        }
-        return scripts;
-    },*/
-    //onBeforeAction: function(){
+        console.log('subscribe');
+        //this.subscribe('svgEditorScripts').wait();
+        //this.subscribe('file', this.params._id).wait();
+        //this.subscribe('filebrowse', 'vyRjpfv2kki5sPE9G', 'file').wait()
+        var subs1 = Meteor.subscribe('svgEditorScripts');
+        this.wait(subs1);
+        global_oro_variables.subscriptionhandles['svgEditorScripts'] = subs1;
 
-    //},
-    data: function(){
-        var js_dep = getDependencies("Yq9iqYhEma9z9mYrp", 3);
-        cssfiles = separate_deps(js_dep,"text/css");
-        jsfiles = separate_deps(js_dep,"application/javascript");
-        return {file: File.findOne({_id:this.params._id}), cssfiles: cssfiles, jsfiles: jsfiles};
+        var subs2 = Meteor.subscribe('file', this.params._id)
+        this.wait(subs2);
+        global_oro_variables.subscriptionhandles['file'] = subs2;
+
+        var subs3 = Meteor.subscribe('filebrowse', 'vyRjpfv2kki5sPE9G', 'file')
+        this.wait(subs3);
+        global_oro_variables.subscriptionhandles['filebrowse'] = subs3;
+
+        //console.log(global_oro_variables.subscriptionhandles);
+        console.log('/subscribe');
     },
     action: function(){
         if(this.ready()){
-
-            this.render();
+            console.log('this.ready');
+            var f = File.findOne({_id: this.params._id});
+            //console.log(JSON.stringify(File.find().fetch()))
+            //console.log(JSON.stringify(Group.find().fetch()))
+            //console.log(JSON.stringify(Item.find().fetch()))
+            var lastit = Item.findOne({_id: f.itemids[f.itemids.length-1]})
+            this.render('svgEditor', {
+                data: function(){
+                    return {file: f};
+                }
+            })
         }
     }
 });
 
+Router.route('/editor/:_id', {
+    path: '/editor/:_id',
+    template: 'svgEditor',
+    subscriptions: function(){
+        console.log('subscribe');
+        //this.subscribe('svgEditorScripts').wait();
+        //this.subscribe('file', this.params._id).wait();
+        //this.subscribe('filebrowse', 'vyRjpfv2kki5sPE9G', 'file').wait()
+
+        this.subscribe('filepublish', this.params._id)
+        this.subscribe('relatedfiles', this.params._id)
+
+        var file = File.findOne({_id: this.params._id})
+        console.log(file);
+        /*
+        for(var i in ids.items)
+            this.subscribe('itempublish', ids.items[i])
+        for(var i in ids.groups)
+            this.subscribe('grouppublish', ids.group[i])
+
+*/
+
+        var subs1 = Meteor.subscribe('svgEditorScripts');
+        this.wait(subs1);
+        global_oro_variables.subscriptionhandles['svgEditorScripts'] = subs1;
+
+        var subs2 = Meteor.subscribe('file', this.params._id)
+        this.wait(subs2);
+        global_oro_variables.subscriptionhandles['file'] = subs2;
+
+        var subs3 = Meteor.subscribe('filebrowse', 'vyRjpfv2kki5sPE9G', 'file')
+        this.wait(subs3);
+        global_oro_variables.subscriptionhandles['filebrowse'] = subs3;
+
+        //console.log(global_oro_variables.subscriptionhandles);
+        console.log('/subscribe');
+    },
+    action: function(){
+        if(this.ready()){
+            console.log('this.ready');
+            var f = File.findOne({_id: this.params._id});
+            //console.log(JSON.stringify(File.find().fetch()))
+            //console.log(JSON.stringify(Group.find().fetch()))
+            //console.log(JSON.stringify(Item.find().fetch()))
+            var lastit = Item.findOne({_id: f.itemids[f.itemids.length-1]})
+            this.render('svgEditor', {
+                data: function(){
+                    return {file: f};
+                }
+            })
+        }
+    }
+});
+
+Router.route('/filed/:_id', {
+    path: '/filed/:_id',
+    template: 'svgDinamic',
+    subscriptions: function(){
+        console.log('subscribe');
+        var subs1 = Meteor.subscribe('svgEditorScripts');
+        this.wait(subs1);
+        global_oro_variables.subscriptionhandles['svgEditorScripts'] = subs1;
+
+        var subs2 = Meteor.subscribe('file', this.params._id)
+        this.wait(subs2);
+        global_oro_variables.subscriptionhandles['file'] = subs2;
+
+        var subs3 = Meteor.subscribe('filebrowse', 'vyRjpfv2kki5sPE9G', 'file')
+        this.wait(subs3);
+        global_oro_variables.subscriptionhandles['filebrowse'] = subs3;
+
+        console.log(global_oro_variables.subscriptionhandles);
+        console.log('/subscribe');
+    },
+    action: function(){
+        if(this.ready()){
+            console.log('this.ready');
+            var f = File.findOne({_id: this.params._id});
+            this.render('svgDinamic', {
+                data: function(){
+                    return {file: f};
+                }
+            })
+        }
+    }
+});
+
+
 Router.route('/browse/:col/:_id/:start/:dim/:buttons', {
     path: '/browse/:col/:_id/:start/:dim/:buttons',
-    template: 'filebrowse',
+    template: 'filebrowse',/*
     subscriptions: function(){
-        this.subscribe('files').wait();
-        this.subscribe('groups').wait();
-        this.subscribe('dependencies').wait();
-    },
+        //this.subscribe('files').wait();
+        //this.subscribe('groups').wait();
+        //this.subscribe('items').wait();
+        //this.subscribe('dependencies').wait();
+        this.subscribe('filebrowse', this.params._id, this.params.col).wait();
+    },*/
     data: function(){
         var dim = Number(this.params.dim);
         var limit = dim * dim;
         return {start: this.params.start, dim: this.params.dim, id: this.params._id, col: this.params.col, buttons: this.params.buttons};
     },
     onBeforeAction: function(){
-        //var script1 = IRLibLoader.load('http://192.168.1.106:3000/file/GZxMGchzEkKFtakFh');
-        var script1 = IRLibLoader.load('http://oroboro.meteor.com/file/GZxMGchzEkKFtakFh');
-
+        var script1 = IRLibLoader.load(server + '/file/GZxMGchzEkKFtakFh');
         if(script1.ready()){
-            //var script2 = IRLibLoader.load('http://192.168.1.106:3000/file/6BdThBrHzGa8qe3nm');
-            var script2 = IRLibLoader.load('http://oroboro.meteor.com/file/6BdThBrHzGa8qe3nm');
+            var script2 = IRLibLoader.load(server + '/file/6BdThBrHzGa8qe3nm');
             if(script2.ready()){
                 this.next();
             }
         }
     },
-    /*
-     waitOn: function(){
-        return IRLibLoader.load('http://192.168.1.106:3000/file/GZxMGchzEkKFtakFh');
-    },*/
     action: function(){
         if(this.ready()){
             this.render();
@@ -166,30 +401,35 @@ Router.route('/browse/:col/:_id/:start/:dim', {
     subscriptions: function(){
         this.subscribe('files').wait();
         this.subscribe('groups').wait();
+        this.subscribe('items').wait();
         this.subscribe('dependencies').wait();
+        //this.subscribe('filebrowse', this.params._id, this.params.col).wait();
     },
     data: function(){
         var dim = Number(this.params.dim);
         var limit = dim * dim;
-        return {start: this.params.start, dim: this.params.dim, id: this.params._id, col: this.params.col};
+        return {start: this.params.start, dim: this.params.dim, id: this.params._id, col: this.params.col, login: true};
     },
     onBeforeAction: function(){
-        var script1 = IRLibLoader.load('http://oroboro.meteor.com/file/GZxMGchzEkKFtakFh');
-
-       // var script1 = IRLibLoader.load('http://192.168.1.106:3000/file/GZxMGchzEkKFtakFh');
+        console.log('load scripts');
+        var script1 = IRLibLoader.load(server + '/file/GZxMGchzEkKFtakFh');
         if(script1.ready()){
-            //var script2 = IRLibLoader.load('http://192.168.1.106:3000/file/6BdThBrHzGa8qe3nm');
-            var script2 = IRLibLoader.load('http://oroboro.meteor.com/file/6BdThBrHzGa8qe3nm');
+            var script2 = IRLibLoader.load(server + '/file/6BdThBrHzGa8qe3nm');
             if(script2.ready()){
-                this.next();
+                var script3 = IRLibLoader.load(server + '/file/uqxojroeQhqAQ2RQm');
+                if(script3.ready()){
+                    console.log('/load scripts');
+                    this.next();
+                }
             }
         }
     },/*
      waitOn: function(){
-        return IRLibLoader.load('http://192.168.1.106:3000/file/GZxMGchzEkKFtakFh');
+        return IRLibLoader.load(server + '/file/GZxMGchzEkKFtakFh');
     },*/
     action: function(){
         if(this.ready()){
+            console.log('ready');
             this.render();
         }
     }
@@ -206,7 +446,7 @@ Router.route('/browse/:_id/:dim', {
         return {id: this.params._id, dim: this.params.dim};   
     },
      waitOn: function(){
-        return IRLibLoader.load('http://192.168.1.106:3000/file/GZxMGchzEkKFtakFh');
+        return IRLibLoader.load(server + '/file/GZxMGchzEkKFtakFh');
     },
     action: function(){
         if(this.ready()){
@@ -214,3 +454,19 @@ Router.route('/browse/:_id/:dim', {
         }
     }
 });*/
+
+Router.route('/add/deps', {
+    template: 'addDeps',
+    subscriptions: function(){
+        this.subscribe('files').wait();
+        this.subscribe('dependencies').wait();
+    },
+    onBeforeAction: function(){
+        var script1 = IRLibLoader.load('http://cdn.jsdelivr.net/ace/1.1.8/min/ace.js');
+        if(script1.ready()){
+            var script2 = IRLibLoader.load('/file/wtjbgpTaFejHZCYrk');
+            if(script2.ready())
+                this.next();
+        }
+    }
+});

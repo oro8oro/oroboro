@@ -1,14 +1,15 @@
+<!--
 <template name="items">
     {{#if isInRole 'admin'}}
         {{> insert_item}}
     {{/if}}
     <div class="">
-        <!--{{> expression_filter}}-->
+        {{> expression_filter}}
     </div>
     <div id="viewer">
         {{> view_items}}
     </div>
-    <!--<div class="modal_image_div">{{> modal_image}}</div>-->
+    <div class="modal_image_div">{{> modal_image}}</div>
 </template>
 
 <template name="insert_item">
@@ -40,6 +41,7 @@
         </div>
     </div>
 </template>
+-->
 <!--
 <template name="render_image">
     <a href="javascript:;"><img class="grid_img" src={{this.src}}></a>

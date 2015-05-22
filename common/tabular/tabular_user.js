@@ -1,4 +1,4 @@
-
+/*
 TabularTables.UserList = new Tabular.Table({
     name: "UserList",
     collection: Meteor.users,
@@ -17,3 +17,4 @@ TabularTables.UserList = new Tabular.Table({
         {tmpl: Meteor.isClient && Template.operation_user}
     ]
 });
+*/

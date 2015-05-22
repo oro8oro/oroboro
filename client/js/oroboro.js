@@ -7,7 +7,7 @@ Template.oroboro.rendered = function(){
     oro.attr("width", win.w);
     oro.attr("height", win.h);
 
-    var link = oro.link('oroboro.meteor.com/filem/eGfQyh6jCqxeEYmex');
+    var link = oro.link('/filem/eGfQyh6jCqxeEYmex');
     var g = Group.findOne({fileId: 'JZXXMo5N38iwgfNAG'});
     var logog = recursive_group_client(link, g);
     //logog.attr('id', 'logog').center(win.w/2, win.h/2);

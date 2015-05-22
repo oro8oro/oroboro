@@ -1,10 +1,19 @@
 
+Meteor.publish('itempublish', function(id){
+    check(id, String);
+    return Item.find({_id: id});
+})
+
 Meteor.publish('items', function(){
     //if (Roles.userIsInRole(this.userId, 'admin')) {
         return Item.find();
     //}
 });
 
+
+
+
+/*
 Meteor.publish('tabular_items', function (tableName, ids, fields) {
     check(tableName, String);
     check(ids, [String]);
@@ -19,3 +28,4 @@ Meteor.publish('tabular_items', function (tableName, ids, fields) {
       });
       return this.ready();
 });
+*/

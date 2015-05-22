@@ -1,0 +1,42 @@
+# Orobo.ro
+## General Considerations
+## How to Use this Manual
+## Known Bugs
+## Unique Features
+## Why SVG
+## Open Design & Open Source
+## General Features
+## How to Start
+## Filebrowser
+### Filebrowser Menu
+### Filebrowser Icons
+#### Folder
+#### Disector
+#### Filebrowser Breadcrumbs
+## Oroboro Editor
+### General Features
+### Items
+#### Item Types
+##### Path
+###### Simple Path
+###### Complex Path
+##### Raster Image
+##### Text
+##### Parametrized Path
+###### Simple Parametrized Path
+###### Complex Parametrized Path
+###### Functions-based Paths
+####### Cartezian Graphs for Functions
+####### Polar Graphs for Functions
+##### Formulae
+##### [![](/file/DKkEqqFhA4dvzqSgN/0.04)](/filem/DKkEqqFhA4dvzqSgN) QRcode
+##### [![](/file/JrTR22Q3d56xWRkc2/0.04)](/filem/JrTR22Q3d56xWRkc2) Markdown
+##### [![](/file/TQWiptxM8BDzyR3uv/0.04)](/filem/TQWiptxM8BDzyR3uv) iFrame
+##### [![](/file/CW976umbSxzA53byY/0.04)](/filem/CW976umbSxzA53byY) Canvas
+##### [![](/file/Pcp7avZpjfQ3fZXCb/0.04)](/filem/Pcp7avZpjfQ3fZXCb) Html
+##### [![](/file/d8RDkZdNnHZipaCbK/0.04)](/filem/d8RDkZdNnHZipaCbK) NestedSvg
+#### Special Items
+##### [![](/file/tJGWoeZnxtAsoDuvy/0.04)](/filem/tJGWoeZnxtAsoDuvy) Connector
+##### [![](/file/DKkEqqFhA4dvzqSgN/0.04)](/filem/DKkEqqFhA4dvzqSgN) Gradient
+#### Editing Items
+##### Item Appearance

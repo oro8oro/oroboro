@@ -3,8 +3,8 @@ Schemas.Item = new SimpleSchema({
     groupId: {
         type: String,
         label: "Group Id",
-        max: 200,
         optional: true,
+        /*
         autoform: {
           type: "select",
           options: function () {
@@ -21,11 +21,13 @@ Schemas.Item = new SimpleSchema({
                 return option;
             }
           }
-        }
+        }*/
     },
     type: {
         type: String,
         label: "Type",
+        allowedValues: ["simple_path", "complex_path", "para_simple_path", "para_complex_path", "text", "rasterImage", "formulae", "embeddediFrame", "embeddedCanvas", "embeddedHtml", "nestedSvg", 'qrcode', 'gradient', 'markdown', 'pathEquation']
+        /*
         autoform: {
             type: "select",
             options: function () {
@@ -43,16 +45,17 @@ Schemas.Item = new SimpleSchema({
                     {label:"Nested SVG", value:"nestedSvg"}
                 ];
             }
-        }
+        }*/
     },
     text: {
         type: String,
         label: "Text",
+        /*
         autoform: {
           afFieldInput: {
             type: "textarea"
           }
-        },
+        },*/
         optional: true
     },
     ordering: {
@@ -64,7 +67,8 @@ Schemas.Item = new SimpleSchema({
     palette:{
         type: Object,
         label: "Palette",
-        optional: true
+        optional: true,
+        blackbox: true
     },
     'palette.strokeColor': {
         type: String,
@@ -90,7 +94,7 @@ Schemas.Item = new SimpleSchema({
         type: String,
         label: "Fill Color",
         optional: true,
-        defaultValue: '000000ff'
+        defaultValue: '000000'
     },
     'palette.fillOpacity': {
         type: String,
@@ -108,6 +112,8 @@ Schemas.Item = new SimpleSchema({
         type: String,
         label: "Stroke Linejoin",
         optional: true,
+        allowedValues: ["bevel", "round", "miter"]
+        /*
         autoform: {
             type: "select",
             options: function () {
@@ -117,12 +123,14 @@ Schemas.Item = new SimpleSchema({
                     {label:"miter", value:"miter"}
                 ];
             }
-        }
+        }*/
     },
     'palette.strokeLinecap': {
         type: String,
         label: "Stroke Linecap",
         optional: true,
+        allowedValues: ["square", "round", "butt"]
+        /*
         autoform: {
             type: "select",
             options: function () {
@@ -132,7 +140,7 @@ Schemas.Item = new SimpleSchema({
                     {label:"butt", value:"butt"}
                 ];
             }
-        }
+        }*/
     },
     'palette.opacity': {
         type: String,
@@ -144,12 +152,15 @@ Schemas.Item = new SimpleSchema({
     font:{
         type: Object,
         label: "Font",
-        optional: true
+        optional: true,
+        blackbox: true
     },
     'font.style': {
         type: String,
         label: "Font Style",
         optional: true,
+        allowedValues: ["normal", "italic"]
+        /*
         autoform: {
             type: "select",
             options: function () {
@@ -158,12 +169,14 @@ Schemas.Item = new SimpleSchema({
                     {label:"italic", value:"italic"}
                 ];
             }
-        }
+        }*/
     },
     'font.weight': {
         type: String,
         label: "Font Weight",
         optional: true,
+        allowedValues: ["normal", "bold"]
+        /*
         autoform: {
             type: "select",
             options: function () {
@@ -172,12 +185,14 @@ Schemas.Item = new SimpleSchema({
                     {label:"bold", value:"bold"}
                 ];
             }
-        }
+        }*/
     },
     'font.family': {
         type: String,
         label: "Font Family",
         optional: true,
+        allowedValues: ["serif", "Sans-serif", "Cursive", "Fantasy", "Monospace"]
+        /*
         autoform: {
             type: "select",
             options: function () {
@@ -189,7 +204,7 @@ Schemas.Item = new SimpleSchema({
                     {label:"Monospace", value:"Monospace"}
                 ];
             }
-        }
+        }*/
     },
     'font.size': {
         type: String,
@@ -200,6 +215,8 @@ Schemas.Item = new SimpleSchema({
         type: String,
         label: "Text Anchor",
         optional: true,
+        allowedValues: ["start", "middle", "end"]
+        /*
         autoform: {
             type: "select",
             options: function () {
@@ -209,7 +226,7 @@ Schemas.Item = new SimpleSchema({
                     {label:"end", value:"end"},
                 ];
             }
-        }
+        }*/
     },
     complexity: {
         type: Number,
@@ -220,17 +237,20 @@ Schemas.Item = new SimpleSchema({
     pointList: {
         type: String,
         label: 'List of Points',
+        /*
         autoform: {
           afFieldInput: {
             type: "textarea"
           }
-        },
+        },*/
         optional: true
     },
     closed: {
         type: String,
         label: 'Closed',
         optional: true,
+        allowedValues: ["true", "false"]
+        /*
         autoform: {
             type: "select",
             options: function () {
@@ -239,17 +259,33 @@ Schemas.Item = new SimpleSchema({
                     {label:"false", value:"false"},
                 ];
             }
-        }
+        }*/
     },
     selected: {
         type: String,
         label: "Selected",
+        defaultValue: 'null'
+    },
+    locked: {
+        type: String,
+        label: "Locked",
         optional: true,
         defaultValue: 'null'
     },
     parameters: {
         type: Object,
         label: "Parameters",
+        optional: true,
+        blackbox: true
+    },
+    original: {
+        type: String,
+        label: "Original",
+        optional: true
+    },
+    linkto: {
+        type: String,
+        label: "Link To",
         optional: true
     }
 });

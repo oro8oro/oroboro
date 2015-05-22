@@ -1,4 +1,4 @@
-
+/*
 TabularTables.Item = new Tabular.Table({
   name: "Item",
   collection: Item,
@@ -43,3 +43,4 @@ TabularTables.Item = new Tabular.Table({
     }
   ]
 });
+*/

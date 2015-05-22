@@ -4,6 +4,298 @@ Meteor.publish('files', function(){
     //}
 });
 
+Meteor.publish('filepublish', function(id){
+    check(id, String);
+    return File.find({_id: id});
+})
+
+Meteor.publish('file', function(fileId){
+    check(fileId, String);
+    var f = File.findOne({_id: fileId});
+    var userIds = [f.creatorId].concat(f.permissions.view).concat(f.permissions.edit).concat(f.selected);
+    var fileIds = [fileId].concat(f.structuralpath).concat(f.dependencypath)
+    //if(f.parameters && f.parameters.templatepath)
+    //    fileIds = fileIds.concat(f.parameters.templatepath)
+    var self = this;
+    //console.log(self);
+
+    var handle2 = File.find({_id: fileId}, {fields: {groupids: 1} }).observe({
+        changed: function(newdoc, olddoc){
+            console.log('publishhandle2groupids')
+            var insert = diff(newdoc.groupids, olddoc.groupids);
+            //console.log('insert:' + JSON.stringify(insert));
+            if(insert != []){
+                if(!self._documents.groupp)
+                    self._documents.groupp = []
+                for(var i = 0; i < insert.length; i++)
+                    if(!self._documents.groupp[insert[i]] || self._documents.groupp[insert[i]] != true ){
+                        var newgr = Group.findOne({_id: insert[i]});
+                        if(newgr){
+                            self.added('groupp', insert[i], newgr)
+                            Group.find({_id: insert[i]}).observeChanges({
+                                changed: function(id, fields){
+                                    self.changed('groupp', id, fields);
+                                }
+                            })
+                        }
+                    }
+            }
+            var remove = diff(olddoc.groupids, newdoc.groupids)
+            //console.log('remove:' + JSON.stringify(remove));
+            if( remove != [])
+                for(var i = 0; i < remove.length; i++)
+                    if(self._documents.groupp[remove[i]])
+                        self.removed('groupp', remove[i]);
+        }
+    });
+    var handle3 = File.find({_id: fileId}, {fields: {itemids: 1} }).observe({
+        changed: function(newdoc, olddoc){
+            console.log('publishhandle3itemids')
+            var insert = diff(newdoc.itemids, olddoc.itemids);
+            console.log('insert:' + JSON.stringify(insert));
+            console.log('sfsdsdsdfds: '+JSON.stringify(self._documents));
+            console.log('sfsdsdsdfds: '+JSON.stringify(self._documents.item));
+            if(insert != []){
+                if(!self._documents.item)
+                    self._documents.item = []
+                for(var i = 0; i < insert.length; i++)
+                    if(!self._documents.item[insert[i]] || self._documents.item[insert[i]] != true ){
+                        var newit = Item.findOne({_id: insert[i]});
+                        if(newit){
+                            self.added('item', insert[i], newit)
+                            Item.find({_id: insert[i]}).observeChanges({
+                                changed: function(id, fields){
+                                    self.changed('item', id, fields);
+                                }
+                            })
+                        }
+                    }
+            }
+            var remove = diff(olddoc.itemids, newdoc.itemids)
+            //console.log('remove:' + JSON.stringify(remove));
+            if( remove != [])
+                for(var i = 0; i < remove.length; i++)
+                    if(self._documents.item[remove[i]])
+                        self.removed('item', remove[i]);
+            self.ready();
+        }
+    });
+
+    var handle3 = File.find({_id: fileId}, {fields: {selected: 1} }).observe({
+        changed: function(newdoc, olddoc){
+            console.log('publishhandleusers')
+            console.log(newdoc)
+            console.log(olddoc)
+            var insert = diff(newdoc.selected, olddoc.selected);
+            console.log('insert:' + JSON.stringify(insert));
+            if(insert != []){
+                if(!self._documents.users)
+                    self._documents.users = []
+                for(var i = 0; i < insert.length; i++)
+                    if(!self._documents.users[insert[i]] || self._documents.users[insert[i]] != true ){
+                        var newuser = Meteor.users.findOne({_id: insert[i]});
+                        if(newuser){
+                            self.added('users', insert[i], newuser)
+                            Meteor.users.find({_id: insert[i]}).observeChanges({
+                                changed: function(id, fields){
+                                    self.changed('users', id, fields);
+                                }
+                            })
+                        }
+                    }
+            }
+            var remove = diff(olddoc.selected, newdoc.selected)
+            //console.log('remove:' + JSON.stringify(remove));
+            if( remove != [])
+                for(var i = 0; i < remove.length; i++)
+                    if(self._documents.users[remove[i]])
+                        self.removed('users', remove[i]);
+            self.ready();
+        }
+    })
+
+    return [
+        Group.find({_id: { $in: f.groupids } }),
+        Item.find({$or: [
+            {_id: { $in: f.itemids } },
+            {groupId: fileId}
+        ]}),
+        Meteor.users.find({_id: { $in: userIds }}),
+        File.find({_id: {$in: fileIds}}),
+        Connector.find({$or: [
+            {source: { $in: f.itemids}},
+            {target: { $in: f.itemids}},
+            ]})
+    ]
+
+
+    /*
+    //get group and items ids
+    var kidsIds = file_components_ids(fileId);
+    kidsIds.groups = kidsIds.groups.reverse();
+    kidsIds.items = kidsIds.items.reverse();
+    var doc = File.findOne({_id: fileId});
+    var userIds = [doc.creatorId].concat(doc.permissions.view).concat(doc.permissions.edit).concat(doc.selected);
+    var fileIds = [fileId].concat(doc.structuralpath).concat(doc.dependencypath)
+
+    return [ 
+        Group.find({_id: {$in: kidsIds.groups}}),
+        Item.find({_id: {$in: kidsIds.items}}),
+        Meteor.users.find({_id: {$in: userIds}}),
+        File.find({_id: {$in: fileIds}})
+        ];
+    */
+});
+
+Meteor.publish('userWork', function(){
+    console.log(this.userId);
+    return File.find({creatorId: this.userId});
+})
+
+Meteor.publish('filebrowse', function(id, col){
+    check(id, String);
+    check(col, String);
+
+    var self = this;
+    //get group and items ids
+    if(col == 'file'){
+
+            var doc = File.findOne({_id: id});
+            //users which have access
+            var userIds = [doc.creatorId].concat(doc.permissions.view).concat(doc.permissions.edit).concat(doc.selected);
+            //kids = children files that appear in browser content
+            var kids = Dependency.find({fileId2: id}).map(function(doc){return doc.fileId1});
+            //ids for all the first items and groups for each kid file
+            var kidsIds = {items: [], groups: []}
+            var deps = [];
+            for(var i = 0; i < kids.length; i++){
+                var d = Dependency.find({fileId2: kids[i], type: 1}).map(function(doc){
+                    return doc._id;
+                })
+                if(d && d.length > 0)
+                    deps = deps.concat(d);
+                //first group, first item, for adding with addElement:
+                /*
+                var g = Group.findOne({fileId: kids[i], type: 'layer'},{sort: {ordering: 1}});
+                if(g){
+                    kidsIds.groups.push(g._id);
+                    var elem = Group.findOne({groupId: g._id},{sort: {ordering: 1}});
+                    if(elem)
+                        kidsIds.groups.push(elem._id);
+                    else{
+                        var it = Item.findOne({groupId: g._id},{sort: {ordering: 1}});
+                        if(it)
+                            kidsIds.items.push(it._id);
+                    }
+                }*/
+                //now, all groups, all items:
+                var ids = file_components_ids(kids[i])
+                kidsIds.groups = kidsIds.groups.concat(ids.groups)
+                kidsIds.items = kidsIds.items.concat(ids.items)
+            }
+            var fileIds = [id].concat(doc.structuralpath).concat(doc.dependencypath).concat(kids)
+    }
+    else if(col == 'group')
+        var kidsIds = recursive_group_elements(id);
+
+    var handle1 = Dependency.find({fileId2: id}).observe({
+        added: function(doc){
+            self.added('file', doc._id, doc)
+            File.find({_id: doc._id}).observeChanges({
+                changed: function(id, fields){
+                    self.changed('file', id, fields);
+                },
+                removed: function(id){
+                    self.removed('file', id)
+                }
+            })
+        }
+    });
+
+    return [ 
+        Group.find({_id: {$in: kidsIds.groups}}),
+        Item.find({_id: {$in: kidsIds.items}}),
+        Meteor.users.find({_id: {$in: userIds}}),
+        File.find({_id: {$in: fileIds}}),
+        Dependency.find({$or: [{fileId2: id}, {_id: {$in: deps}}]})
+        ];
+});
+
+Meteor.publish('filebrowsePage', function(id, col, start, dim){
+    check(id, String);
+    check(col, String);
+    check(start, Number);
+    check(dim, Number);
+
+    var self = this;
+    //get group and items ids
+    if(col == 'file'){
+
+            var doc = File.findOne({_id: id});
+            //users which have access
+            var userIds = [doc.creatorId].concat(doc.permissions.view).concat(doc.permissions.edit).concat(doc.selected);
+            //kids = children files that appear in browser content
+            var kids = Dependency.find({fileId2: id}, {skip: start-1, limit: dim}).map(function(doc){return doc.fileId1});
+            //ids for all the first items and groups for each kid file
+            var kidsIds = {items: [], groups: []}
+            var deps = [];
+            for(var i = 0; i < kids.length; i++){
+                var d = Dependency.find({fileId2: kids[i], type: 1}).map(function(doc){
+                    return doc._id;
+                })
+                if(d && d.length > 0)
+                    deps = deps.concat(d);
+                //now, all groups, all items:
+                var ids = file_components_ids(kids[i])
+                kidsIds.groups = kidsIds.groups.concat(ids.groups)
+                kidsIds.items = kidsIds.items.concat(ids.items)
+            }
+            var fileIds = [id].concat(doc.structuralpath).concat(doc.dependencypath).concat(kids)
+    }
+    else if(col == 'group')
+        var kidsIds = recursive_group_elements(id);
+
+    var handle1 = Dependency.find({fileId2: id}).observe({
+        added: function(doc){
+            self.added('file', doc._id, doc)
+            File.find({_id: doc._id}).observeChanges({
+                changed: function(id, fields){
+                    self.changed('file', id, fields);
+                },
+                removed: function(id){
+                    self.removed('file', id)
+                }
+            })
+        }
+    });
+
+    return [ 
+        Group.find({_id: {$in: kidsIds.groups}}),
+        Item.find({_id: {$in: kidsIds.items}}),
+        Meteor.users.find({_id: {$in: userIds}}),
+        File.find({_id: {$in: fileIds}}),
+        Dependency.find({$or: [{fileId2: id}, {_id: {$in: deps}}]})
+        ];
+});
+
+//[ 'MvzohMngm2xEJrXHC','G5KffWcT3XX2rjwxK','uf4CGrS8YCa9Kzkvu','oZnd7AiQbJyTbz4RK','8nmfkYxEkHPj96jJ7', 'MxkDTRj2vmosLp87D','tw2RpiiegLc3oTfMa', 'TA7ZkH5kcJphFgava', '8Xae36ehBgHN76QQv', '7ziKkSHtugsvvr26r', 'wW7Zg2TRHESnT3vCn', '3D5vD2tdydkcwbF2u','XnLgvN66uX2jGv5pi','EWmmmDfyu9tMXzcFN', 'WRMEbRSYytCMETMwq','2BcyTg7zuYbHwEu5G','iCWosqjNQ4tCpWvMK','HyaPgfJaRPyKcLGSL','rqfth2JWdFSs5JjcY','XDyiYBQbTHhMbMmnp','4CsLzXWkPzvkC6N8K','q4K34aEywfzr4c3YC','zK8sDBZk3SvTzzpgq', 'NXMA9ydpuoozkF82K', 'AP78x7bvsAPXStA76', 'miL5yhYd7AYsHgMiR', 'ujcY27RtKzcR4n95o', 'JuEEvYk7kobLtx7C4', 'GmHqYn7AmEgur5nXA' ]
+Meteor.publish('svgEditorScripts', function(){
+  var f = File.findOne({_id: "Yq9iqYhEma9z9mYrp"});
+  var ids = ["Yq9iqYhEma9z9mYrp"].concat(f.dependencypath);
+    return File.find({_id: {$in: ids}});
+})
+
+Meteor.publish('filemd', function(q){
+    return File.find({$or: [
+                {_id: q},
+                {title: q},
+                {uuid: q}
+                ]});
+})
+
+
+
+/*
 Meteor.publish('tabular_files', function (tableName, ids, fields) {
     check(tableName, String);
     check(ids, [String]);
@@ -21,23 +313,5 @@ Meteor.publish('tabular_files', function (tableName, ids, fields) {
             }, 'creator');
       });
       return this.ready();
-});
-
-/*
-Meteor.publish('file', function(id){
-    check(id, String);
-
-    Publish.relations(this, File.find({_id: id}), function (id, doc) {  this.cursor(Dependency.find({fileId1: id})).publish();
-        this.cursor(Group.find({fileId: id})).publish(function (id, doc) {
-            this.cursor(Group.find({groupId: id})).publish(function (id, doc) {
-                this.cursor(Item.find({groupId: id})).publish();
-            });
-            this.cursor(Dependency.find({fileId1: id})).publish(function(id, doc){
-                this.cursor(Group.find({_id: doc.fileId2}))
-            });
-        });
-          
-      });
-    return this.ready();
 });
 */

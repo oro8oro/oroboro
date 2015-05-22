@@ -23,7 +23,8 @@ Schemas.Message = new SimpleSchema({
     viewed: {
         type: Object,
         label: 'Viewed',
-        optional: true
+        optional: true,
+        blackbox: true
     }
 });
 

@@ -2,7 +2,7 @@ Schemas.Dependency = new SimpleSchema({
     fileId1: {
         type: String,
         label: "File Id 1",
-        max: 200,
+        /*
         autoform: {
           type: "select",
           options: function () {
@@ -17,23 +17,25 @@ Schemas.Dependency = new SimpleSchema({
             }
             return option;
           }
-        }
+        }*/
     },
     collection1:{
         type: String,
         label: "Collection1",
         optional: true,
+        allowedValues: Object.keys(Collections)
+        /*
         autoform: {
             type: "select",
             options: function(){
                 return Object.keys(Collections);
             }
-        }
+        }*/
     },
     fileId2: {
         type: String,
         label: "Parent File",
-        max: 200,
+        /*
         autoform: {
           type: "select",
           options: function () {
@@ -48,23 +50,26 @@ Schemas.Dependency = new SimpleSchema({
             }
             return option;
           }
-        }
+        }*/
     },
     collection2:{
         type: String,
         label: "Collection2",
         optional: true,
+        allowedValues: Object.keys(Collections)
+        /*
         autoform: {
             type: "select",
             options: function(){
                 return Object.keys(Collections);
             }
-        }
+        }*/
     },
     type: {
         type: Number,
         label: "Type",
-        max: 200,
+        allowedValues: [1,2,3,4,5,6,7]
+        /*
         autoform: {
             type: "select",
             options: function () {
@@ -75,9 +80,16 @@ Schemas.Dependency = new SimpleSchema({
                     {label:"needed by", value: 4},
                     {label:"simple link", value: 5},
                     {label:"fork", value: 6},
+                    {label:"connection", value: 7},
                 ];
             }
-        }
+        }*/
+    },
+    parameters: {
+        type: Object,
+        label: "Parameters",
+        optional: true,
+        blackbox: true
     }
 });
 

@@ -1,3 +1,7 @@
+Meteor.publish('dependencypublish', function(id){
+    check(id, String);
+    return Dependency.find({_id: id});
+})
 
 Meteor.publish('dependencies', function(){
     //if (Roles.userIsInRole(this.userId, 'admin')) {
@@ -5,7 +9,7 @@ Meteor.publish('dependencies', function(){
     //}
 });
 
-
+/*
 Meteor.publish('tabular_dependencies', function (tableName, ids, fields) {
     check(tableName, String);
     check(ids, [String]);
@@ -40,11 +44,4 @@ Meteor.publish('tabular_dependencies', function (tableName, ids, fields) {
       });
       return this.ready();
 });
-/*
-Meteor.publish('dependencies', function(id, start, dim){
-    check(id, String);
-    check(start, Number);
-    check(dim, Number);
-
-    return Dependency.find({fileId2: id}).skip(start-1).limit(dim).fetch();
-});*/
+*/

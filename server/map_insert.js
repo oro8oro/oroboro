@@ -1,6 +1,33 @@
 
-//Meteor.startup(function(){  
+//Meteor.startup(function(){ 
 //});
+
+    /*
+    var files = File.find().fetch();
+    for(var i in files){
+        if(files[i].dateModified){
+            var upd = {$set: {dateCreated: files[i].dateModified}}
+            console.log(upd);
+            File.update({_id: files[i]._id}, upd);
+        }
+    }
+    */
+
+    /*
+    var files = File.find().fetch();
+    for(var i in files){
+        var allids = file_components_ids(files[i]._id);
+        File.update({_id: files[i]._id}, {$set: {groupids: allids.groups, itemids: allids.items}});
+    }
+    */
+    /*
+    var files = File.find().fetch();
+    for(var i in files){
+        var spath = getFilePath(files[i]._id, 1);
+        var dpath = getDependencies(files[i]._id, 3);
+        File.update({_id: files[i]._id}, {$set: {structuralpath: spath, dependencypath: dpath}});
+    }
+    */
 
     //var files = File.find({permissions:"public"}).fetch();
         //for(i in files)

@@ -9,13 +9,15 @@ Schemas.UserProfile = new SimpleSchema({
         type: String,
         label: 'Role',
         optional: true,
+        allowedValues: ['client', 'admin']
+        /*
         autoform: {
           type: "select",
           options: function () {
             var option = {"client":"client","admin":"admin"};
             return option;
           }
-        }
+        }*/
     },
     icon: {
         type: String,
@@ -53,6 +55,12 @@ Schemas.User = new SimpleSchema({
     roles: {
         type: Object,
         label: 'Role',
+        blackbox: true,
+        optional: true
+    },
+    parameters: {
+        type: Object,
+        label: "Parameters",
         blackbox: true,
         optional: true
     }

@@ -85,6 +85,11 @@ function arrayToString(a) {
   return s + ' '
 }
 
+SVG.extend(SVG.ForeignObject, {
+  bbox: function () {
+    return {x: Number(this.attr('x')), y: Number(this.attr('y')), width: Number(this.attr('width')), height: Number(this.attr('height')), x2: Number(this.attr('x')) + Number(this.attr('width')), y2: Number(this.attr('y')) + Number(this.attr('height'))}
+  }
+})
 
 SVG.extend(SVG.PathArray, {
     typeOf: function(){

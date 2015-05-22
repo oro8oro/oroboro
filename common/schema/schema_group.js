@@ -8,7 +8,7 @@ Schemas.Group = new SimpleSchema({
     fileId: {
         type: String,
         label: "File Id",
-        max: 200,
+        /*
         autoform: {
           type: "select",
           options: function () {
@@ -19,13 +19,13 @@ Schemas.Group = new SimpleSchema({
             }
             return option;
           }
-        },
+        },*/
         optional: true
     },
     groupId: {
         type: String,
         label: "Group Id",
-        max: 200,
+        /*
         autoform: {
           type: "select",
           options: function () {
@@ -39,13 +39,15 @@ Schemas.Group = new SimpleSchema({
             }
             return option;
           }
-        },
+        },*/
         optional: true
     },
     type: {
         type: String,
         label: "Type",
         optional: true,
+        allowedValues: ["menu", "menu_item", "menu_button", "layer", "simpleGroup", "linkedGroup", "parametrizedGroup"]
+        /*
         autoform: {
             type: "select",
             options: function () {
@@ -59,7 +61,7 @@ Schemas.Group = new SimpleSchema({
                     {label:"Parametrized Group", value:"parametrizedGroup"}
                 ];
             }
-        }
+        }*/
     },
     ordering: {
         type: Number,
@@ -87,8 +89,9 @@ Schemas.Group = new SimpleSchema({
     parameters: {
         type: Object,
         label: "Parameters",
-        optional: true
-    },
+        optional: true,
+        blackbox: true
+    /*},
     'parameters.col': {
         type: Number,
         label: "No of Columns",
@@ -103,6 +106,9 @@ Schemas.Group = new SimpleSchema({
         type: String,
         label: "Hide Content",
         optional: true,
+        allowedValues: ["true", "false"],
+        defaultValue: "false"*/
+        /*
         autoform: {
             type: "select",
             options: function () {
@@ -112,12 +118,18 @@ Schemas.Group = new SimpleSchema({
                 ];
             }
         }
+        */
     },
     transparency: {
         type: Number,
         label: "Transparency",
         optional: true,
         decimal: true
+    },
+    original: {
+        type: String,
+        label: "Original",
+        optional: true
     }
 });
 

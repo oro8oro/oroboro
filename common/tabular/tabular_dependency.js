@@ -1,4 +1,4 @@
-
+/*
 TabularTables.Dependency = new Tabular.Table({
   name: "Dependency",
   collection: Dependency,
@@ -14,3 +14,4 @@ TabularTables.Dependency = new Tabular.Table({
     {tmpl: Meteor.isClient && Template.operation_depend}
   ]
 });
+*/

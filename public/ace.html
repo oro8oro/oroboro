@@ -15,19 +15,41 @@
 <body>
 
 <div id="editor1">
-// svg = SVG('KnNbAST2hzSa5mkBs').viewbox(0, 0, 1448, 1024);
-//regPoly(8,90);
-//goldens(6,350);
-//tree(240);
-//cover(15,5); 
-//roses(30, 5, 3);
-//fern(25,1);
-//lsys("F", {F: "G-F-G", G: "F+G+F"}, 9, 2, 1/6);
-//lsys("XYXYXYX+XYXYXYX+XYXYXYX+XYXYXYX",{X:"FX+FX+FXFY-FY-",Y:"+FX+FXFY-FY-FY", F:""},4,4,1/4)
-//lsys("F++F++F", {F: "F-F++F-F"}, 5, 3, 1/6);
-//lsys("L--F--L--F", {L: "+R-F-R+", R: "-L+F+L-"}, 9, 15, 1/8);
-//lsys("L--F-", {F: "F+F-F-F-G+F+F+F-F", G: "GGG"}, 4, 10, 1/4);
-//lsys("W", {W:"+++X--F--ZFX+", X: "---W++F++YFW-", Y: "+ZFX--F--Z+++", Z: "-YFW++F++Y---"}, 7, 8, 1/12);
+
+//var tg =svg.tgraph(1024,1024).attr({stroke:"#000"}); 
+//tg.t("M0,0<90F1448<90F1024<90F1448<90F1024Z");
+
+//var tg =svg.tgraph(1024,1024).attr({stroke:"#000"});  
+//console.log(tg);
+//tg.rt(1/3);
+//tg.f(150);
+//tg.t("M0,0<90F1448<90F1024<190F1448<90F1024Z");
+//console.log(tg);
+//tg.render();
+
+
+var tg =svg.lsys(1024,1024).attr({stroke:"#000","stroke-width":.5,fill:"#f4f4f4"});
+
+//tg.iter("F<<F<<F", {F: "F>F<<F>F"}, 4, 3, 1/6);
+//tg.iter("F", {F: "G>F>G", G: "F<G<F"}, 9, 2, 1/6);
+
+//////tg.iter("XYXYXYX<XYXYXYX<XYXYXYX<XYXYXYX",{X:"FX<FX<FXFY>FY>",Y:"<FX<FXFY>FY>FY", F:""},4,4,1/4);
+
+/// tg.iter("L>>F>", {F: "F<F>F>F>G<F<F<F<F", G: "GGG"}, 4, 10, 1/4);
+//tg.iter("W", {W:"<<<X>>F>>ZFX<", X: ">>>W<<F<<YFW>", Y: "<ZFX>>F>>Z<<<", Z: ">YFW<<F<<Y>>>"}, 7, 8, 1/12);
+
+//tg.iter("F<F<F", 4, 3, 1/6);
+//tg.iter("F", {F: "G>F>G", G: "FFY>",Y:"FY>FY"},4,4,1/4);
+// tg.iter("L>>F>", {F: "FF>F>G>F>>ZFX<", X: ">>>W<", Y: ">F>>Z<<<", Z: ">YFW<>>"}, 7, 8, 1/12);
+//var tg =svg.puppet(424,424, "show","/file/2bQfWx8fDbWMgddmj").mirror().attr({stroke:"#000"}).say("Habem!");
+
+//var tg =svg.puppet(824,424, "standing","/file/8XGTxhrmcLancxZ6h").attr({stroke:"#000"}).think("Habemus!");
+// console.log(tg);
+//tg.rt(1/3);
+//tg.f(150); 
+//tg.t("M0,0<90F1448<90F1024<90F1448<90F1024Z");
+//console.log(tg);
+tg.render(1); 
 
 </div>
     

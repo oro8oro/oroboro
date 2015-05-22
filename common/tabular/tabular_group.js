@@ -1,4 +1,4 @@
-
+/*
 TabularTables.Group = new Tabular.Table({
   name: "Group",
   collection: Group,
@@ -41,3 +41,4 @@ TabularTables.Group = new Tabular.Table({
     {data: "transform", title: "Transform"},
   ]
 });
+*/

@@ -1,14 +1,7 @@
 Template.registerHelper("log", function(opt){
   console.log(opt);
 });
-
-Meteor.subscribe('users');
-Meteor.subscribe('files');
-Meteor.subscribe('dependencies');
-Meteor.subscribe('items');
-Meteor.subscribe('groups');
-Meteor.subscribe('images');
-
+/*
 Template.home.rendered = function(){
   $('li').removeClass("active");
   $('#li_files').attr("class","active");
@@ -53,7 +46,8 @@ Template.home.events({
         Blaze.render(Template.rasters, document.getElementById("content"));
     }
 });
-
+*/
+/*
 AutoForm.addHooks(null, {
     after: {
       insert: function(error, result, template) {
@@ -114,3 +108,4 @@ AutoForm.hooks({
     }
   }
 });
+*/

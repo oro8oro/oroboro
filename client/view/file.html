@@ -1,3 +1,4 @@
+<!--
 <template name="files">
     {{#if isInRole 'admin'}}
         {{> insert_file}}
@@ -44,13 +45,14 @@
 
 <template name="show_file">
 </template>
-
+-->
 <template name="svgEditor">
     <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="svgEditor">
     </svg>
-    {{> svgCodeEditor}}
+    <!--{{> svgCodeEditor}}
     {{> filebrowserModal}}
     {{> csvModal}}
+    {{> qrcodeModal}}-->
 </template>
 
 <template name="show_meteor_file_svg">
@@ -59,21 +61,7 @@
 </template>
 
 
-<template name="svgCodeEditor">
-    <!--
-    <section class="modal-show" id="CodeEditorModal" tabindex="-1" role="dialog" aria-labelledby="CodeEditorModalLabel" aria-hidden="true" style="visibility: hidden;" >
-        <div class="modal-inner" id='CodeEditorModalInner'>
-            <header id="CodeEditorModalLabel">
-                <button onclick="menuItemCodeSave();" data-close="Close" data-dismiss="modal">Save</button>
-            </header>
-            <div class="modal-content" id='CodeEditorModalBody' style="overflow:auto;" contentEditable="true"></div>
-        </div>
-    </section>-->
-
-<!--
-    <div id="modal-overlay" style="visibility: hidden;"></div>
-    <div id="modal-container" style="visibility: hidden;"><div id="modal-header" style="cursor: default;"><div id="modal-close"></div></div><div id="modal-content"></div></div>-->
-
+<!--<template name="svgCodeEditor">
     <div class="modal fade" id="CodeEditorModal" tabindex="-1" role="dialog" aria-labelledby="CodeEditorModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -87,16 +75,9 @@
         </div>
       </div>
     </div>
-</template>
+</template>-->
 
-<template name="filebrowserModal">
-    <!--
-    <section class="modal-show" id="filebrowserModal" tabindex="-1" role="dialog" aria-labelledby="filebrowserModalLabel" aria-hidden="true" style="visibility: hidden; margin:auto" >
-        <div class="modal-inner" id='filebrowserModalInner'>
-            <div class="modal-content" id='filebrowserModalBody' style="overflow:auto; margin:auto"></div>
-        </div>
-    </section>-->
-
+<!--<template name="filebrowserModal">
     <div class="modal fade" id="filebrowserModal" tabindex="-1" role="dialog" aria-labelledby="filebrowserModalLabel" aria-hidden="true" style="background-color: rgba(255, 255, 255, 0);">
         <div class="modal-dialog modal-lg" id="filebrowserModalWrap" style="width: 60%; height: 90%; background-color: rgba(255, 255, 255, 0);">
             <div class="modal-content" style="background-color: rgba(255, 255, 255, 0); width: 100%; height: 100%; border: none; box-shadow: 0 0 0 rgba(0, 0, 0, 0)">
@@ -104,9 +85,10 @@
             </div>
         </div>
     </div>
-</template>
+</template>-->
 
 
+<!--
 <template name="csvModal">
     <div class="modal fade" id="csvModal" tabindex="-1" role="dialog" aria-labelledby="csvModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-lg">
@@ -120,4 +102,131 @@
         </div>
       </div>
     </div>
+</template>-->
+
+<!--
+<template name="qrcodeModal">
+    <div class="modal fade" id="qrcodeModal" tabindex="-1" role="dialog" aria-labelledby="qrcodeModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-body" id="qrcodeModalBody" style="overflow:auto;">
+            <img id="qrcodeimg" src="{{qrcodehref}}" height="{{height}}" width="{{width}}">
+          </div>
+        </div>
+      </div>
+    </div>
+</template>-->
+
+<template name="addDeps">
+    <div>
+        <select id = 'selectfiletype1' onchange='setType();'>
+            {{# each optionstype1}}
+                <option value="{{this}}">{{this}}</option> 
+            {{/each}}
+        </select>
+        <input type='text' id='file1'/>
+        {{selectedfiles1}}/{{totalfiles}}
+        <select id = 'selectfile1' onchange='setDep(1);'>
+            {{# each options1}}
+                <option value="{{this.id}}">{{this.title}}</option> 
+            {{/each}}
+        </select>
+        <select id = 'selectcol1'>
+            <option selected></option>
+            {{# each options11}}
+                <option value="{{this}}">{{this}}</option> 
+            {{/each}}
+        </select>
+        <a href="/file/{{fileId1}}" target="_blank"><button id="viewFile1">view</button></a>
+        <a id="editSVG1" href="/filem/{{fileId1}}" target="_blank" style="display:none;"><button>edit</button></a>
+        <button id="saveScript" onclick="saveScript();">save</button>
+        <button id="deleteScript" onclick="deleteScript();">delete</button>
+    </div>
+    <div>
+        <select id = 'selectfiletype2' onchange='setType();'>
+            {{# each optionstype2}}
+                <option value="{{this}}">{{this}}</option> 
+            {{/each}}
+        </select>
+        <input type='text' id='file2'/>
+        {{selectedfiles2}}/{{totalfiles}}
+        <select id = 'selectfile2' onchange='setDep(2);'>
+            {{# each options2}}
+                <option value="{{this.id}}">{{this.title}}</option> 
+            {{/each}}
+        </select>
+        <select id = 'selectcol2'>
+            <option selected></option>
+            {{# each options22}}
+                <option value="{{this}}">{{this}}</option> 
+            {{/each}}
+        </select>
+        <a href="/file/{{fileId2}}" target="_blank"><button id="viewFile2">view</button></a>
+        <a id="editSVG2" href="/filem/{{fileId2}}" target="_blank" style="display:none;"><button>edit</button></a>
+    </div>
+    <!--
+    <textarea readonly id='currentdep' placeholder='current dependency' rows="4" cols="60"></textarea>
+    <label id="changeddeplabel" style="display:none;">New Dependency: <textarea readonly id='changeddep' rows="4" cols="60"></textarea></label>-->
+    <div>
+        <select id = 'selecttype'>
+            {{# each optionst}}
+                <option value="{{this}}">{{this}}</option> 
+            {{/each}}
+        </select>
+        <button id="newDep" onclick="insertDep();">insert</button>
+        <button id="updDep" onclick="updateDep();">update</button>
+        <button id="delDep" onclick="deleteDep();">delete</button>
+    </div>
+    {{> aceEditor}}
+</template>
+
+<template name="aceEditor">
+    <div id="aceEditor" style="position: absolute; top: 120px; right: 0; bottom: 0; left: 0;"></div>
+</template>
+
+<template name="markdownTemplate">
+    {{#markdown}}{{markdowndata}}{{/markdown}}
+</template>
+
+<template name="markdownFileMd">
+    {{#markdown}}{{markdowndata}}{{/markdown}}
+</template>
+
+<template name="svgDinamic">
+    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="svgEditor">
+    </svg>
+</template>
+
+<template name="gcodeSimulation" id="top" is="auto-binding">
+        <!-- Bind parameters to local storage -->
+        <core-localstorage name="test-cutterDiameter" value="{{cutterDiameter}}"></core-localstorage>
+        <core-localstorage name="test-cutterHeight" value="{{cutterHeight}}"></core-localstorage>
+        <core-localstorage name="test-gcode" value="{{gcode}}"></core-localstorage>
+
+        <!-- gcode simulator -->
+        <jscut-simulate-gcode
+            width="400"
+            height="400"
+            gcode="{{gcode}}" 
+            cutterdiameter="{{cutterDiameter}}" 
+            cutterheight="{{cutterHeight}}"
+            time1="{{time1}}"
+            time2="{{time2}}"
+            maxtimeRounded="{{maxTime}}"
+            elementsurl="http://api.jscut.org/elements">
+        </jscut-simulate-gcode>
+
+        <!-- Controls with parameters bound to simulator -->
+        <br><paper-slider pin editable value="{{time1}}" immediatevalue="{{time2}}" max="{{maxTime}}" step="0.1" id="paper_slider"></paper-slider>
+        <br><input type="number" value="{{cutterDiameter}}">
+        <br><input type="number" value="{{cutterHeight}}">
+        <br><textarea value="{{gcode}}" rows="20" cols="60"></textarea>
+</template>
+
+<template name="gcode">
+</template>
+
+<template name="svgViewer">
+    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="svgViewer" style="overflow:hidden;">
+    </svg>
 </template>
