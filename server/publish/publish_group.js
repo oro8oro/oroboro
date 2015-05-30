@@ -3,6 +3,12 @@ Meteor.publish('grouppublish', function(id){
     return Group.find({_id: id});
 })
 
+Meteor.publish('groupspublish', function(ids){
+    check(ids, [String])
+    //console.log('groupspublish: '+JSON.stringify(ids));
+    return Group.find({_id: {$in: ids}})
+})
+
 Meteor.publish('groups', function(){
     //if (Roles.userIsInRole(this.userId, 'admin')) {
         return Group.find();

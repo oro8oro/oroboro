@@ -4,6 +4,12 @@ Meteor.publish('itempublish', function(id){
     return Item.find({_id: id});
 })
 
+Meteor.publish('itemspublish', function(ids){
+    check(ids, [String])
+    //console.log('itemspublish: '+JSON.stringify(ids));
+    return Item.find({_id: {$in: ids}})
+})
+
 Meteor.publish('items', function(){
     //if (Roles.userIsInRole(this.userId, 'admin')) {
         return Item.find();

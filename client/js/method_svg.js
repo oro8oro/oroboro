@@ -2644,9 +2644,7 @@ recursive_group_client = function (parent, group, linkedgs){
     //console.log("recursive: ", recursive);
     //if(recursive > 500) return;
     //recursive = recursive + 1;
-    console.log(group)
     var subgroups = Group.find({ groupId: group._id }, { sort: { ordering:1 }}).fetch();
-    console.log(subgroups)
     var subparent = parent.group().attr("id", group._id).attr("type", group.type);
     if(group.uuid)
         subparent.attr("function", group.uuid);

@@ -1,19 +1,23 @@
 allfiles = {};
+allfileslength = 0;
 countB = 0;
 bscale = 0.1;
 noedit = 'JZXXMo5N38iwgfNAG'
 
 reloadFilebrowser = function(params){
     console.log('reloadFilebrowser');
-    console.log(allfiles[Session.get('browseParams').id])
     if(allfiles[Session.get('browseParams').id]){
         SVG.get('browserContent').clear();
-        console.log(params)
-        //if(!params.buttons)
-        //    params.buttons = Session.get("fileButtons");
+        //console.log(params)
+
         browserContent(params);
         navButtons(params);
         fileBMenu();
+
+        console.log('start autorun crumbs')
+        SVG.get('Bcrumbs').clear()
+        fileBcrumbs(params.id);
+        console.log('end autorun crumbs');
     }
 }
 
@@ -27,8 +31,6 @@ Template.filebrowse.onRendered(function(){
     $('body').css("background-color", "rgba(255, 255, 255, 0)");
     var start = Number(this.data.start);
     var dim = Number(this.data.dim);
-    console.log(this.data.buttons)
-    console.log(this.data.id)
     if(!this.data.buttons){
         Session.set('defaultButtons', 'buttons');
         if(noedit.indexOf(this.data.id) != -1)
@@ -36,12 +38,10 @@ Template.filebrowse.onRendered(function(){
     }
     else
         Session.set('defaultButtons', 'nobuttons')
-    Session.set('fileBId', {id: this.data.id, col: this.data.col});
-    //Session.set("fileButtons", this.data.buttons);
+
     Session.set("fileBCallback", this.data.callback);
     var params = {start:start, dim:dim, col: this.data.col, id: this.data.id, buttons: this.data.buttons, login: this.data.login};
     Session.set('browseParams', {start:start, dim:dim, col: this.data.col, id: this.data.id, buttons: this.data.buttons, login: this.data.login});
-    //var browser = SVG('fileBrowse'); 
     var browser = SVG('filebrowsediv')
     browser.attr('id', 'fileBrowse');
     var browserContent = browser.group().attr('id', 'browserContent');
@@ -49,85 +49,153 @@ Template.filebrowse.onRendered(function(){
     defs.attr("id", "defs");
     defs.group().attr('id','navdefs');
     defs.group().attr('id','navigation');
+    var crumbs = browser.group().attr("id", "Bcrumbs");
     if(this.data.login){ 
         Blaze.render(Template.login, document.getElementById('logintemplatediv'));
     }
 
-    self.autorun(function(){
-        var dims = Session.get('parentDims')
-    })
-
+    var subscriptions = {}
 
     self.autorun(function(){
-        var p = Session.get('fileBId');     
-        if(p.id == 'PRRyiPWSw8xj82T8F')
-            self.subscribe('userWork', function(){
+        var p = Session.get('browseParams')    
+        if(p.id == 'PRRyiPWSw8xj82T8F'){
+            if(subscriptions.userWork)
+                subscriptions.userWork.stop()
+            //console.log(p)
+            subscriptions.userWork = Meteor.subscribe('userWork', 'image/svg+xml', p.start-1, p.dim*p.dim, function(){
                 console.log('userWork')
-                console.log(File.find().fetch())
+                //console.log(JSON.stringify(File.find({$and: [{creatorId: Meteor.userId()}, {fileType:'image/svg+xml'}]}, {sort: {dateModified: -1}}).fetch()))
             })
-        self.subscribe('filebrowse', p.id, p.col);
+            Meteor.call('count', 'File', {creatorId: Meteor.userId()}, function(err, res){
+                if(err)
+                    console/log(err)
+                if(res){
+                    console.log('allfileslength: ' + res)
+                    allfileslength = res
+                }
+            })
+        }
+        else{
+
+            Meteor.call('count', 'Dependency', {fileId2: p.id, type: 1}, function(err, res){
+                if(err)
+                    console/log(err)
+                if(res){
+                    //console.log('allfileslength: ' + res)
+                    allfileslength = res
+                }
+            })
+            
+            Meteor.call('getDependantFileIds', p.id, 'fileId2', 1, p.start-1, p.dim*p.dim, function(err, res){
+                if(err)
+                    console.log(err)
+                if(res){
+                    //console.log('DependantFileIds: '+res)
+                    if(subscriptions.getDependantFileIds)
+                        subscriptions.getDependantFileIds.stop()
+                    subscriptions.getDependantFileIds = Meteor.subscribe('filespublish', res, function(){
+                        //console.log('filespublishhhhhhhhhhhhhhed')
+                    })
+                    
+                    if(window.windowType == 'svgEditor' || window.parent.windowType == 'svgEditor'){
+                        if(subscriptions.groups)
+                            for(var s in subscriptions.groups)
+                                subscriptions.groups[s].stop()
+                        if(subscriptions.items)
+                            for(var s in subscriptions.items)
+                                subscriptions.items[s].stop()
+                        subscriptions.groups = []
+                        subscriptions.items = []
+                        for(var k in res){
+                            Meteor.call('getComponentsIds', res[k], function(err, res2){
+                                if(err)
+                                    console.log(err)
+                                if(res2){
+                                    subscriptions.groups.push(Meteor.subscribe('groupspublish', res2.groups))
+                                    subscriptions.items.push(Meteor.subscribe('itemspublish', res2.items))
+                                }
+                            })
+                        }
+                    }
+                }
+            })
+
+            Meteor.call('getRelatedFiles', p.id, function(err, res){
+                if(err)
+                    console.log(err)
+                if(res){
+                    //console.log('RelatedFiles: ' + res)
+                    if(subscriptions.getRelatedFiles)
+                        subscriptions.getRelatedFiles.stop()
+                    subscriptions.getRelatedFiles = Meteor.subscribe('filespublish', res)
+                }
+            })
+
+            Meteor.call('getDepsIds', p.id, 'fileId2', 1, p.start-1, p.dim*p.dim, function(err, res){
+                if(err)
+                    console.log(err)
+                if(res){
+                    //console.log('DepsIds: '+res)
+                    if(subscriptions.getDepsIds)
+                        subscriptions.getDepsIds.stop()
+                    subscriptions.getDepsIds = Meteor.subscribe('dependenciespublish', res)
+                }
+            })
+            /*
+            Meteor.call('getUsers', p.id, function(err, res){
+                if(err)
+                    console.log(err)
+                if(res){
+                    //console.log('users: '+res)
+                    if(subscriptions.getUsers)
+                        subscriptions.getUsers.stop()
+                    subscriptions.getUsers = Meteor.subscribe('userspublish', res)
+                }
+            })*/
+        }
     })
 
     self.autorun(function(){
-        var deps = Dependency.find({fileId2: Session.get('fileBId').id}).fetch();
+        var deps = Dependency.find({fileId2: Session.get('browseParams').id}).fetch();
         console.log('deps autorun');
-        console.log(deps);
+        //console.log(JSON.stringify(deps));
         if(deps.length > 0){
             var params = Session.get('browseParams');
-            var fileBId = Session.get('fileBId');
 
             var idss = [];
             for(var d in deps)
                 idss.push(deps[d].fileId1);
-            console.log(idss);
-            var data = File.find({_id: {$in: idss}}, {sort: {dateModified: -1}}).fetch();
-            console.log(data)
-            if(data.length > 0){
-                allfiles = {};
-                allfiles[fileBId.id] = data;
 
-                console.log(allfiles[fileBId.id]);
-                
-                if(params.id != fileBId.id){
-                    params.id = fileBId.id;
-                    params.col = fileBId.col;
-                    params.start = 1;
-                    Session.set('browseParams', params);
-                }
-                else{
-                    console.log('start reloadFilebrowser');
-                    reloadFilebrowser(params);
-                    console.log('end reloadFilebrowser');
-                }
+            var data = File.find({_id: {$in: idss}}, {sort: {dateModified: -1}}).fetch();
+
+            if(data.length > 0 && JSON.stringify(allfiles[params.id]) != JSON.stringify(data)){
+                allfiles = {};
+                allfiles[params.id] = data;
+
+
+                console.log('start reloadFilebrowser');
+                reloadFilebrowser(params);
+                console.log('end reloadFilebrowser');
+
             }
         }
     })
 
     self.autorun(function(){
         var data = File.find({$and: [{creatorId: Meteor.userId()}, {fileType:'image/svg+xml'}]}, {sort: {dateModified: -1}}).fetch();
-        if(data.length > 0 && Session.get('fileBId').id == 'PRRyiPWSw8xj82T8F'){
-            console.log('yes ' + JSON.stringify(Session.get('fileBId')));
+        if(data.length > 0 && Session.get('browseParams').id == 'PRRyiPWSw8xj82T8F'){
+            console.log('yes ' + JSON.stringify(Session.get('browseParams')));
             var params = Session.get('browseParams');
-            var fileBId = Session.get('fileBId');
-            allfiles = {};
-            allfiles[fileBId.id] = data;      
-
-            console.log(allfiles[fileBId.id]);
-            
-            if(params.id != fileBId.id){
-                params.id = fileBId.id;
-                params.col = fileBId.col;
-                params.start = 1;
-                Session.set('browseParams', params);
-            }
-            else{
-                console.log('start reloadFilebrowser');
-                reloadFilebrowser(params);
-                console.log('end reloadFilebrowser');
-            }
+            allfiles = {}; 
+            allfiles[params.id] = data;        
+            console.log(allfiles[params.id]);
+ 
+            console.log('start reloadFilebrowser');
+            reloadFilebrowser(params);
+            console.log('end reloadFilebrowser');
         }
     })
-
+/*
     self.autorun(function () {
         var gr = Group.findOne({$or: [{_id: Session.get('fileBId').id}, {fileId: Session.get('fileBId').id} ]});
         console.log('allfiles group/item')
@@ -177,30 +245,7 @@ Template.filebrowse.onRendered(function(){
             }
         }
     })
-
-    self.autorun(function(){
-        var params = Session.get('browseParams');
-        console.log(params);
-        if(Session.get('fileBId') && params.id == Session.get('fileBId').id){
-            console.log('start reloadFilebrowser');
-            reloadFilebrowser(params);
-            console.log('end reloadFilebrowser');
-        }
-    });
-    self.autorun(function(){
-        var data = allfiles[Session.get('fileBId').id];
-        console.log(allfiles);
-        console.log(Session.get('fileBId'))
-        console.log('hereeeeee')
-        console.log(data)
-        if(data){
-            if(SVG.get("Bcrumbs"))
-                SVG.get("Bcrumbs").remove();
-            console.log('start autorun crumbs')
-            fileBcrumbs(Session.get('fileBId').id);
-            console.log('end autorun crumbs');
-        }
-    })
+*/
 
     self.autorun(function(){
        var win = Session.get("window");
@@ -224,9 +269,11 @@ Template.filebrowse.events({
                         params.buttons = undefined
                     else
                         params.buttons = defaultButtons;
-                    Session.set('browseParams', params);
                 }
-                Session.set('fileBId', {id: fileId, col: SVG.get("file_"+i).attr("col")});
+                params.id = fileId
+                params.col = SVG.get("file_"+i).attr("col")
+                params.start = 1
+                Session.set('browseParams', params);
             }
             else if(window.windowType == 'svgEditor' || window.parent.windowType == 'svgEditor')
                 window.parent[Session.get("fileBCallback")](SVG.get("file_"+i).attr("fileId"));
@@ -250,18 +297,16 @@ browserContent = function(params){
         col = params.col,
         parent;
 
-    console.log(params)
-    console.log(File.findOne({_id: params.id}))
     if(col == 'file')
         parent = File.findOne({_id: params.id});
     else{
         var path = getElementPath(params.id);
         parent = File.findOne({_id: path[path.length-1]});
     }
-    console.log(parent);
+
     Session.set('parentDims', {w: parent.width, h: parent.height});
-    console.log(allfiles[params.id]);
-    var files = allfiles[params.id].slice(start-1,dim*dim+start-1);
+
+    var files = allfiles[params.id]
     $('body').attr({"class": "no_scroll"}).css({margin:0,padding:0});
     var browser = SVG.get('fileBrowse'); 
     browser.viewbox(0,0,parent.width,parent.height);
@@ -335,19 +380,20 @@ browserContent = function(params){
 
 navButtons = function(params){
     console.log('navButtons');
-    console.log(File.find({_id:"eAywEx5e5cNwe6BpC"}).fetch())
+
     var start = params.start;
     var dim = params.dim;
     var col = params.col;
     var browser = SVG.get('fileBrowse');
     var dims = Session.get('parentDims');
-    console.log(dims);
+
     var nav = {};
     if(Math.ceil(start/(dim*dim)) == 1)
         nav.p = false;
     else
         nav.p = true;
-    if(Math.ceil(allfiles[params.id].length / (dim*dim)) == 1 || Math.ceil(start/(dim*dim)) == Math.ceil(allfiles[params.id].length / (dim*dim)))
+
+    if(Math.ceil(allfileslength / (dim*dim)) == 1 || Math.ceil(start/(dim*dim)) == Math.ceil(allfileslength / (dim*dim)))
         nav.n = false;
     else
         nav.n = true;
@@ -369,8 +415,7 @@ navButtons = function(params){
             n = SVG.get('navigation').image('/file/menuItemNext').loaded(function(loader) {
                 this.size(loader.width*bscale, loader.height*bscale);
                 this.x(dims.w).y(dims.h-loader.height*bscale);
-                console.log(this.x());
-                console.log(dims.w);
+
             })
             n.attr('id', 'nextButton').attr({"dimsw":dims.w, "dimsh":dims.h});
         }
@@ -422,16 +467,14 @@ navButtons = function(params){
         var pages = SVG.get('pagination');
         pages.clear();
         var currentpg = Math.ceil(start/(dim*dim));
-        var allpg = Math.ceil(allfiles[params.id].length / (dim*dim));
-        console.log(allfiles[params.id]);
-        console.log(allpg);
+        var allpg = Math.ceil(allfileslength / (dim*dim));
+
         pages.text(currentpg + '/' + allpg).move(dims.w+20, 20).font({size: 30, family: 'Sans-serif'}).attr('id', 'paginationtext');
 
         var st = 100
                 , en = dims.h - 250
                 , step = Math.floor((en - st) / allpg);
-        console.log(en);
-        console.log(step);
+
         if(!SVG.get('slider')){
             var slider = browser.group().attr('id', 'slider');
             var base = slider.group().attr('id', 'sliderbase');
@@ -493,11 +536,11 @@ navButtons = function(params){
 
 fileBMenu = function(){
     console.log('fileBMenu');
-    console.log(File.find({_id:"eAywEx5e5cNwe6BpC"}).fetch())
+
     var params = Session.get('browseParams');
     var start = params.start, dim = params.dim, col = params.col, id = params.id;
     var browser = SVG.get('fileBrowse');
-    var partfiles = allfiles[params.id].slice(start-1,dim*dim+start-1);
+    var partfiles = allfiles[params.id]
     var bscale = 0.16;
 
     if(!params.buttons || params.buttons != 'nobuttons'){
@@ -594,6 +637,7 @@ fileBMenu = function(){
             });
             console.log('/created folder')
         }
+        /* not yet 
         if(!SVG.get('disector')){
             console.log('create disector')
             var disector = SVG.get('navdefs').image('/file/menuItemDisector').loaded(function(loader) {
@@ -603,7 +647,7 @@ fileBMenu = function(){
                 disectIt();
             });;
             console.log('/created disector')
-        }
+        }*/
     }
     //for(i = 0; i < len; i++){
     for(i = 0; i < partfiles.length; i++){
@@ -633,6 +677,7 @@ fileBMenu = function(){
                 if(subs == 0)
                     var subs = Item.find({groupId: SVG.get("file_"+i).attr("fileId")}).count()
             }
+            /* not yet
             if(col == 'file' || (col == 'group' && subs > 0)){
                 var disect = SVG.get("group_"+i).group().scale(bscale).fill('none');
                 disect.use(SVG.get('disector')).attr('id', 'disectorUse_'+i);
@@ -647,7 +692,7 @@ fileBMenu = function(){
                 disect.on('click',function(e){
                     disectIt()
                 });
-            }
+            }*/
         }
     }
     console.log('/fileBMenu');
@@ -658,23 +703,19 @@ fileBcrumbs = function(fileid){
     var start = params.start, dim = params.dim, col = params.col, id = params.id;
     if(col == "file"){
         var parent = File.findOne({_id: fileid});
-        //var path = getDependencyPath(id);
-        //path.splice(0,0, {fileId2: id});
         var path = parent.structuralpath;
     }
     else{
         var path2 = getElementPath(fileid);
         var parent = File.findOne({_id: path2[path2.length-1]});
-        //var path = getDependencyPath(parent._id);
         var path = parent.structuralpath;
-        //path2[path2.length-1] = {fileId2: path2[path2.length-1]};
         path = path2.concat(path);
-        console.log(path2);
+
         var lim = path2.length-2;
     }
-    console.log(path);
+
     var browser = SVG.get('fileBrowse');
-    var crumbs = browser.group().attr("id", "Bcrumbs");
+    var crumbs = SVG.get("Bcrumbs");
     //var scale = browser.attr("height")/data.dim;
     var scale = (1/6)*0.5;
     var vb = browser.attr("viewBox").split(" ");
@@ -683,7 +724,7 @@ fileBcrumbs = function(fileid){
     var maxwidth = 0;
     for(i = path.length-1; i >= 0; i--){
         if(typeof lim === 'undefined' || i > lim){
-            var f = File.findOne({_id: path[i]})//["fileId2"]});
+            var f = File.findOne({_id: path[i]})
             var imagepath = '/file/'+f._id;
             if(typeof lim === 'undefined' || i > lim+1)
                 cols[i] = 'file';
@@ -716,23 +757,25 @@ fileBcrumbs = function(fileid){
                 var backgf = fold.rect(1024,1024).radius(512).fill('#cccccc').opacity(1);
                 fold.use(SVG.get('folder'));
             }
+            /* not yet
             else{
                 var disect = gr[i].group().move(50, Number(vb[3])-300).scale(0.5).fill('none');
                 var backg = disect.rect(1024,1024).radius(512).fill('#cccccc').opacity(1);
                 disect.use(SVG.get('disector'));
-            }
+            }*/
         }
         crumbsarr[i].on('click', function(){
             i = this.attr("id").substring(this.attr("id").indexOf('_')+1);
-            console.log(path[i]);
+
+            var params = Session.get('browseParams')
             if(noedit.indexOf(path[i]) != -1){
                 Session.set('defaultButtons', 'buttons');
-                var params = Session.get('browseParams')
                 params.buttons = 'nobuttons'
-                params.id = path[i]
-                Session.set('browseParams', params);
             }
-            Session.set('fileBId', {id: path[i], col: cols[i]});
+            params.id = path[i]
+            params.col = cols[i]
+            params.start = 1
+            Session.set('browseParams', params);
         });
         y = y + f.height*scale + 20;
         gr[i].on('mouseover', function(){
@@ -757,13 +800,13 @@ editIt = function editIt(){
 
 viewIt = function viewIt(){
     var params = Session.get('browseParams');
-    window.open('/'+ params.col +'/'+Session.get("fileBIt"), '_blank');
+    //window.open('/'+ params.col +'/'+Session.get("fileBIt"), '_blank');
+    window.open('/viewer?url='+ params.col +'/'+Session.get("fileBIt"), '_blank');
 }
 
 editCloneIt = function editCloneIt(){
     console.log('editCloneItstart')
     if(Meteor.userId()){
-        console.log(Meteor.userId());
         var params = Session.get('browseParams');
         if(params.col == 'file')
             cloneFile(Session.get("fileBIt"), function(res){window.open('/filem/'+res, '_blank');});
@@ -777,9 +820,10 @@ browseIt = function browseIt(){
     var defaultButtons = Session.get('defaultButtons');
     if(params.buttons != defaultButtons){
         params.buttons = defaultButtons;
-        Session.set('browseParams', params);
     }
-    Session.set('fileBId', {id: Session.get('fileBIt'), col: params.col});
+    params.id = Session.get('fileBIt')
+    params.start = 1
+    Session.set('browseParams', params);
 }
 
 disectIt = function disectIt(){
@@ -792,9 +836,10 @@ disectIt = function disectIt(){
             if(Group.find({groupId: Session.get("fileBIt")}).fetch().length > 0)
                 var col = 'group';
 
-    //Session.set('browseParams', {start:1, dim:params.dim, col: col, id: Session.get("fileBIt"), buttons: params.buttons});
-
-    Session.set('fileBId', {id: Session.get('fileBIt'), col: col});
+    params.id = Session.get('fileBIt')
+    params.col = col
+    params.start = 1
+    Session.set('browseParams', params)
 
 }
 

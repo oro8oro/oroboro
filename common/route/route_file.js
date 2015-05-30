@@ -240,11 +240,10 @@ Router.route('/filem/:_id', {
         this.wait(subs2);
         global_oro_variables.subscriptionhandles['file'] = subs2;
 
-        var subs3 = Meteor.subscribe('filebrowse', 'vyRjpfv2kki5sPE9G', 'file')
-        this.wait(subs3);
-        global_oro_variables.subscriptionhandles['filebrowse'] = subs3;
+        //var subs3 = Meteor.subscribe('filebrowse', 'vyRjpfv2kki5sPE9G', 'file')
+        //this.wait(subs3);
+        //global_oro_variables.subscriptionhandles['filebrowse'] = subs3;
 
-        //console.log(global_oro_variables.subscriptionhandles);
         console.log('/subscribe');
     },
     action: function(){
@@ -284,7 +283,7 @@ Router.route('/editor/:_id', {
         for(var i in ids.groups)
             this.subscribe('grouppublish', ids.group[i])
 
-*/
+        */
 
         var subs1 = Meteor.subscribe('svgEditorScripts');
         this.wait(subs1);
@@ -354,14 +353,7 @@ Router.route('/filed/:_id', {
 
 Router.route('/browse/:col/:_id/:start/:dim/:buttons', {
     path: '/browse/:col/:_id/:start/:dim/:buttons',
-    template: 'filebrowse',/*
-    subscriptions: function(){
-        //this.subscribe('files').wait();
-        //this.subscribe('groups').wait();
-        //this.subscribe('items').wait();
-        //this.subscribe('dependencies').wait();
-        this.subscribe('filebrowse', this.params._id, this.params.col).wait();
-    },*/
+    template: 'filebrowse',
     data: function(){
         var dim = Number(this.params.dim);
         var limit = dim * dim;
@@ -399,10 +391,6 @@ Router.route('/browse/:col/:_id/:start/:dim', {
     path: '/browse/:col/:_id/:start/:dim',
     template: 'filebrowse',
     subscriptions: function(){
-        this.subscribe('files').wait();
-        this.subscribe('groups').wait();
-        this.subscribe('items').wait();
-        this.subscribe('dependencies').wait();
         //this.subscribe('filebrowse', this.params._id, this.params.col).wait();
     },
     data: function(){

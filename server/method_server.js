@@ -232,5 +232,116 @@ Meteor.methods({
             query = {$and: [ otherquery, query ]};
         var res = Collections[col].find(query).fetch();
         return res;
+    },
+    getFirstElement: function(fileId){
+        check(fileId, String)
+
+        var res = {}
+        var g = Group.findOne({fileId: fileId, type: 'layer'},{sort: {ordering: 1}});
+        var elem = Group.findOne({groupId: g._id},{sort: {ordering: 1}});
+        if(elem)
+            res.type = 'group'
+        else{
+            var elem = Item.findOne({groupId: g._id},{sort: {ordering: 1}});
+            res.type = 'item'
+        }
+        res.elem = elem
+
+        return res
+    },
+    getDepsIds: function(id, label, type, skip, limit){
+        check(id, String);
+        check(label, String);
+
+        var q = {}
+        var opt = {sort: {dateModified: -1}}
+        q[label] = id
+
+        if(label == 'fileId2')
+            var depFile = 'fileId1'
+        else
+            var depFile = 'fileId2'
+
+        if(type)
+            q.type = type
+        if(skip){
+            check(skip, Number)
+            opt.skip = skip
+        }
+        if(limit){
+            check(limit, Number)
+            opt.limit = limit
+        }
+        var ids = Dependency.find(q).map(function(doc){
+            return doc[depFile]
+        })
+        var fileids = File.find({_id: {$in: ids}}, opt).map(function(doc){
+            return doc._id
+        })
+        var result = []
+        for(var i = 0 ; i < ids.length ; i++)
+            if(fileids.indexOf(ids[i]) != -1)
+                result.push(ids[i])
+        q[depFile] = {$in: result}
+        ids = Dependency.find(q).map(function(doc){
+            return doc._id
+        })
+        return ids
+    },
+    getDependantFileIds: function(id, label, type, skip, limit){
+        check(id, String);
+        check(label, String);
+        check(type, Number);
+        check(skip, Number)
+        check(limit, Number)
+
+        var q = {type: type}
+        q[label] = id
+        if(label == 'fileId2')
+            var depFile = 'fileId1'
+        else
+            var depFile = 'fileId2'
+        var ids = Dependency.find(q).map(function(doc){
+            return doc[depFile]
+        })
+        var ids = File.find({_id: {$in: ids}}, {sort: {dateModified: -1}, skip: skip, limit: limit}).map(function(doc){
+            return doc._id
+        })
+        return ids
+    },
+    getComponentsIds: function(fileId){
+        check(fileId, String)
+
+        var ids = file_components_ids(fileId)
+        return ids
+    },
+    getRelatedFiles: function(fileId){
+        check(fileId, String)
+        console.log(fileId)
+        var doc = File.findOne({_id: fileId});
+        var fileIds = [fileId].concat(doc.structuralpath).concat(doc.dependencypath)
+        console.log(fileIds)
+        return fileIds
+    },
+    getUsers: function(fileId){
+        check(fileId, String)
+
+        console.log(fileId)
+        var doc = File.findOne({_id: fileId});
+        var userIds = [doc.creatorId].concat(doc.permissions.view).concat(doc.permissions.edit)
+        //remnant...selected shouldn't be null
+        console.log(doc.selected)
+        if(doc.selected)
+            userIds = userIds.concat(doc.selected);
+        return userIds
+    },
+    count: function(collection, query){
+        check(collection, String);
+        if(query)
+            check(query, Object)
+        else
+            query = {};
+
+        return Collections[collection].find(query).count();
     }
 });

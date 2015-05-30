@@ -1,0 +1,134 @@
+
+[File
+  |_id: Int;
+  title: String;
+  uuid: String;
+  width: Number;
+  height: Number;
+  dateModified: Date;
+  dateCreated: Date;
+  version: String;
+  fileType: String
+  script: String;
+  permissions: Object;
+  creatorId: String;
+  locked: String;
+  selected: Array;
+  noofchildren: Number;
+  structuralpath: Array;
+  dependencypath: Array;
+  groupids: Array;
+  itemids: Array;
+  original: String;
+  parameters: Object
+  |raid();pillage()|
+  [beard]--[parrot]
+  [beard]-:>[foul mouth]
+]
+
+[Group
+  |_id: Int;
+  uuid: String;
+  fileId: String;
+  groupId: String;
+  type: String;
+  ordering: Number;
+  selected: String;
+  locked: String;
+  transform: Stringl
+  parameters: Object;
+  transparency: Number;
+  original: String
+  ||
+]
+
+[Item
+  |_id: Int;
+  groupId: String;
+  type: String;
+  text: String;
+  ordering: Number;
+  palette: Object;
+  font: Object;
+  complexity: Number;
+  pointList: String;
+  closed: String;
+  selected: String;
+  locked: String;
+  parameters: Object;
+  original: String;
+  linkto: String
+  ||
+]
+
+[Palette
+  |strokeColor: String;
+  strokeWidth: String;
+  strokeOpacity: String;
+  fillColor: String;
+  fillOpacity: String;
+  strokeDasharray: String;
+  strokeLinejoin: String;
+  strokeLinecap: String;
+  opacity: String
+  ||
+]
+
+[Text
+  |font-style: String;
+  font-family: String;
+  font-style: String;
+  font-weight: String;
+  font-anchor: String
+  ||
+]
+
+[Dependency
+  |_id: Int;
+  fileId1: String;
+  fileId2: String;
+  collection1: String;
+  collection2: String;
+  type: Number;
+  parameters: Object
+  ||
+]
+
+[UserProfile
+  |name: String;
+  role: String;
+  icon: String
+  ||
+]
+
+[UserEmail
+  |address: String;
+  verified: Boolean
+  ||
+]
+
+[User
+  |_id: Int;
+  profile: Object;
+  emails: Array;
+  createdAt: Date;
+  services: Object;
+  roles: Object;
+  parameters: Object
+  ||
+]
+
+[Connector
+  |_id: Int;
+  source: String;
+  target: String;
+  connector: String;
+  marker: String;
+  sourceAttach: String;
+  targetAttach: String;
+  type: String;
+  inflexions: Array;
+  color: String;
+  labels: String
+  ||
+]

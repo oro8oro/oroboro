@@ -102,7 +102,8 @@ Template.show_meteor_file_svg.rendered = function(){
                         var parentId = doc.fileId;
                     if(parentId == undefined)
                         console.log("Group: " + JSON.stringify(doc) + " does not have a parent id")
-                    else{
+                    else if(SVG.get(parentId)){
+                    //else{
                         var idds = recursive_group_ids(doc._id, {items:[],groups:[]});
                         for(var i in idds.items)
                             if(SVG.get(idds.items[i]))
@@ -228,7 +229,7 @@ Template.show_meteor_file_svg.rendered = function(){
                 //console.log('added item: '+JSON.stringify(doc));
                 //console.log(count);
                 if(!SVG.get(doc._id) && count.i != 0)
-                    if(doc.groupId != Session.get('fileId'))
+                    if(doc.groupId != Session.get('fileId') && SVG.get(doc.groupId))
                         build_item(SVG.get(doc.groupId), doc);
                     else
                         build_item(SVG.get('connectordefs'), doc);
@@ -852,14 +853,11 @@ Template.svgEditor.rendered = function(){
     var viewport = editor.group().attr("id", "viewport");
     if(window.innerHeight / file.height < window.innerWidth / file.width){
         var scale = window.innerHeight / file.height
-        console.log(window.innerWidth - file.width*scale)
         var startmatrix = scale + ',0,0,' + scale + ',' + ((window.innerWidth - file.width*scale) / 2) + ',0'
-        console.log(startmatrix)
     }
     else{
         var scale = window.innerWidth / file.width
         var startmatrix = scale + ',0,0,' + scale + ',0,' + ((window.innerHeight - file.height*scale) / 2)
-        console.log(startmatrix)
     }
 
     SVG.get('viewport').transform('matrix', startmatrix);
@@ -1321,21 +1319,21 @@ Template.svgViewer.onRendered(function(){
 
 
             Session.set("fileId", svg.attr('id'))
-            /*
+            
             if(svg.attr('height') && svg.attr('width')){
                 box.height = svg.attr('height')
                 box.width = svg.attr('width')
-                //may be: "100pt" / "100px" / "100em"
-                if(typeof box.height == 'string'){
-                    box.height = Number(box.height.slice(0,box.height.length-2))
-                    svg.attr('height', box.height)
-                }
-                if(typeof box.width == 'string'){
-                    box.width = Number(box.width.slice(0,box.width.length-2))
-                    svg.attr('width', box.width)
-                }
+                //if points, ~convert to px 
+                if(typeof box.height == 'string' && box.height.indexOf('pt') != -1)
+                    box.height = parseFloat(box.height) * 1.333
+                else
+                    box.height = parseFloat(box.height)
+                if(typeof box.width == 'string' && box.width.indexOf('pt') != -1)
+                    box.width = parseFloat(box.width) * 1.333
+                else
+                    box.width = parseFloat(box.width)
             }
-            else*/
+            else
                 var box = svg.bbox();
             Session.set('fileWidth', box.width)
             Session.set('fileHeight', box.height)

@@ -1316,6 +1316,7 @@ menuAddElemCallb = function menuAddElemCallb(id){
     });
     if(!currentLayer)
         currentLayer =  SVG.get(Session.get('fileId')).first();
+
     if(File.findOne({_id: id})){
         var g = Group.findOne({fileId: id, type: 'layer'},{sort: {ordering: 1}});
         var elem = Group.findOne({groupId: g._id},{sort: {ordering: 1}});
@@ -1325,6 +1326,19 @@ menuAddElemCallb = function menuAddElemCallb(id){
             var elem = Item.findOne({groupId: g._id},{sort: {ordering: 1}});
             cloneItem(elem, currentLayer.attr("id"));
         }
+        /*
+        Meteor.call('getFirstElement', id, function(err, res){
+            if(err)
+                console.log(err)
+            if(res){
+                console.log(res)
+
+                if(res.type == 'item')
+                    cloneItem(res.elem, currentLayer.attr("id"));
+                else if(res.type == 'group')
+                    cloneGroup(res.elem, currentLayer.attr("id"), 'groupId');
+            }
+        })*/
     }
     else{
         var elem = Group.findOne({_id: id})

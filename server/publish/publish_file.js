@@ -1,13 +1,24 @@
+Meteor.publish('filepublish', function(id){
+    check(id, String);
+    return File.find({_id: id});
+})
+
+Meteor.publish('filespublish', function(ids){
+    check(ids, [String])
+    //console.log('filespublish: '+JSON.stringify(ids));
+    return File.find({_id: {$in: ids}})
+})
+
+Meteor.publish('relatedfiles', function(id){
+    check(id, String);
+    return File.find({_id: id});
+})
+
 Meteor.publish('files', function(){
     //if (Roles.userIsInRole(this.userId, 'admin')) {
         return File.find();
     //}
 });
-
-Meteor.publish('filepublish', function(id){
-    check(id, String);
-    return File.find({_id: id});
-})
 
 Meteor.publish('file', function(fileId){
     check(fileId, String);
@@ -147,9 +158,11 @@ Meteor.publish('file', function(fileId){
     */
 });
 
-Meteor.publish('userWork', function(){
-    console.log(this.userId);
-    return File.find({creatorId: this.userId});
+Meteor.publish('userWork', function(type, skip, limit){
+    check(skip, Number)
+    check(limit, Number)
+
+    return File.find({creatorId: this.userId, fileType: type}, {sort: {dateModified: -1}, skip: skip, limit: limit});
 })
 
 Meteor.publish('filebrowse', function(id, col){
@@ -169,6 +182,7 @@ Meteor.publish('filebrowse', function(id, col){
             var kidsIds = {items: [], groups: []}
             var deps = [];
             for(var i = 0; i < kids.length; i++){
+                
                 var d = Dependency.find({fileId2: kids[i], type: 1}).map(function(doc){
                     return doc._id;
                 })
