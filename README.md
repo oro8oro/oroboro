@@ -1,14 +1,17 @@
 #Oroboro - Svg Editor App for Meteor ver.0.1.0
 
+![](/file/JZXXMo5N38iwgfNAG/0.1)
+
 ## About Orobo.ro
 
-http://orobo.ro is a pre-pre-alpha live-collaboration SVG editor with cloud support, in Meteor.js.
+[Oroboro](http://orobo.ro) is a pre-pre-alpha live-collaboration SVG editor with cloud support, in Meteor.js.
 
 This is a mega open source project, combining powerful SVG editing features with creating and maintaining an online database for sharing, showcasing works, live-collaboration on projects and even creating and performing tutorials and presentations.
 
 
-See http://orobo.ro/md/tutorial for how to use the editor.
-Try our playground: http://orobo.ro/filem/eGfQyh6jCqxeEYmex
+See our [tutorial](http://orobo.ro/md/tutorial) for how to use the editor.
+
+Try our [playground](http://orobo.ro/filem/eGfQyh6jCqxeEYmex) or [sign up](http://orobo.ro) and start by ![](http://oroboro-oroboro.rhcloud.com/file/menuItemClone/0.04) cloning existing designs and editing them.
 
 
 ## Current Status
@@ -78,7 +81,7 @@ Features:
 
 ## Want to help?
 
-Go to [(https://github.com/oro8oro/oroboro/issues)](https://github.com/oro8oro/oroboro/issues)
+Go to [https://github.com/oro8oro/oroboro/issues](https://github.com/oro8oro/oroboro/issues)
 
  - you can help by offering us ideas about Oroboro's usabillity. For example, we would like to use it for educational purposes, as a mathematical formulae browser (among a lot of other things)
  - you can help by offering us ideas about implementing other interesting features
@@ -88,5 +91,3 @@ Go to [(https://github.com/oro8oro/oroboro/issues)](https://github.com/oro8oro/o
 ## License: [GPLv3](http://www.gnu.org/copyleft/gpl.html)
 
 (see [gplv3_license.txt](https://raw.githubusercontent.com/oro8oro/oroboro/master/gplv3_license.txt))
-
-
