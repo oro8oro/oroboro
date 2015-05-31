@@ -1,6 +1,6 @@
 #Oroboro - Svg Editor App for Meteor ver.0.1.0
 
-![](/file/JZXXMo5N38iwgfNAG/0.1)
+![](http://oroboro-oroboro.rhcloud.com/file/JZXXMo5N38iwgfNAG/0.1)
 
 ## About Orobo.ro
 
