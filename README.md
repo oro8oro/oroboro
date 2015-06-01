@@ -33,7 +33,7 @@ Features:
 ![](http://oroboro-oroboro.rhcloud.com/file/7jLp2apKztDxd6Siv/0.1)
 
  - basic operations and actions, such as editing points, changing geometry, changing appearance (fill, stroke etc.), creating groups, horizontal/vertical mirror, split / join paths, reverse path order, clone, delete
- 
+ filem
  [![](http://oroboro-oroboro.rhcloud.com/file/nzumC3jDDPK6jnPTZ/0.1)](http://oroboro-oroboro.rhcloud.com/viewer?url=/file/nzumC3jDDPK6jnPTZ)
  [![](http://oroboro-oroboro.rhcloud.com/file/oPifnc3gKSdxqaipz/0.1)](http://oroboro-oroboro.rhcloud.com/viewer?url=/file/oPifnc3gKSdxqaipz)
  
@@ -48,10 +48,18 @@ Features:
  [![](http://oroboro-oroboro.rhcloud.com/file/gzG3QnbfhFMbBQCzf/0.1)](http://oroboro-oroboro.rhcloud.com/viewer?url=/file/gzG3QnbfhFMbBQCzf)
  [![](http://oroboro-oroboro.rhcloud.com/file/z5CTy2uBPegog5Bnv/0.1)](http://oroboro-oroboro.rhcloud.com/viewer?url=/file/z5CTy2uBPegog5Bnv)
  [![](http://oroboro-oroboro.rhcloud.com/file/nPW3sGvBa57m87d7d/0.1)](http://oroboro-oroboro.rhcloud.com/viewer?url=/file/nPW3sGvBa57m87d7d)
- [![](http://oroboro-oroboro.rhcloud.com/file/FJ5PsCfAe8FXiZiXF/0.1)](http://oroboro-oroboro.rhcloud.com/viewer?url=/file/FJ5PsCfAe8FXiZiXF)
- [![](http://oroboro-oroboro.rhcloud.com/file/xkYrgQSscp4yoKM9v/0.1)](http://oroboro-oroboro.rhcloud.com/viewer?url=/file/xkYrgQSscp4yoKM9v)
  
- - generating paths with our symmetry engines (point symmetry, line symmetry, array symmetry) in order to create complex designs such as tessellations, spirals; live feedback: modifying the original path changes the entire design
+ [![](http://oroboro-oroboro.rhcloud.com/file/h2bNyDpySrwrsG5N2/0.1)](http://oroboro-oroboro.rhcloud.com/viewer?url=/file/h2bNyDpySrwrsG5N2)
+ [![](http://oroboro-oroboro.rhcloud.com/file/KBtAqH623Src52i96/0.1)](http://oroboro-oroboro.rhcloud.com/viewer?url=/file/KBtAqH623Src52i96)
+ [![](http://oroboro-oroboro.rhcloud.com/file/zrsJTCFpCXKYh8dxE/0.1)](http://oroboro-oroboro.rhcloud.com/viewer?url=/file/zrsJTCFpCXKYh8dxE)
+ 
+ - generating paths with our symmetry engines (point symmetry, line symmetry) in order to create complex designs such as spirals and kaleidoscopes; live feedback: modifying the original path changes the entire design at the same time with it.
+ 
+ [![](http://oroboro-oroboro.rhcloud.com/file/2CC2YmbKH9pzL4rb8/0.1)](http://oroboro-oroboro.rhcloud.com/viewer?url=/file/2CC2YmbKH9pzL4rb8)
+ [![](http://oroboro-oroboro.rhcloud.com/file/xkYrgQSscp4yoKM9v/0.1)](http://oroboro-oroboro.rhcloud.com/viewer?url=/file/xkYrgQSscp4yoKM9v)
+ [![](http://oroboro-oroboro.rhcloud.com/file/iQdYEY4DHG5EJkTLd/0.1)](http://oroboro-oroboro.rhcloud.com/viewer?url=/file/iQdYEY4DHG5EJkTLd)
+ 
+ - generating paths with our array-like repetitions can help you create tiles and tessellations.
  
  [![](http://oroboro-oroboro.rhcloud.com/file/ACKSA92hnv8Xm7TdQ/0.1)](http://oroboro-oroboro.rhcloud.com/viewer?url=/file/ACKSA92hnv8Xm7TdQ)
  [![](http://oroboro-oroboro.rhcloud.com/file/5j8hem49B5c8Wmf8w/0.1)](http://oroboro-oroboro.rhcloud.com/viewer?url=/file/5j8hem49B5c8Wmf8w)
@@ -60,10 +68,6 @@ Features:
  [![](http://oroboro-oroboro.rhcloud.com/file/qDRbePmMAJgGhgzcg/0.1)](http://oroboro-oroboro.rhcloud.com/viewer?url=/file/qDRbePmMAJgGhgzcg)
  
  - boolean operations on simple paths (union, difference, xor, intersection), with possibility to convert complex paths to a multi-point simple path with our simplify tool.
- 
- [![](http://oroboro-oroboro.rhcloud.com/file/qDRbePmMAJgGhgzcg/0.1)](http://oroboro-oroboro.rhcloud.com/viewer?url=/file/qDRbePmMAJgGhgzcg)
- [![](http://oroboro-oroboro.rhcloud.com/file/qDRbePmMAJgGhgzcg/0.1)](http://oroboro-oroboro.rhcloud.com/viewer?url=/file/qDRbePmMAJgGhgzcg)
- 
  
  - connecting elements from the canvas or creating static labels for them
   
