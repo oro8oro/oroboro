@@ -572,7 +572,14 @@ fileBMenu = function(){
                     this.size(loader.width*bscale, loader.height*bscale)
                     this.x(border+loader.width*bscale).y(loader.height*bscale/2);
                     backgEx.size(loader.width*bscale, loader.height*bscale).x(border+loader.width*bscale).y(loader.height*bscale/2).fill('#59534d')
-                }).front();
+                }).front().on('mouseover', function(event){
+                    this.parent.opacity(1);
+                }).on('mouseout', function(event){
+                    this.parent.opacity(0.7);
+                }).mousedown(function(){
+                    console.log('mousedown img');
+                    exportIt()
+                });
 
             menuBdelete = menu.group().attr('id', 'menuItemDelete').opacity(0.7);
             var backgD = menuBdelete.rect(20,30).fill('#59534d').opacity(0.7);
