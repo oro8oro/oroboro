@@ -2,18 +2,20 @@
 
 (We have a better version in work. Stay tuned on https://www.youtube.com/channel/UCvttYMVLy72hqUolQqtO91Q/videos )
 
+If you are interested to see a live version and/or a live presentation, let us know. At the moment, we do not have a reliable server due to the alpha nature of this project.
+
 ![](http://orobo.go.ro:3500/file/JZXXMo5N38iwgfNAG/0.1)
 
 ## About Orobo.ro
 
-[Oroboro](http://orobo.ro) is a pre-pre-alpha live-collaboration SVG editor with cloud support, in Meteor.js.
+[Oroboro](http://orobo.go.ro:3500) is a pre-pre-alpha live-collaboration SVG editor with cloud support, in Meteor.js.
 
 This is a mega open source project, combining powerful SVG editing features with creating and maintaining an online database for sharing, showcasing works, live-collaboration on projects and even creating and performing tutorials and presentations.
 
 
 See our [tutorial](http://orobo.go.ro:3500/md/tutorial) for how to use the editor.
 
-Try our [playground](http://orobo.go.ro:3500/filem/eGfQyh6jCqxeEYmex) or [sign up](http://orobo.ro) and start by ![](http://orobo.go.ro:3500/file/menuItemClone/0.04) cloning existing designs and editing them.
+Try our [playground](http://orobo.go.ro:3500/filem/eGfQyh6jCqxeEYmex) or [sign up](http://orobo.go.ro:3500) and start by ![](http://orobo.go.ro:3500/file/menuItemClone/0.04) cloning existing designs and editing them.
 
 
 ## Current Status
