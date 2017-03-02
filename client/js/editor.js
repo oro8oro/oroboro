@@ -385,6 +385,7 @@ absorbSVG = function absorbSVG(code, its, groupparentId, locked){
             var newit = SVG.get(Session.get("fileId")).svg(code);
             console.log(newit);
             var newids = [];
+            
             newit.roots(function(){
                 console.log(this);
                 var itemid = this.attr("id");
@@ -405,6 +406,7 @@ absorbSVG = function absorbSVG(code, its, groupparentId, locked){
                     updateItemDB(this, parentId, locked);
                 }
             });
+
             var elemids = Object.keys(its)
             for(var i = 0; i < elemids.length; i++)
                 if(newids.indexOf(elemids[i]) == -1){
@@ -413,6 +415,7 @@ absorbSVG = function absorbSVG(code, its, groupparentId, locked){
                     else
                         removeGroup(elemids[i]);
                 }
+                
         }
     }
 }
@@ -433,6 +436,7 @@ menuItemCodeSave = function menuItemCodeSave(){
     }
     absorbSVG(code, ids);
     //$('#CodeEditorModal').modal('hide');
+    $('#modal-container').css('visibility','hidden')
     enablePan();
 }
 
@@ -1316,14 +1320,16 @@ menuAddElemCallb = function menuAddElemCallb(id){
     });
     if(!currentLayer)
         currentLayer =  SVG.get(Session.get('fileId')).first();
-
     if(File.findOne({_id: id})){
         var g = Group.findOne({fileId: id, type: 'layer'},{sort: {ordering: 1}});
+        console.log(g._id)
         var elem = Group.findOne({groupId: g._id},{sort: {ordering: 1}});
+        console.log(elem)
         if(elem)
             cloneGroup(elem, currentLayer.attr("id"), 'groupId');
         else{
             var elem = Item.findOne({groupId: g._id},{sort: {ordering: 1}});
+            console.log(elem)
             cloneItem(elem, currentLayer.attr("id"));
         }
         /*
@@ -1435,7 +1441,13 @@ menuItemDeparametrize = function menuItemDeparametrize(){
 
 menuGroupDeparametrize = function menuGroupDeparametrize(){
     var paragr = SVG.get(global_oro_variables.selected.members[0].attr('selected'));
-    var patharray = joinPaths(paragr.children());
+    var kids = []
+    paragr.each(function(i, children) {
+        if(this.visible())
+            kids.push(this)
+    })
+    //var patharray = joinPaths(paragr.children());
+    var patharray = joinPaths(kids);
     var temp = SVG.get('svgEditor').path(patharray)
     var type = checkPathType(temp);
     if(type == 'simple'){
@@ -1461,31 +1473,21 @@ menuGroupDeparametrize = function menuGroupDeparametrize(){
 
 menuItemClosePath = function menuItemClosePath(){
     var m = global_oro_variables.selected.members;
-    var upd;
+    var upd, p, path;
     for(i in m){
-        var path = Item.findOne({_id: m[i].attr('selected')});
-        if(path.closed == 'false') {
-            if(path.type == 'simple_path')
-                upd = {closed: "true"};
-            else{
-                var p = SVG.get(m[i].attr('selected')).array.value;
-                if(p[p.length-1][0] != 'Z')
-                    p.push(['Z']);
-                SVG.get(m[i].attr('selected')).plot(p);
-                upd = {closed: "true", pointList: SVG.get(m[i].attr('selected')).attr("d")};
-            }
+        path = SVG.get(m[i].attr('selected'));
+        p = path.attr('d');
+        if(p.indexOf('z') == -1 && p.indexOf('Z') == -1) {
+            upd = {closed: "true"};
+            p += 'Z';
         }
-        else{
-            if(path.type == 'simple_path')
-                upd = {closed: "false"};
-            else{
-                var p = SVG.get(m[i].attr('selected')).array.value;
-                if(p[p.length-1][0] == 'Z')
-                    p.pop();
-                SVG.get(m[i].attr('selected')).plot(p);
-                upd = {closed: "false", pointList: SVG.get(m[i].attr('selected')).attr("d")};
-            }
+        else {
+            upd = {closed: "false"};
+            p = p.replace(/z/gi,'');
         }
+        if(path.attr('type') != 'simple_path')
+            upd.pointList = p;
+
         Meteor.call('update_document', 'Item', m[i].attr('selected'), upd);
     }
 }

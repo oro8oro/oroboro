@@ -113,6 +113,35 @@ movePoint = function(point, dx, dy, coord, sidex, sidey){
     return point;
 };
 
+buildNewCurve = function(p0, a1, a2, p2, ratio){
+    
+    var item = {
+        x1: a1.x,
+        x2: a2.x,
+        y1: a1.y,
+        y2: a2.y,
+        x: p2.x,
+        y: p2.y
+    }
+
+    var p0_x = (p0.x + item.x1) * ratio
+    var p1_x = (item.x1 + item.x2) * ratio
+    var p2_x = (item.x2 + item.x) * ratio
+    var p01_x = (p0_x + p1_x) * ratio
+    var p12_x = (p1_x + p2_x) * ratio
+    new_x = (p01_x + p12_x) * ratio
+    var p0_y = (p0.y + item.y1) * ratio
+    var p1_y = (item.y1 + item.y2) * ratio
+    var p2_y = (item.y2 + item.y) * ratio
+    var p01_y = (p0_y + p1_y) * ratio
+    var p12_y = (p1_y + p2_y) * ratio
+    new_y = (p01_y + p12_y) * ratio
+    
+    return [['C', p0_x, p0_y, p01_x, p01_y, new_x, new_y], 
+        ['C', p12_x, p12_y, p2_x, p2_y, item.x, item.y]
+    ]
+}
+
 resizeCPathp = function(points, dx, dy, coord, sidex, sidey){
     if(['Z','z'].indexOf(points[0]) == -1){
         var p = movePoint([points[1],points[2]], dx, dy, coord, sidex, sidey);
@@ -1619,7 +1648,36 @@ buildHinge = function(p, points, hinge, midd, attr, id, hinges, midds, attrs, no
     newhinge.on('dblclick', function(e){
         //if there is no selection of points/hinges to do a group operation
         if(selectionno.length == 0){
+
+            //if deleted point is between 2 curves, reposition attractors (first and last)
+            if(points.path[points.start+p-1][0] == 'C' && points.path[points.start+p][0] == 'C'){
+                //get the coords of the first attractor
+                var a1x = points.path[points.start+p-1][1]
+                var a1y = points.path[points.start+p-1][2]
+
+                //get the coords of the last attractor
+                var a2x = points.path[points.start+p][3]
+                var a2y = points.path[points.start+p][4]
+                var prevp = points.path[points.start+p-2]
+                var prevplen = points.path[points.start+p-2].length
+
+                //double the length of the first attractor
+                a1x = prevp[prevplen-2] + (a1x - prevp[prevplen-2]) * 2
+                a1y = prevp[prevplen-1] + (a1y - prevp[prevplen-1]) * 2
+
+                //double the length of the last attractor
+                a2x = points.path[points.start+p][5] + (a2x - points.path[points.start+p][5]) * 2
+                a2y = points.path[points.start+p][6] + (a2y - points.path[points.start+p][6]) * 2
+
+                //replace the attractors for the point after the deleted one
+                points.path[points.start+p][1] = a1x
+                points.path[points.start+p][2] = a1y
+                points.path[points.start+p][3] = a2x
+                points.path[points.start+p][4] = a2y
+            }
             points.path.splice(points.start+p-1,1);
+
+            //if we have to delete the first point, make sure that the new first point does not have attractors and begins with an M
             if(p == 1){
                 if(points.path[points.start][0] == 'C'){
                     points.path[points.start][1] = points.path[points.start][5]
@@ -1746,12 +1804,24 @@ positionMidd = function(newmidd, p, points){
     if(points.subpath[p][0] == 'C'){ var x = 5, y = 6; }
     else{ var x = 1, y = 2; }
     var point2 = points.subpath[p+1];
-    if(points.subpath[p+1][0] == 'M')
-        point2[0] = 'L';
-    var temppath = SVG.get(Session.get('fileId')).path([[ 'M', points.subpath[p][x], points.subpath[p][y] ], point2 ]);
-    var p = temppath.pointAt(temppath.length() / 2);
-    newmidd.cx(p.x).cy(p.y);
-    temppath.remove();
+    if(point2 && point2 != 'null'){
+        if(point2[0] == 'C'){
+            var newseg = buildNewCurve({x: points.subpath[p][x], y: points.subpath[p][y]}, {x: point2[1], y: point2[2]}, {x: point2[3], y: point2[4]}, {x: point2[5], y: point2[6]}, 0.5)
+            newmidd.cx(newseg[0][5]).cy(newseg[0][6]);
+        }
+        else{
+            newmidd.cx((points.subpath[p][x]+point2[1])/2).cy((points.subpath[p][y]+point2[2])/2);
+        }
+        /*
+        if(point2[0] == 'M')
+            point2[0] = 'L';
+        var temppath = SVG.get(Session.get('fileId')).path([[ 'M', points.subpath[p][x], points.subpath[p][y] ], point2 ]);
+        var p = temppath.pointAt(temppath.length() / 2);
+        newmidd.cx(p.x).cy(p.y);
+        temppath.remove();*/
+    }
+    else
+        newmidd.remove()
 }
 
 buildMidd = function(p, points, hinge, midd, attr, id, hinges, midds, attrs, no){
@@ -1769,39 +1839,31 @@ buildMidd = function(p, points, hinge, midd, attr, id, hinges, midds, attrs, no)
         var pp = transformPoint(this.cx(), this.cy(), [invview, invmatrix]);
         if(e.shiftKey){
             var d = 10;
-            if(points.path[points.start+p-1][0] == 'C'){
-                var at1 = points.path[points.start+p-1][5];
-                var at2 = points.path[points.start+p-1][6];
-                var at11 = points.subpath[p][5];
-                var at22 = points.subpath[p][6];
+
+            //before middpoint and after;
+            var p0 = points.path[points.start+p-1]
+            var p2 = points.path[points.start+p]
+
+            var p00 = points.subpath[p]
+            var p22 = points.subpath[p+1]
+
+            //if it is already a curve use buildNewCurve algorithm else put it in the middle
+            if(p2[0] == 'C'){
+
+                var newseg = buildNewCurve({x: p0[p0.length-2], y: p0[p0.length-1]}, {x: p2[1], y: p2[2]}, {x: p2[3], y: p2[4]}, {x: p2[5], y: p2[6]}, 0.5)
+                var newsegsubp = buildNewCurve({x: p00[p00.length-2], y: p00[p00.length-1]}, {x: p22[1], y: p22[2]}, {x: p22[3], y: p22[4]}, {x: p22[5], y: p22[6]}, 0.5)
+
+                //add new point and replace point after midd with a new one with correct attractors
+                points.subpath.splice(p+1, 1, newsegsubp[0], newsegsubp[1]);
+                points.path.splice(points.start+p, 1, newseg[0], newseg[1]);
             }
             else{
-                var at1 = points.path[points.start+p-1][1] + d;
-                var at2 = points.path[points.start+p-1][2] - d;
-                var at11 = points.subpath[p][1] + d;
-                var at22 = points.subpath[p][2] - d;
+                //add new point and replace point after midd with a new one with correct attractors
+                points.subpath.splice(p+1, 1, ['C', p00[p00.length-2], p00[p00.length-1], this.cx(), this.cy(), this.cx(), this.cy()], ['C', this.cx(), this.cy(), p22[1], p22[2], p22[1], p22[2]]);
+                points.path.splice(points.start+p, 1, ['C', p0[p0.length-2], p0[p0.length-1], pp[0], pp[1], pp[0], pp[1]], ['C', pp[0], pp[1], p2[1], p2[2], p2[1], p2[2]]);
             }
-            if(points.path[points.start+p][0] == 'C'){
-                points.path[points.start+p][1] = pp[0] + d;
-                points.path[points.start+p][2] = pp[1] - d;
-            }
-            else{
-                if(points.path[points.start+p][0] != 'Z'){
-                    points.path[points.start+p][0] = 'C';
-                    points.path[points.start+p][5] = points.path[points.start+p][1];
-                    points.path[points.start+p][6] = points.path[points.start+p][2];
-                    points.path[points.start+p][1] = pp[0] + d;
-                    points.path[points.start+p][2] = pp[1] - d;
-                    points.path[points.start+p][3] = points.path[points.start+p][5] - d;
-                    points.path[points.start+p][4] = points.path[points.start+p][6] - d;
-                }
-                else{
-                    points.subpath.splice(p+1,0, ['C', this.cx() + d, this.cy() - d, points.subpath[p+1][5] - d, points.subpath[p+1][6] - d, points.subpath[p+1][1], points.subpath[p+1][2]]);
-                    points.path.splice(points.start+p, 0, ['C', pp[0] + d, pp[1] - d, points.path[points.start][1] - d, points.path[points.start][2] - d, points.path[points.start][1], points.path[points.start][2]]);
-                }
-            }
-            points.subpath.splice(p+1,0, ['C', at11, at22, this.cx() - d, this.cy() - d, this.cx(), this.cy()]);
-            points.path.splice(points.start+p, 0, ['C', at1, at2, pp[0] - d, pp[1] - d, pp[0], pp[1]]);
+
+            //build new attractors
             attrs[p] = buildAttractors(p,points, hinge, attr, id, attrs, midds);
             attrs[p+1] = buildAttractors(p+1,points, hinge, attr, id, attrs, midds);
             attrs[p+2] = buildAttractors(p+2,points, hinge, attr, id, attrs, midds);
@@ -2590,7 +2652,7 @@ removeItem = function(id){
     Meteor.call('remove_document', 'Item', id);
 }
 
-removeGroup = function(id, deep){
+removeGroup = function(id, deep, callb){
     if(deep){
         var items = Item.find({groupId: id}).fetch();
         for(i in items)
@@ -2602,17 +2664,29 @@ removeGroup = function(id, deep){
         for(d in deps)
             Meteor.call('remove_document', 'Dependency', deps[d]._id);
     }
-    Meteor.call('remove_document', 'Group', id);
+    Meteor.call('remove_document', 'Group', id, function(err, res){
+        if(err)
+            console.log(err)
+        if(res)
+            if(callb)
+                callb(res)
+    });
 }
 
-removeFile = function(id){
+removeFile = function(id, callb){
     var groups = Group.find({fileId: id}).fetch();
     for(g in groups)
         removeGroup(groups[g]._id);
     var deps = Dependency.find({$or: [{fileId1: id}, {fileId2: id}] }).fetch();
     for(d in deps)
         Meteor.call('remove_document', 'Dependency', deps[d]._id);
-    Meteor.call('remove_document', 'File', id);
+    Meteor.call('remove_document', 'File', id, function(err, res){
+        if(err)
+            console.log(err)
+        if(res)
+            if(callb)
+                callb(res)
+    });
 }
 
 build_group_client = function (g, group, subgroups){
@@ -3281,8 +3355,6 @@ cloneItem = function cloneItem(it, groupId, locked, callb){
     console.log('cloneItem');
     if(typeof it === 'string')
         it = Item.findOne({_id: it});
-    console.log(JSON.stringify(it))
-    console.log(locked);
     it.original = it._id;
     delete it._id;
     it.groupId = groupId;
@@ -3296,7 +3368,6 @@ cloneItem = function cloneItem(it, groupId, locked, callb){
     it.selected = 'null';
     if(!it.locked && it.parameters && it.parameters.parametrizedGroup)
         delete it.parameters.parametrizedGroup
-    console.log(JSON.stringify(it))
     insertItem(it, callb);
     console.log('/cloneItem');
 }
@@ -3305,13 +3376,11 @@ cloneGroup = function cloneGroup(gr, parentId, parent){
     console.log('cloneGroup');
     if(typeof gr === 'string')
         gr = Group.findOne({_id: gr});
-    console.log(JSON.stringify(gr));
     var no = Group.find({uuid: gr.uuid}).count();
     no++;
     var deps = Dependency.find({fileId1: gr._id, type: {$in:[2,3,5]} }).fetch();
     var groups = Group.find({groupId: gr._id}).fetch();
     var items = Item.find({groupId: gr._id}).fetch();
-    console.log(JSON.stringify(items));
     var groupId = gr._id; 
     gr.original = gr._id;
     delete gr._id;
@@ -3353,6 +3422,7 @@ cloneFile = function cloneFile(id, callb){
     f.groupids = [];
     f.itemids = [];
     f.selected = [];
+    f.noofchildren = 0
     console.log(f);
     Meteor.call('insert_document', 'File', f, function(err, res){
         if(err) console.log(err);
@@ -3823,6 +3893,8 @@ pointSymmetry = function(parameters, update){
     return path.parent;
 }
 
+//old line symmetry
+/*
 lineSymmetry = function(parameters, update){
     var obj = JSON.parse(JSON.stringify(parameters.params));
     var path = SVG.get(obj.elements.path);
@@ -3845,10 +3917,6 @@ lineSymmetry = function(parameters, update){
             m2 = -1/m1, b2;
     }
     var dscale = 0;
-    //console.log(dscale);
-    //console.log(m1);
-    //console.log(b1);
-    //console.log(m2);
 
     if(kids.length > 1){
         var len = kids.length;
@@ -3946,6 +4014,185 @@ lineSymmetry = function(parameters, update){
     }
     return path.parent;
 }
+*/
+
+lineSymmetry = function(parameters, update){
+    var obj = JSON.parse(JSON.stringify(parameters.params));
+    var path = SVG.get(obj.elements.path);
+    var box = path.bbox();
+    //relative points to path origin
+    obj.pointX1 = box.x + obj.pointX1
+    obj.pointY1 = box.y + obj.pointY1
+    obj.pointX2 = box.x + obj.pointX2
+    obj.pointY2 = box.y + obj.pointY2
+
+    var repsonturn = Math.ceil(obj.repetitions / obj.rotations);
+    var angle = 2*Math.PI / repsonturn,
+        paths = [path],
+        kids = path.parent.children(),
+        p
+    
+    obj.dscale = 0.99 + obj.dscale*0.01
+
+    if(kids.length > 1){
+        var len = kids.length;
+        for(var i = 0; i < len; i++)
+            if(kids[i] != path){
+                kids[i].remove();
+                i--;
+                len--;
+            }
+    }
+
+    for(var r = 0 ; r < obj.repetitions-1; r++){
+        paths = simpleLineSymmetry(obj, paths)
+        p = rotate_point(obj.pointX1, obj.pointY1, -angle, [ obj.pointX2, obj.pointY2 ])
+        obj.pointX2 = p[0]
+        obj.pointY2 = p[1]
+    }
+
+    if(update){
+        var output = SVG.get(path.parent.attr('id')).node.outerHTML;
+        parameters.output = output;
+        Meteor.call('update_document', 'Group', path.parent.attr('id'), {parameters: parameters});
+    }
+    return path.parent;
+}
+
+simpleLineSymmetry = function(obj, paths){
+    var repetitions = 2
+    var a = Math.PI,
+        arrs = [], dx = 0, dy = 0, bigx, bigy, x, y,
+        m1 = (obj.pointY2 - obj.pointY1) / (obj.pointX2 - obj.pointX1),
+        tempscale = obj.dscale,
+        cx, cy
+
+    if(m1){
+        var b1 = obj.pointY1 - m1 * obj.pointX1,
+            m2 = -1/m1, b2;
+    }
+
+    for(var r = 0 ; r < repetitions-1; r++){
+        arrs[r] = JSON.parse(JSON.stringify(paths[paths.length-1].array.valueOf()));
+        //find perpendicular from path center to line for dscale
+        if(tempscale > 1){
+            var box = paths[paths.length-1].bbox()
+            if(m1 != Infinity){
+                b2 = box.cy - m2 * box.cx;
+                cx = (b2-b1) / (m1-m2);
+                cy = m1 * cx + b1;
+            }
+            else if(obj.pointX1 == obj.pointX2){
+                cx = obj.pointX1;
+                cy = box.cy
+            }
+            else if(obj.pointY1 == obj.pointY2){
+                cx = box.cx
+                cy = obj.pointY1;
+            }
+        }
+
+        for(var i = 0 ; i < arrs[r].length; i++){
+            if(arrs[r][i][0] != 'Z'){
+                var len = arrs[r][i].length;
+            
+                if(m1 != Infinity){
+                    b2 = arrs[r][i][len-1] - m2 * arrs[r][i][len-2];
+                    x = (b2-b1) / (m1-m2);
+                    y = m1 * x + b1;
+                }
+                else if(obj.pointX1 == obj.pointX2){
+                    x = obj.pointX1;
+                    y = arrs[r][i][len-1];
+                }
+                else if(obj.pointY1 == obj.pointY2){
+                    x = arrs[r][i][len-2];
+                    y = obj.pointY1;
+                }
+
+                if(tempscale > 1){
+                    x = cx - (cx - x) * tempscale
+                    y = cy - (cy - y) * tempscale
+                    dx = x - (x - arrs[r][i][len-2]) * tempscale
+                    dy = y - (y - arrs[r][i][len-1]) * tempscale
+                }
+                else{
+                    dx = arrs[r][i][len-2]
+                    dy = arrs[r][i][len-1]
+                }
+
+                var p = rotate_point(x, y, a, [dx, dy ])
+                arrs[r][i][len-2] = p[0];
+                arrs[r][i][len-1] = p[1];
+
+                if(arrs[r][i][0] == 'C'){
+                    if(m1 != Infinity){
+                        b2 = arrs[r][i][2] - m2 * arrs[r][i][1];
+                        x = (b2-b1) / (m1-m2);
+                        y = m1 * x + b1;
+                    }
+                    else if(obj.pointX1 == obj.pointX2){
+                        x = obj.pointX1;
+                        y = arrs[r][i][2];
+                    }
+                    else if(obj.pointY1 == obj.pointY2){
+                        x = arrs[r][i][1];
+                        y = obj.pointY1;
+                    }
+
+                    if(tempscale > 1){
+                        x = cx - (cx - x) * tempscale
+                        y = cy - (cy - y) * tempscale
+                        dx1 = x - (x - arrs[r][i][1]) * tempscale
+                        dy1 = y - (y - arrs[r][i][2]) * tempscale
+                    }
+                    else{
+                        dx1 = arrs[r][i][1]
+                        dy1 = arrs[r][i][2]
+                    }
+
+                    var a1 = rotate_point(x, y, a, [dx1, dy1 ])
+                    arrs[r][i][1] = a1[0];
+                    arrs[r][i][2] = a1[1];
+
+                    if(m1 != Infinity){
+                        b2 = arrs[r][i][4] - m2 * arrs[r][i][3];
+                        x = (b2-b1) / (m1-m2);
+                        y = m1 * x + b1;
+                    }
+                    else if(obj.pointX1 == obj.pointX2){
+                        x = obj.pointX1;
+                        y = arrs[r][i][4];
+                    }
+                    else if(obj.pointY1 == obj.pointY2){
+                        x = arrs[r][i][3];
+                        y = obj.pointY1;
+                    }
+
+                    if(tempscale > 1){
+                        x = cx - (cx - x) * tempscale
+                        y = cy - (cy - y) * tempscale
+                        dx2 = x - (x - arrs[r][i][3]) * tempscale
+                        dy2 = y - (y - arrs[r][i][4]) * tempscale
+                    }
+                    else{
+                        dx2 = arrs[r][i][3]
+                        dy2 = arrs[r][i][4]
+                    }
+
+                    var a2 = rotate_point(x, y, a, [dx2, dy2 ])
+                    arrs[r][i][3] = a2[0];
+                    arrs[r][i][4] = a2[1];
+                }
+            }
+        }
+        paths[paths.length+r] = paths[paths.length-1].clone()
+        paths[paths.length+r-1].plot(arrs[r]).attr('id', 'lineSymmetry_' + r);
+    }
+
+    return paths
+
+}
 
 itemArray = function(parameters, update){
     var obj = parameters.params;
@@ -3984,6 +4231,26 @@ itemArray = function(parameters, update){
         Meteor.call('update_document', 'Group', path.parent.attr('id'), {parameters: parameters});
     }
     return path.parent;
+}
+
+sliceSPath = function(path, line){
+
+    var cliptype = ClipperLib.ClipType.ctIntersection
+    var result = pathArraySvgXY(path.array.valueOf());
+    var box = path.bbox()
+    var rect = path.parent.rect(box.width+100, box.height+100).move()
+
+    var c = new ClipperLib.Clipper();
+    c.AddPaths(result, ClipperLib.PolyType.ptSubject, true);
+    c.AddPaths(points2, ClipperLib.PolyType.ptClip, true);
+    var solution = new ClipperLib.Paths();
+    c.Execute(cliptype, solution);
+    result = solution;
+
+    solution = JSON.stringify(pathArrayXYOro(result));
+    var palette = Item.findOne({_id: SVG.get(elems[0].attr("selected")).attr("id")},{fields: {palette:1}}).pallette;
+    var doc = {groupId: SVG.get(elems[0].attr("selected")).parent.attr("id"), type: "simple_path", pointList: solution, palette: palette};
+    insertItem(doc);
 }
 /*
 parameters: { 

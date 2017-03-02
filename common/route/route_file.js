@@ -253,7 +253,7 @@ Router.route('/filem/:_id', {
             //console.log(JSON.stringify(File.find().fetch()))
             //console.log(JSON.stringify(Group.find().fetch()))
             //console.log(JSON.stringify(Item.find().fetch()))
-            var lastit = Item.findOne({_id: f.itemids[f.itemids.length-1]})
+            //var lastit = Item.findOne({_id: f.itemids[f.itemids.length-1]})
             this.render('svgEditor', {
                 data: function(){
                     return {file: f};

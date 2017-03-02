@@ -3,6 +3,103 @@ allfileslength = 0;
 countB = 0;
 bscale = 0.1;
 noedit = 'JZXXMo5N38iwgfNAG'
+subscriptions = {}
+
+reloadSubscriptions = function(){
+    var p = Session.get('browseParams')
+    if(p.id == 'PRRyiPWSw8xj82T8F'){
+        if(subscriptions.userWork)
+            subscriptions.userWork.stop()
+        //console.log(p)
+        subscriptions.userWork = Meteor.subscribe('userWork', 'image/svg+xml', p.start-1, p.dim*p.dim, function(){
+            console.log('userWork')
+            //console.log(JSON.stringify(File.find({$and: [{creatorId: Meteor.userId()}, {fileType:'image/svg+xml'}]}, {sort: {dateModified: -1}}).fetch()))
+        })
+        Meteor.call('count', 'File', {creatorId: Meteor.userId()}, function(err, res){
+            if(err)
+                console/log(err)
+            if(res){
+                console.log('allfileslength: ' + res)
+                allfileslength = res
+            }
+        })
+    }
+    else{
+        Meteor.call('count', 'Dependency', {fileId2: p.id, type: 1}, function(err, res){
+            if(err)
+                console/log(err)
+            if(res){
+                //console.log('allfileslength: ' + res)
+                allfileslength = res
+            }
+        })
+        
+        Meteor.call('getDependantFileIds', p.id, 'fileId2', 1, p.start-1, p.dim*p.dim, function(err, res){
+            if(err)
+                console.log(err)
+            if(res){
+                //console.log('DependantFileIds: '+res)
+                if(subscriptions.getDependantFileIds)
+                    subscriptions.getDependantFileIds.stop()
+                subscriptions.getDependantFileIds = Meteor.subscribe('filespublish', res, function(){
+                    //console.log('filespublishhhhhhhhhhhhhhed')
+                })
+                
+                if(subscriptions.groups)
+                    for(var s in subscriptions.groups)
+                        subscriptions.groups[s].stop()
+                if(subscriptions.items)
+                    for(var s in subscriptions.items)
+                        subscriptions.items[s].stop()
+                subscriptions.groups = []
+                subscriptions.items = []
+                for(var k in res){
+                    Meteor.call('getComponentsIds', res[k], function(err, res2){
+                        if(err)
+                            console.log(err)
+                        if(res2){
+                            subscriptions.groups.push(Meteor.subscribe('groupspublish', res2.groups))
+                            subscriptions.items.push(Meteor.subscribe('itemspublish', res2.items))
+                        }
+                    })
+                }
+            }
+        })
+
+        Meteor.call('getRelatedFiles', p.id, function(err, res){
+            if(err)
+                console.log(err)
+            if(res){
+                //console.log('RelatedFiles: ' + res)
+                if(subscriptions.getRelatedFiles)
+                    subscriptions.getRelatedFiles.stop()
+                subscriptions.getRelatedFiles = Meteor.subscribe('filespublish', res)
+            }
+        })
+
+        Meteor.call('getDepsIds', p.id, 'fileId2', 1, p.start-1, p.dim*p.dim, function(err, res){
+            if(err)
+                console.log(err)
+            if(res){
+                //console.log('DepsIds: '+res)
+                if(subscriptions.getDepsIds)
+                    subscriptions.getDepsIds.stop()
+                subscriptions.getDepsIds = Meteor.subscribe('dependenciespublish', res)
+            }
+        })
+        /*
+        Meteor.call('getUsers', p.id, function(err, res){
+            if(err)
+                console.log(err)
+            if(res){
+                //console.log('users: '+res)
+                if(subscriptions.getUsers)
+                    subscriptions.getUsers.stop()
+                subscriptions.getUsers = Meteor.subscribe('userspublish', res)
+            }
+        })*/
+    }
+}
 
 reloadFilebrowser = function(params){
     console.log('reloadFilebrowser');
@@ -54,105 +151,17 @@ Template.filebrowse.onRendered(function(){
         Blaze.render(Template.login, document.getElementById('logintemplatediv'));
     }
 
-    var subscriptions = {}
+    self.autorun(function(){
+        var login = Meteor.userId()
+        if(SVG.get('menu_defs')){
+            SVG.get('menu_defs').remove()
+            reloadSubscriptions()
+        }
+    })
 
     self.autorun(function(){
         var p = Session.get('browseParams')    
-        if(p.id == 'PRRyiPWSw8xj82T8F'){
-            if(subscriptions.userWork)
-                subscriptions.userWork.stop()
-            //console.log(p)
-            subscriptions.userWork = Meteor.subscribe('userWork', 'image/svg+xml', p.start-1, p.dim*p.dim, function(){
-                console.log('userWork')
-                //console.log(JSON.stringify(File.find({$and: [{creatorId: Meteor.userId()}, {fileType:'image/svg+xml'}]}, {sort: {dateModified: -1}}).fetch()))
-            })
-            Meteor.call('count', 'File', {creatorId: Meteor.userId()}, function(err, res){
-                if(err)
-                    console/log(err)
-                if(res){
-                    console.log('allfileslength: ' + res)
-                    allfileslength = res
-                }
-            })
-        }
-        else{
-
-            Meteor.call('count', 'Dependency', {fileId2: p.id, type: 1}, function(err, res){
-                if(err)
-                    console/log(err)
-                if(res){
-                    //console.log('allfileslength: ' + res)
-                    allfileslength = res
-                }
-            })
-            
-            Meteor.call('getDependantFileIds', p.id, 'fileId2', 1, p.start-1, p.dim*p.dim, function(err, res){
-                if(err)
-                    console.log(err)
-                if(res){
-                    //console.log('DependantFileIds: '+res)
-                    if(subscriptions.getDependantFileIds)
-                        subscriptions.getDependantFileIds.stop()
-                    subscriptions.getDependantFileIds = Meteor.subscribe('filespublish', res, function(){
-                        //console.log('filespublishhhhhhhhhhhhhhed')
-                    })
-                    
-                    if(window.windowType == 'svgEditor' || window.parent.windowType == 'svgEditor'){
-                        if(subscriptions.groups)
-                            for(var s in subscriptions.groups)
-                                subscriptions.groups[s].stop()
-                        if(subscriptions.items)
-                            for(var s in subscriptions.items)
-                                subscriptions.items[s].stop()
-                        subscriptions.groups = []
-                        subscriptions.items = []
-                        for(var k in res){
-                            Meteor.call('getComponentsIds', res[k], function(err, res2){
-                                if(err)
-                                    console.log(err)
-                                if(res2){
-                                    subscriptions.groups.push(Meteor.subscribe('groupspublish', res2.groups))
-                                    subscriptions.items.push(Meteor.subscribe('itemspublish', res2.items))
-                                }
-                            })
-                        }
-                    }
-                }
-            })
-
-            Meteor.call('getRelatedFiles', p.id, function(err, res){
-                if(err)
-                    console.log(err)
-                if(res){
-                    //console.log('RelatedFiles: ' + res)
-                    if(subscriptions.getRelatedFiles)
-                        subscriptions.getRelatedFiles.stop()
-                    subscriptions.getRelatedFiles = Meteor.subscribe('filespublish', res)
-                }
-            })
-
-            Meteor.call('getDepsIds', p.id, 'fileId2', 1, p.start-1, p.dim*p.dim, function(err, res){
-                if(err)
-                    console.log(err)
-                if(res){
-                    //console.log('DepsIds: '+res)
-                    if(subscriptions.getDepsIds)
-                        subscriptions.getDepsIds.stop()
-                    subscriptions.getDepsIds = Meteor.subscribe('dependenciespublish', res)
-                }
-            })
-            /*
-            Meteor.call('getUsers', p.id, function(err, res){
-                if(err)
-                    console.log(err)
-                if(res){
-                    //console.log('users: '+res)
-                    if(subscriptions.getUsers)
-                        subscriptions.getUsers.stop()
-                    subscriptions.getUsers = Meteor.subscribe('userspublish', res)
-                }
-            })*/
-        }
+        reloadSubscriptions();
     })
 
     self.autorun(function(){
@@ -282,7 +291,7 @@ Template.filebrowse.events({
             else if(fileId == 'mmZmkPGbRDEhuBg5p')
                 window.open('/filem/eGfQyh6jCqxeEYmex', '_blank');//playground
             else if(fileId == 'AXPzGY3BcQdNCXMyC')
-                window.open('https://github.com/loredanacirstea/meteor-svg-app', '_blank'); //github
+                window.open('https://github.com/oro8oro/oroboro', '_blank'); //github
             else if(fileId == "37u7npbMF6NvccC6u")
                 window.open('/md/AboutOroboro', '_blank');//about us
         }
@@ -547,69 +556,79 @@ fileBMenu = function(){
         if(!SVG.get('menu_defs')){
             console.log('create menu_defs')
             var menu = SVG.get('defs').group().attr("id", "menu_defs")
-            var border = 100;
+            var border = 100, skipx = 0;
 
-            var menuBclone = menu.group().attr('id', 'menuItemClone').opacity(0.7);
-            var backgC = menuBclone.rect(20,30).fill('#59534d').opacity(0.7);
-            var imgC = menuBclone.image('/file/menuItemClone').loaded(function(loader) {
-                    this.size(loader.width*bscale, loader.height*bscale);
-                    this.x(border).y(loader.height*bscale/2);
-                    backgC.size(loader.width*bscale, loader.height*bscale).x(border).y(loader.height*bscale/2).fill('#59534d')
-                }).front();
-            imgC.on('mouseover', function(event){
-                    this.parent.opacity(1);
-                }).on('mouseout', function(event){
-                    this.parent.opacity(0.7);
-                }).mousedown(function(){
-                    console.log('mousedown img');
-                    editCloneIt()
-                });
+            if(Meteor.userId()){
+                menuBedit = menu.group().attr('id', 'menuItemEdit').opacity(0.7);
+                var backgE = menuBedit.rect(20,30).fill('#59534d').opacity(0.7);
+                menuBedit.image('/file/menuItemEdit').loaded(function(loader) {
+                        this.size(loader.width*bscale, loader.height*bscale)
+                        this.x(border).y(loader.height*bscale/2);
+                        backgE.size(loader.width*bscale, loader.height*bscale).x(border).y(loader.height*bscale/2)
+                    }).front().on('mouseover', function(event){
+                        this.parent.opacity(1);
+                    }).on('mouseout', function(event){
+                        this.parent.opacity(0.7);
+                    }).mousedown(function(){
+                        console.log('mousedown img');
+                        editIt()
+                    });
 
+                var menuBclone = menu.group().attr('id', 'menuItemClone').opacity(0.7);
+                var backgC = menuBclone.rect(20,30).fill('#59534d').opacity(0.7);
+                var imgC = menuBclone.image('/file/menuItemClone').loaded(function(loader) {
+                        this.size(loader.width*bscale, loader.height*bscale);
+                        this.x(border+loader.width*bscale).y(loader.height*bscale/2);
+                        backgC.size(loader.width*bscale, loader.height*bscale).x(border+loader.width*bscale).y(loader.height*bscale/2).fill('#59534d')
+                    }).front();
+                imgC.on('mouseover', function(event){
+                        this.parent.opacity(1);
+                    }).on('mouseout', function(event){
+                        this.parent.opacity(0.7);
+                    }).mousedown(function(){
+                        console.log('mousedown img');
+                        editCloneIt()
+                    });
+
+                menuBdelete = menu.group().attr('id', 'menuItemDelete').opacity(0.7);
+                var backgD = menuBdelete.rect(20,30).fill('#59534d').opacity(0.7);
+                menuBdelete.image('/file/menuItemDelete').loaded(function(loader) {
+                        this.size(loader.width*bscale, loader.height*bscale)
+                        this.x(border+loader.width*bscale*2).y(loader.height*bscale/2);
+                        backgD.size(loader.width*bscale, loader.height*bscale).x(border+loader.width*bscale*2).y(loader.height*bscale/2).fill('#59534d')
+                    }).front().on('mouseover', function(event){
+                        this.parent.opacity(1);
+                    }).on('mouseout', function(event){
+                        this.parent.opacity(0.7);
+                    }).mousedown(function(){
+                        console.log('mousedown img');
+                        removeIt()
+                    });
+                skipx = 3
+            }
 
             menuBexport = menu.group().attr('id', 'menuItemExport').opacity(0.7);
             var backgEx = menuBexport.rect(20,30).fill('#59534d').opacity(0.7);
             menuBexport.image('/file/menuItemExport').loaded(function(loader) {
                     this.size(loader.width*bscale, loader.height*bscale)
-                    this.x(border+loader.width*bscale).y(loader.height*bscale/2);
-                    backgEx.size(loader.width*bscale, loader.height*bscale).x(border+loader.width*bscale).y(loader.height*bscale/2).fill('#59534d')
-                }).front();
-
-            menuBdelete = menu.group().attr('id', 'menuItemDelete').opacity(0.7);
-            var backgD = menuBdelete.rect(20,30).fill('#59534d').opacity(0.7);
-            menuBdelete.image('/file/menuItemDelete').loaded(function(loader) {
-                    this.size(loader.width*bscale, loader.height*bscale)
-                    this.x(border+loader.width*bscale*2).y(loader.height*bscale/2);
-                    backgD.size(loader.width*bscale, loader.height*bscale).x(border+loader.width*bscale*2).y(loader.height*bscale/2).fill('#59534d')
+                    this.x(border+loader.width*bscale*skipx).y(loader.height*bscale/2);
+                    backgEx.size(loader.width*bscale, loader.height*bscale).x(border+loader.width*bscale*skipx).y(loader.height*bscale/2).fill('#59534d')
                 }).front().on('mouseover', function(event){
                     this.parent.opacity(1);
                 }).on('mouseout', function(event){
                     this.parent.opacity(0.7);
                 }).mousedown(function(){
                     console.log('mousedown img');
-                    removeIt()
+                    exportIt()
                 });
-
-            menuBedit = menu.group().attr('id', 'menuItemEdit').opacity(0.7);
-            var backgE = menuBedit.rect(20,30).fill('#59534d').opacity(0.7);
-            menuBedit.image('/file/menuItemEdit').loaded(function(loader) {
-                    this.size(loader.width*bscale, loader.height*bscale)
-                    this.x(border+loader.width*bscale*3).y(loader.height*bscale/2);
-                    backgE.size(loader.width*bscale, loader.height*bscale).x(border+loader.width*bscale*3).y(loader.height*bscale/2)
-                }).front().on('mouseover', function(event){
-                    this.parent.opacity(1);
-                }).on('mouseout', function(event){
-                    this.parent.opacity(0.7);
-                }).mousedown(function(){
-                    console.log('mousedown img');
-                    editIt()
-                });
+            
             
             var menuBview = menu.group().attr('id', 'menuItemView').opacity(0.7);
             var backgV = menuBview.rect(20,30).fill('#59534d').opacity(0.7);
             var imgV = menuBview.image('/file/menuItemSearch').loaded(function(loader) {
                     this.size(loader.width*bscale, loader.height*bscale)
-                    this.x(border+loader.width*bscale*4).y(loader.height*bscale/2);
-                    backgV.size(loader.width*bscale, loader.height*bscale).x(border+loader.width*bscale*4).y(loader.height*bscale/2);
+                    this.x(border+loader.width*bscale*(skipx+1)).y(loader.height*bscale/2);
+                    backgV.size(loader.width*bscale, loader.height*bscale).x(border+loader.width*bscale*(skipx+1)).y(loader.height*bscale/2);
                 }).front();
             imgV.on('mouseover', function(event){
                     this.parent.opacity(1);
@@ -800,8 +819,12 @@ editIt = function editIt(){
 
 viewIt = function viewIt(){
     var params = Session.get('browseParams');
-    //window.open('/'+ params.col +'/'+Session.get("fileBIt"), '_blank');
     window.open('/viewer?url='+ params.col +'/'+Session.get("fileBIt"), '_blank');
+}
+
+exportIt = function(){
+    var params = Session.get('browseParams');
+    window.open('/'+ params.col +'/'+Session.get("fileBIt"), '_blank');
 }
 
 editCloneIt = function editCloneIt(){
@@ -809,9 +832,39 @@ editCloneIt = function editCloneIt(){
     if(Meteor.userId()){
         var params = Session.get('browseParams');
         if(params.col == 'file')
-            cloneFile(Session.get("fileBIt"), function(res){window.open('/filem/'+res, '_blank');});
+            cloneFile(Session.get("fileBIt"), function(res){
+                Meteor.subscribe('filepublish', res, function(err, res2){
+                    reloadSubscriptions()
+                })
+                Meteor.setTimeout(function(){
+                    Meteor.call('getComponentsIds', res, function(err, res2){
+                        if(err)
+                            console.log(err)
+                        if(res2){
+                            subscriptions.groups.push(Meteor.subscribe('groupspublish', res2.groups))
+                            subscriptions.items.push(Meteor.subscribe('itemspublish', res2.items))
+                        }
+                    })
+                }, 10000)
+                window.open('/filem/'+res, '_blank');
+            });
         else
-            cloneGroupFile(Session.get("fileBIt"), function(res){window.open('/filem/'+res, '_blank');});
+            cloneGroupFile(Session.get("fileBIt"), function(res){
+                Meteor.subscribe('filepublish', res, function(err, res2){
+                    reloadSubscriptions()
+                })
+                Meteor.setTimeout(function(){
+                    Meteor.call('getComponentsIds', res, function(err, res2){
+                        if(err)
+                            console.log(err)
+                        if(res2){
+                            subscriptions.groups.push(Meteor.subscribe('groupspublish', res2.groups))
+                            subscriptions.items.push(Meteor.subscribe('itemspublish', res2.items))
+                        }
+                    })
+                }, 10000)
+                window.open('/filem/'+res, '_blank');
+            });
     }
 }
 
@@ -847,15 +900,23 @@ removeIt = function removeIt(){
     if(File.findOne({_id: Session.get("fileBIt")}).creatorId == Meteor.userId() || Meteor.user().profile.role == 'admin'){
         var params = Session.get('browseParams');
         if(params.col == 'file')
-            removeFile(Session.get("fileBIt"));
+            removeFile(Session.get("fileBIt"), function(){
+                reloadSubscriptions()
+            });
         else
             if(params.col == 'group'){
                 if(Group.findOne({_id: Session.get("fileBIt")}).fetch().length > 0)
-                    removeGroup(Session.get("fileBIt"), true);
+                    removeGroup(Session.get("fileBIt"), true, function(){
+                reloadSubscriptions()
+            });
                 else
-                    removeItem(Session.get("fileBIt"));
+                    removeItem(Session.get("fileBIt"), function(){
+                reloadSubscriptions()
+            });
             }
             else
-                removeItem(Session.get("fileBIt"));
+                removeItem(Session.get("fileBIt"), function(){
+                reloadSubscriptions()
+            });
     }
 }

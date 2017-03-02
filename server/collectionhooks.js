@@ -2,11 +2,13 @@
 Item.after.insert(function(userId, doc){
     console.log('after.insert');
     console.log('server: ' + Meteor.isServer)
-    console.log(doc);
+    //console.log(doc);
     console.log(this._id);
-
+    console.log('hook for getElementPath')
     var fileId = getElementPath(this._id);
+    console.log(fileId)
     fileId = fileId[fileId.length-1];
+    console.log(fileId)
     var iids = File.findOne({_id: fileId}).itemids;
     if(!iids)
         iids = [];

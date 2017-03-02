@@ -28,6 +28,7 @@ Template.show_meteor_file_svg.rendered = function(){
     var fileId = this.data._id;
     Session.set("fileId", this.data._id);
     var groups = Group.find({fileId: this.data._id}, { sort: { ordering:1 }}).fetch();
+    console.log(groups)
     var draw = SVG(this.data._id);//.size(file.width, file.height);
     draw.width(file.width);
     draw.height(file.height);
@@ -76,7 +77,8 @@ Template.show_meteor_file_svg.rendered = function(){
     console.log('/render svg file');
     console.log(Meteor.userId())
     console.log(file.selected)
-    console.log(file.selected.indexOf(Meteor.userId()))
+    if(!file.selected)
+        file.selected = []
     if(Meteor.userId() && file.selected.indexOf(Meteor.userId()) == -1){
         file.selected.push(Meteor.userId())
         console.log(file.selected)
@@ -187,7 +189,7 @@ Template.show_meteor_file_svg.rendered = function(){
                     else
                         var parentId = doc.fileId;
                     if(parentId == undefined)
-                        console.log("Group: " + JSON.stringify(doc) + " does not have a parent id")
+                        console.log("Group: " + doc._id + " does not have a parent id")
                     else{
                         group.remove();
                         recursive_group_client(SVG.get(parentId), doc);
@@ -235,7 +237,7 @@ Template.show_meteor_file_svg.rendered = function(){
                         build_item(SVG.get('connectordefs'), doc);
             },
             removed: function(doc){
-                console.log('removed item: ' + JSON.stringify(doc));
+                //console.log('removed item: ' + JSON.stringify(doc));
                 deleteItem(doc._id);
             }
         });
@@ -578,7 +580,6 @@ buildWBackground = function(){
 
 function keyControlls(key, callback){
     document.addEventListener('keydown', function(e){
-        //console.log(e);
         if(e.keyIdentifier == key && e.altKey && global_oro_variables.selected.members && global_oro_variables.selected.members.length > 0){
             e.preventDefault();
             e.stopPropagation();
@@ -599,10 +600,26 @@ Template.svgEditor.rendered = function(){
     var cssfiles = separate_deps(js_dep,"text/css");
     var jsfiles = separate_deps(js_dep,"application/javascript");
     console.log('/get script dependencies')
+    var f = this.data.file
 
-    this.data = this.data.file;
+    if(!f)
+        f = File.findOne({_id: this.data.id})
+
+    if(!f)
+        f = File.findOne({title: this.data.id})
+
+    if(!f)
+        f = File.findOne({uuid: this.data.id})
+
+    if(!f)
+        f = File.findOne({$or: [{title: {$regex: this.data.id, $options: 'i'}}, {uuid: {$regex: this.data.id, $options: 'i'}}]})
+
+    console.log(f)
+    this.data = f
+
 
     console.log('load scripts')
+    $("head").append('<script type="application/javascript" src="/SVGPathSeg-polyfill.js">')
     for(var i in jsfiles){
         $("head").append('<script type="application/javascript" src="/file/' + jsfiles[i]._id + '">');
     }
@@ -819,7 +836,8 @@ Template.svgEditor.rendered = function(){
      /*******
     **  variables:
     ********/
-
+    console.log('this data')
+    console.log(this.data)
     var x = Session.get("window").w;
     var y = Session.get("window").h;
     var a = Math.min(x,y) * mini_scale;
@@ -828,7 +846,7 @@ Template.svgEditor.rendered = function(){
     Session.set("fileId", fileId);
     Session.set('fileWidth', this.data.width);
     Session.set('fileHeight', this.data.height);
-    console.log(file.permissions.edit);
+    console.log(file.permissions);
     console.log(Meteor.userId());
     if(file.permissions.edit.indexOf(Meteor.userId()) != -1 || file.permissions.edit.length == 0 || Meteor.userId() == 'BQcJJQWRT32zEqdjG' || Meteor.userId() == 'aEYrN3Fo2R5uv9peZ')
         var enableEdit = "true";
@@ -1027,28 +1045,33 @@ Template.svgEditor.rendered = function(){
     });
 
     this.autorun(function(){
-        var users = File.findOne({_id: Session.get('fileId')}).selected;
-        if(users.length > 1 && Session.get('miceEnabled') ){
-            Session.set('userIds', users)
-            users.splice(users.indexOf(Meteor.userId()),1);
-            console.log(users)
-            var us = Meteor.users.find({_id: {$in: users}}, {fields: {parameters: 1}}).fetch();
-            console.log(us);
-            for(u in us){
-                if(us[u].parameters && us[u].parameters.mousecoord){
-                    var p = us[u].parameters.mousecoord
-                    console.log(p);
-                    if(!SVG.get('coordMouse_'+us[u]._id))
-                        mousegroup.use(SVG.get('coordMouse')).attr('id', 'coordMouse_'+us[u]._id).attr('mousex', p.x).attr('mousey', p.y);
-                    var view = SVG.get('viewport').node.getCTM();
-                    var pp = transformPoint(p.x, p.y, [view])
-                    console.log(pp)
-                    SVG.get('coordMouse_'+us[u]._id).move(pp[0],pp[1]);
+        var ff = File.findOne({_id: Session.get('fileId')})
+        if(ff) {
+            var users = ff.selected;
+            if(!users)
+                users = []
+            if(users.length > 1 && Session.get('miceEnabled') ){
+                Session.set('userIds', users)
+                users.splice(users.indexOf(Meteor.userId()),1);
+                console.log(users)
+                var us = Meteor.users.find({_id: {$in: users}}, {fields: {parameters: 1}}).fetch();
+                console.log(us);
+                for(u in us){
+                    if(us[u].parameters && us[u].parameters.mousecoord){
+                        var p = us[u].parameters.mousecoord
+                        console.log(p);
+                        if(!SVG.get('coordMouse_'+us[u]._id))
+                            mousegroup.use(SVG.get('coordMouse')).attr('id', 'coordMouse_'+us[u]._id).attr('mousex', p.x).attr('mousey', p.y);
+                        var view = SVG.get('viewport').node.getCTM();
+                        var pp = transformPoint(p.x, p.y, [view])
+                        console.log(pp)
+                        SVG.get('coordMouse_'+us[u]._id).move(pp[0],pp[1]);
+                    }
                 }
             }
+            else
+                Session.set('userIds', [])
         }
-        else
-            Session.set('userIds', [])
     })
 
     this.autorun(function(){
@@ -1123,9 +1146,203 @@ Template.qrcodeModal.helpers({
     width: function(){ return '400px' }
 })
 */
-Template.markdownFileMd.onRendered(function(){
+
+//markdown goodies courtesy of https://github.com/SubjectRaw/SubjectRaw/blob/gh-pages/md.html
+function goto(anchor){
+  element_to_scroll_to = $('a[name='+anchor+']')
+  element_to_scroll_to[0].scrollIntoView();
+}
+
+
+function getLineNo(text,level){
+    var t = text.replace(/\[/,"\\[").replace(/\(/,"\\(").replace(/\)/,"\\)");
+    var re = new RegExp(t);
+    for (var i = loc;i<val_arr.length;i++){
+        if (val_arr[i].search(re)>-1){
+          loc = i+1;
+          return i+1;
+        }
+    }
+}
+var levels = [], uniq = [], temp_head="", levPoint = [null], loc=0, val_arr=[], val="";
+
+function addHeading(text, level, ln){
+    if (uniq[text] == undefined) {
+        uniq[text] =1;
+    } else {
+        uniq[text] =1+uniq[text];
+        text = text+" "+uniq[text];
+    }
+    temp_head = text;
+    if (levels.length == 0) {
+    levels.push({parent: null, node: text, icon: "", ln: ln})
+    levPoint[level-1] = levels[level-1]
+  } else {
+    levels.push({parent: levPoint[level-2], node: text, icon: "", ln: ln})
+    levPoint[level-1] = levels[levels.length-1]
+  }
+  return text;
+}
+
+var codes=[], images=[],last_code="";
+
+function addCode(code){
+    last_code = code;
+    console.log(codes)
+    console.log(codes[code])
+    console.log(temp_head)
+    if (codes[code] == undefined) {
+        codes[code]= {
+            data: code.toLowerCase().replace(/[^\w]+/g, '-'),
+            icon: "",
+            text: code,
+            children: [{data: temp_head.toLowerCase().replace(/[^\w]+/g, '-'), text: temp_head}]
+        }
+    } else {
+        codes[code].children.push({data: temp_head.toLowerCase().replace(/[^\w]+/g, '-'), text: temp_head})
+    } 
+}
+
+function addImage(href, title, text){
+    console.info(title,text);
+
+    if (images[title] == undefined) {
+        images[title]= {
+        data: title.toLowerCase().replace(/[^\w]+/g, '-'),
+        icon: "",
+        text: title,
+        children: [{data: temp_head.toLowerCase().replace(/[^\w]+/g, '-'), text: temp_head}]
+    }
+    } else {
+        images[title].children.push({data: temp_head.toLowerCase().replace(/[^\w]+/g, '-'), text: temp_head})
+    }
+}
+
+
+String.repeat = function(string, num){ return new Array(parseInt(num) + 1).join(string); };
+
+//multimarked
+function validateURL(textval) {
+      var urlregex = new RegExp(
+            "^(http|https|ftp)\://([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&amp;%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2}))(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&amp;%\$#\=~_\-]+))*$");
+      return urlregex.test(textval);
+    }
+
+var umls =[];
+var toc = [];
+
+//$('#cont1').width("100%").height("100%").split({orientation:'vertical', limit:2, position: 4});
+  //$('#centerRight').width("100%").height("100%").split({orientation:'vertical', limit:2, position: 8});
+/*
+    var editor = ace.edit("editor");
+    //editor.setTheme("ace/theme/monokai");
+    editor.getSession().setMode("ace/mode/markdown");
+    editor.on("change", function(e){
+
+        uml =editor.getSession().getValue();
+        umls =[];
+        toc = [];
+        markit();
+        MathJax.Hub.Queue(["Reprocess", MathJax.Hub, "md"])
+    })
+*/
+function renderAll() {
+        for (var ii = 0 ; ii < umls.length; ii++) {
+            console.log('uml_'+ii)
+            var canvas = document.getElementById('uml_'+ii);
+
+            nomnoml.draw(canvas, umls[ii]);
+            
+        };
+        //$("canvas").attr({width:"1100"})
+    }
+
+/*Template.markdownFileMd.onRendered(function(){
+
+    //$("head").append('<script src="/jquery.splitter-0.15.0.js"></script>')
+    $("head").append('<link href="/jquery.splitter.css" rel="stylesheet"/>')
     $("body").append('<script> var hash = window.location.hash; console.log(hash); if(document.getElementById(hash.substring(1))){ document.getElementById(hash.substring(1)).scrollIntoView(true);} </script>');
-})
+
+    var renderer = new marked.Renderer();
+    var content =""
+
+    renderer.heading = function (text, level) {
+    var escapedText = text.toLowerCase().replace(/[^\w]+/g, '-');
+
+      return '<h' + level + '><a name="' +
+                    escapedText +
+                     '" class="anchor" href="#' +
+                     escapedText +
+                     '"><span class="header-link"></span></a>' +
+                      text + '</h' + level + '>';
+    }
+
+    renderer.code = function(code, lang, escaped) {
+      if (this.options.highlight) {
+        var out = this.options.highlight(code, lang);
+        if (out != null && out !== code) {
+          escaped = true;
+          code = out;
+        }
+      }
+
+      if (!lang) {
+        return '<pre><code>'
+          + (escaped ? code : escape(code, true))
+          + '\n</code></pre>';
+      }
+
+      if (lang == "uml") {
+        //console.log(validateURL("http://localhost/nomnoml-librarify/uml.txt")); 
+        if (validateURL(code)){ 
+            //console.log(code); 
+            var location  = umls.length;
+            umls.push("code");
+            $.get(
+               code,
+               function(data, textStatus, jqXHR) {
+                  //load the iframe here...
+                  //console.log(data); 
+                  umls[location]=data;
+                  //return '<canvas id="uml_'+(umls.length-1)+'"></canvas>';
+                  renderAll();
+               }
+            );
+            //return "";
+        } else {
+            umls.push(code);
+        }
+        
+        return '<div class="fit"><canvas id="uml_'+(umls.length-1)+'"></canvas><div>';
+        
+      }
+
+      return '<pre><code class="'
+        + this.options.langPrefix
+        + escape(lang, true)
+        + '">'
+        + (escaped ? code : escape(code, true))
+        + '\n</code></pre>\n';
+    };
+
+    val = File.find().fetch()[0].script;
+    val_arr = val.split("\n");
+    var out = marked(val , {
+        xhtml: true, 
+        renderer: renderer,
+        gfm: true,
+        tables: true,
+        breaks: false,
+        pedantic: false,
+        sanitize: true,
+        smartLists: true,
+        smartypants: false
+    });
+
+
+    Blaze.renderWithData(Template.markdownTemplate, {markdowndata: out}, document.getElementById('markdownTemplate'))
+
+})*/
 
 Template.markdownFileMd.helpers({
     markdowndata: function(){
