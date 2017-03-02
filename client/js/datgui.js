@@ -1,4 +1,3 @@
-
 datGuiParam = function(item){
     this.cloneFile = menuItemSaveNew;
     this.browse = menuItemBrowse;
@@ -483,12 +482,13 @@ buildDatGui = function(gui, item, type, no){
     }
 
     if(item){
+        if(item.attr('type') == 'simple_path' || item.attr('type') == 'complex_path')
+            var f11 = gui.addFolder('Complex Actions')
         var code = f3.add(param, 'source');
         var del = f3.add(param, 'delete');
         var clone = f3.add(param, 'clone');
         var front = f3.add(param, 'toFront');
         var back = f3.add(param, 'toBack');
-        var importSelector = f3.add(param, 'importSelector');
         if(!no)
             var box = f3.add(param, 'toGroup');
         var group = f3.add(param, 'group');
@@ -496,8 +496,8 @@ buildDatGui = function(gui, item, type, no){
             var ungroup = f3.add(param, 'ungroup');
             var toggLock = f3.add(param, 'toggLock');
         }
+        var importSelector = f3.add(param, 'importSelector');
         if(item.attr('type') == 'pathEquation'){
-            var genPath = f3.add(param, 'genPath');
             var f7 = gui.addFolder('Parameters');
             f7.open();
             var k = Object.keys(it.parameters.params)
@@ -540,9 +540,9 @@ buildDatGui = function(gui, item, type, no){
                     Meteor.call('update_document', 'Item', item.attr('id'), set);
                 });
             }
+            var genPath = f7.add(param, 'genPath');
         }
         if(item.attr('type') == "parametrizedGroup"){
-            var genPath = f3.add(param, 'genPath');
             var f7 = gui.addFolder('Parameters');
             f7.open();
             var k = Object.keys(it.parameters.params)
@@ -618,7 +618,8 @@ buildDatGui = function(gui, item, type, no){
                         }
                     });
                 }
-            } 
+            }
+            var genPath = f7.add(param, 'genPath'); 
         }
         if(type == 'multiple_subjects'){
             var elems = global_oro_variables.selected.members;
@@ -665,7 +666,10 @@ buildDatGui = function(gui, item, type, no){
             var swap = f9.add(param, 'swap');
         } 
         if(item.type == 'path'){
-            var close = f3.add(param, 'closeOpen');
+            if(f11)
+                var close = f11.add(param, 'closeOpen');
+            else
+                var close = f3.add(param, 'closeOpen');
             var points = gui.addFolder('Points');
             var step = points.add(param, 'step', item.array.value).onChange(function(value){
                 var point = value.split(',');
@@ -801,10 +805,10 @@ buildDatGui = function(gui, item, type, no){
                 var box = item.bbox();
                 var dg = Math.sqrt(Math.pow(box.width,2)+Math.pow(box.height,2)) / 10;
 
-                var reflecth = f3.add(param, "mirrorH");
-                var reflectv = f3.add(param, "mirrorV");
-                var reverse = f3.add(param, 'reverse');
-                var lighten = f3.add(param, 'simplify', 0, range).step(0.1).onChange(function(value){
+                var reflecth = f11.add(param, "mirrorH");
+                var reflectv = f11.add(param, "mirrorV");
+                var reverse = f11.add(param, 'reverse');
+                var lighten = f11.add(param, 'simplify', 0, range).step(0.1).onChange(function(value){
                     if(value > 0){
                         item.opacity(0);
                         console.log(value)
@@ -833,10 +837,10 @@ buildDatGui = function(gui, item, type, no){
                         SVG.get('clone_'+id).remove();
                     SVG.get('simplify_noPoints').remove();
                 });
-                var subpath = f3.add(param, 'splitPaths');
-                var pointSymmetry = f3.add(param, 'pointSymmetry');
-                var lineSymmetry = f3.add(param, 'lineSymmetry');
-                var itemArray = f3.add(param, 'itemArray');
+                var subpath = f11.add(param, 'splitPaths');
+                var pointSymmetry = f11.add(param, 'pointSymmetry');
+                var lineSymmetry = f11.add(param, 'lineSymmetry');
+                var itemArray = f11.add(param, 'itemArray');
 
                 var jointype = f10.add(param, 'joinType', ['square', 'round', 'miter']).onChange(function(value){
                     menuItemOffset(true, 'joinType', value)
@@ -866,14 +870,14 @@ buildDatGui = function(gui, item, type, no){
                 var execute = f10.add(param, 'execute');
             }
             else if(item.attr("type") == 'complex_path'){
-                var reflecth = f3.add(param, "mirrorH");
-                var reflectv = f3.add(param, "mirrorV");
-                var simple = f3.add(param, 'simplify', 0, range).step(0.1);
-                var reverse = f3.add(param, 'reverse');
-                var subpath = f3.add(param, 'splitPaths');
-                var pointSymmetry = f3.add(param, 'pointSymmetry');
-                var lineSymmetry = f3.add(param, 'lineSymmetry');
-                var itemArray = f3.add(param, 'itemArray');
+                var reflecth = f11.add(param, "mirrorH");
+                var reflectv = f11.add(param, "mirrorV");
+                var simple = f11.add(param, 'simplify', 0, range).step(0.1);
+                var reverse = f11.add(param, 'reverse');
+                var subpath = f11.add(param, 'splitPaths');
+                var pointSymmetry = f11.add(param, 'pointSymmetry');
+                var lineSymmetry = f11.add(param, 'lineSymmetry');
+                var itemArray = f11.add(param, 'itemArray');
             }
             if(item.attr("type") == 'embeddediFrame'){
                 var content = f1.add(param, 'content').onChange(function(value){
@@ -1319,6 +1323,7 @@ buildDatGui = function(gui, item, type, no){
                     Meteor.call('update_document', 'File', f._id, {permissions: f.permissions});
                 });
             }
+            /*
             var f6 = gui.addFolder('Upload');
             var behaviour = f6.add(param, 'behaviour', [ 'separate files', 'this file/separate layers', 'this file/this layer' ]);
             var uploadType = f6.add(param, 'uploadType', [ 'select type', 'url', 'text' ]).onChange(function(value){
@@ -1354,6 +1359,7 @@ buildDatGui = function(gui, item, type, no){
             var parameters = f6.add(param, 'parameters');
             var callback = f6.add(param, 'callback');
             var ok = f6.add(param, 'ok');
+            */
         }
         else
             if(f.title)
@@ -1361,8 +1367,8 @@ buildDatGui = function(gui, item, type, no){
             else
                 var title = f5.add(param, 'title', ['']);
         var browse = f5.add(param, 'browse');
-        var reload = f5.add(param, 'reload');
-        var resetView = f5.add(param, 'resetView');
+        var reload = f3.add(param, 'reload');
+        var resetView = f3.add(param, 'resetView');
     }
     console.log(type);
     if(type == 'simple_path'){
@@ -1490,8 +1496,10 @@ buildDatGui = function(gui, item, type, no){
                 setItemsValue('text',href);
             });
     }
-    if(!item || ['text', 'rasterImage', 'simple_path', 'complex_path', 'para_simple_path', 'para_complex_path', 'formulae'].indexOf(item.attr('type')) != -1)
+    if(!item || ['text', 'rasterImage', 'para_simple_path', 'para_complex_path', 'formulae'].indexOf(item.attr('type')) != -1)
         f3.open();
+    else if(['simple_path', 'complex_path'].indexOf(item.attr('type')) != -1)
+        f11.open()
 /*
     $('div.dg.main.a').on('mouseenter',function(){
         disablePan();

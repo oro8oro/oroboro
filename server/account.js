@@ -10,7 +10,7 @@ Accounts.onCreateUser(function(info, user) {
     else
         user.profile = {};
 
-    if(info.profile.name == undefined)
+    if(!info.profile || !info.profile.name)
         if(info.username)
             user.profile.name = info.username;
         else {
