@@ -265,7 +265,7 @@ Template.filebrowse.onRendered(function(){
 Template.filebrowse.events({
     'click .filegroup': function(e,t){
         console.log('click file')
-        if(e.target.getAttribute('id').indexOf('container_') == -1){
+        if(e.target.getAttribute('id').indexOf('container_') == -1 && e.target.tagName != 'use'){
             var id = e.currentTarget.getAttribute('id');
             var i = Number(id.substring(id.lastIndexOf("_")+1));
             var fileId = SVG.get("file_"+i).attr("fileId")
@@ -370,7 +370,17 @@ browserContent = function(params){
                         SVG.get("container_"+i).show();
                 else{
                     var vb = SVG.get('fileBrowse').attr("viewBox").split(" ");
-                    var container = SVG.get('group_'+i).use(SVG.get('menu_defs')).attr("id", "container_"+i)
+                    var container = SVG.get('group_'+i).group()
+                      .attr("id", "container_"+i);
+
+                    SVG.get('menu_defs').children().forEach(function(k) {
+                      var clone = container.use(k);
+                      clone.on('click', function() {
+                        var name = k.attr('data-action');
+                        console.log('name', name);
+                        window[name]();
+                      });
+                    });
                     //container.scale(0.8 * Number(vb[2]) / container.bbox().width);
                 }
             }
@@ -559,7 +569,10 @@ fileBMenu = function(){
             var border = 100, skipx = 0;
 
             if(Meteor.userId()){
-                menuBedit = menu.group().attr('id', 'menuItemEdit').opacity(0.7);
+                menuBedit = menu.group()
+                  .attr('id', 'menuItemEdit')
+                  .opacity(0.7)
+                  .attr('data-action', 'editIt');
                 var backgE = menuBedit.rect(20,30).fill('#59534d').opacity(0.7);
                 menuBedit.image('/file/menuItemEdit').loaded(function(loader) {
                         this.size(loader.width*bscale, loader.height*bscale)
@@ -574,7 +587,10 @@ fileBMenu = function(){
                         editIt()
                     });
 
-                var menuBclone = menu.group().attr('id', 'menuItemClone').opacity(0.7);
+                var menuBclone = menu.group()
+                  .attr('id', 'menuItemClone')
+                  .opacity(0.7)
+                  .attr('data-action', 'editCloneIt');
                 var backgC = menuBclone.rect(20,30).fill('#59534d').opacity(0.7);
                 var imgC = menuBclone.image('/file/menuItemClone').loaded(function(loader) {
                         this.size(loader.width*bscale, loader.height*bscale);
@@ -590,7 +606,10 @@ fileBMenu = function(){
                         editCloneIt()
                     });
 
-                menuBdelete = menu.group().attr('id', 'menuItemDelete').opacity(0.7);
+                menuBdelete = menu.group()
+                  .attr('id', 'menuItemDelete')
+                  .opacity(0.7)
+                  .attr('data-action', 'removeIt');
                 var backgD = menuBdelete.rect(20,30).fill('#59534d').opacity(0.7);
                 menuBdelete.image('/file/menuItemDelete').loaded(function(loader) {
                         this.size(loader.width*bscale, loader.height*bscale)
@@ -607,7 +626,10 @@ fileBMenu = function(){
                 skipx = 3
             }
 
-            menuBexport = menu.group().attr('id', 'menuItemExport').opacity(0.7);
+            menuBexport = menu.group()
+              .attr('id', 'menuItemExport')
+              .opacity(0.7)
+              .attr('data-action', 'exportIt');
             var backgEx = menuBexport.rect(20,30).fill('#59534d').opacity(0.7);
             menuBexport.image('/file/menuItemExport').loaded(function(loader) {
                     this.size(loader.width*bscale, loader.height*bscale)
@@ -621,9 +643,12 @@ fileBMenu = function(){
                     console.log('mousedown img');
                     exportIt()
                 });
-            
-            
-            var menuBview = menu.group().attr('id', 'menuItemView').opacity(0.7);
+
+
+            var menuBview = menu.group()
+              .attr('id', 'menuItemView')
+              .opacity(0.7)
+              .attr('data-action', 'viewIt');
             var backgV = menuBview.rect(20,30).fill('#59534d').opacity(0.7);
             var imgV = menuBview.image('/file/menuItemSearch').loaded(function(loader) {
                     this.size(loader.width*bscale, loader.height*bscale)
