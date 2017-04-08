@@ -7,7 +7,7 @@ var w = window,
     y = w.innerHeight|| e.clientHeight|| g.clientHeight;
 */
 
-Session.set("window", {w: window.innerWidth, h: window.innerHeight}); 
+Session.set("window", {w: window.innerWidth, h: window.innerHeight});
 Session.set("selectedLayer", '');
 Session.set("hiddenLayers", []);
 Session.set("lockedItems", []);
@@ -306,7 +306,7 @@ Template.show_meteor_file_svg.rendered = function(){
                         global_oro_variables.connections[id].label.attr('role', 'label');
                     }
                     else
-                        global_oro_variables.connections[id].setLabel(false); 
+                        global_oro_variables.connections[id].setLabel(false);
                 }
                 if(fields.type){
                     global_oro_variables.connections[id].setType(fields.type);
@@ -334,7 +334,7 @@ Template.show_meteor_file_svg.rendered = function(){
 Template.show_meteor_file_svg.onDestroyed(function(){
     $('body').removeClass('no_scroll');
     var users = File.findOne({_id: Session.get('fileId')}).selected;
-    users.splice(users.indexOf(Meteor.userId()), 1); 
+    users.splice(users.indexOf(Meteor.userId()), 1);
     Meteor.call('update_document', 'File', this.data._id, {selected: users});
     deselect();
 });
@@ -347,7 +347,7 @@ setItemsValue = function setItemValue(property, val){
     for(var k in kids){
         var itemid = kids[k].attr("selected");
         itemids.push(itemid);
-    } 
+    }
     var upd = {};
     upd[property] = val;
     Meteor.call('update_collection', "Item", itemids, upd);
@@ -355,13 +355,13 @@ setItemsValue = function setItemValue(property, val){
 
 setFill = function setFill(val){
     var itemids = [];
-    //var val = String($.jPicker.List[0].color.active.val('ahex')); 
+    //var val = String($.jPicker.List[0].color.active.val('ahex'));
     //console.log(val);
     var kids = global_oro_variables.selected.members;
     for(var k in kids){
         var itemid = kids[k].attr("selected");
         itemids.push(itemid);
-    } 
+    }
     var upd = {};
     upd = {"palette.fillColor": val};
     console.log(upd);
@@ -370,13 +370,13 @@ setFill = function setFill(val){
 
 setFillOpacity = function setFillOpacity(val){
     var itemids = [];
-    //var val = String($.jPicker.List[0].color.active.val('ahex')); 
+    //var val = String($.jPicker.List[0].color.active.val('ahex'));
     //console.log(val);
     var kids = global_oro_variables.selected.members;
     for(var k in kids){
         var itemid = kids[k].attr("selected");
         itemids.push(itemid);
-    } 
+    }
     var upd = {};
     upd = {"palette.fillOpacity": val};
     Meteor.call('update_collection', "Item", itemids, upd);
@@ -573,16 +573,16 @@ buildWBackground = function(){
 
     background.on('click', function(event){
         if(!event.shiftKey)
-            deselect();  
+            deselect();
     });
 }
 
 renderedTemplates = [];
 g0 = undefined;
 
-Template.svgEditor.rendered = function(){ 
+Template.svgEditor.rendered = function(){
     console.log('render svgEditor')
-    window.windowType = 'svgEditor' 
+    window.windowType = 'svgEditor'
     console.log('get script dependencies')
     var js_dep = File.findOne({_id: "Yq9iqYhEma9z9mYrp"}).dependencypath;
     var cssfiles = separate_deps(js_dep,"text/css");
@@ -691,7 +691,7 @@ Template.svgEditor.rendered = function(){
                 SVG.get('selectionRect').y(shiftselection.y2);
             //opacity change on elem
 
-            if(elements.length > 0){  
+            if(elements.length > 0){
                 var obox = SVG.get('selectionRect').bbox();
                 var invview = SVG.get('viewport').node.getCTM().inverse();
                 var pp = transformPoint(obox.x, obox.y, [invview]);
@@ -724,7 +724,7 @@ Template.svgEditor.rendered = function(){
                             else if( box.y < rbox.y && rbox.y < box.y2
                                 && box.y < rbox.y2 && rbox.y2 < box.y2
                                 &&  ((box.x < rbox.x && rbox.x < box.x2) || (box.x < rbox.x2 && rbox.x2 < box.x2) || (rbox.x < box.x && rbox.x2 > box.x2) )
-                            ) 
+                            )
                                 inside = true;
                         if(inside){
                             if(selectionno.indexOf(elements[i]) == -1){
@@ -739,7 +739,7 @@ Template.svgEditor.rendered = function(){
                                     //select_item(selectionno[0],true);
                                     select_item(elements[i],true);
                                 }
-                                else 
+                                else
                                     select_item(elements[i],true);
                             }
                         }
@@ -832,7 +832,7 @@ Template.svgEditor.rendered = function(){
 
     //buildColorPicker();
 
-    
+
      /*******
     **  variables:
     ********/
@@ -865,7 +865,7 @@ Template.svgEditor.rendered = function(){
     var grey = editor.rect(x,y).attr("id","grey_background").fill("#A9A9A9");
     grey.on('click', function(event){
         if(!event.shiftKey)
-            deselect();  
+            deselect();
     });
 
     var viewport = editor.group().attr("id", "viewport");
@@ -892,7 +892,7 @@ Template.svgEditor.rendered = function(){
 
     var labels = editor.group().attr('id', 'labels');
 
-  
+
    /*******
     **  white background for file:
     ********/
@@ -902,7 +902,7 @@ Template.svgEditor.rendered = function(){
     /*******
     **  database SVG file:
     ********/
-    
+
     console.log('load file template')
 
     renderedTemplates["show_meteor_file_svg"] = Blaze.renderWithData(Template.show_meteor_file_svg, {"_id":this.data._id}, document.getElementById("viewport"));
@@ -987,7 +987,7 @@ Template.svgEditor.rendered = function(){
     });
     chatButton.on('click',function(e){
         //$('#chatterModal').modal({backdrop: false, show: true});
-        
+
         if(chatContent.visible())
             chatContent.hide();
         else
@@ -1200,7 +1200,7 @@ function addCode(code){
         }
     } else {
         codes[code].children.push({data: temp_head.toLowerCase().replace(/[^\w]+/g, '-'), text: temp_head})
-    } 
+    }
 }
 
 function addImage(href, title, text){
@@ -1252,7 +1252,7 @@ function renderAll() {
             var canvas = document.getElementById('uml_'+ii);
 
             nomnoml.draw(canvas, umls[ii]);
-            
+
         };
         //$("canvas").attr({width:"1100"})
     }
@@ -1293,16 +1293,16 @@ function renderAll() {
       }
 
       if (lang == "uml") {
-        //console.log(validateURL("http://localhost/nomnoml-librarify/uml.txt")); 
-        if (validateURL(code)){ 
-            //console.log(code); 
+        //console.log(validateURL("http://localhost/nomnoml-librarify/uml.txt"));
+        if (validateURL(code)){
+            //console.log(code);
             var location  = umls.length;
             umls.push("code");
             $.get(
                code,
                function(data, textStatus, jqXHR) {
                   //load the iframe here...
-                  //console.log(data); 
+                  //console.log(data);
                   umls[location]=data;
                   //return '<canvas id="uml_'+(umls.length-1)+'"></canvas>';
                   renderAll();
@@ -1312,9 +1312,9 @@ function renderAll() {
         } else {
             umls.push(code);
         }
-        
+
         return '<div class="fit"><canvas id="uml_'+(umls.length-1)+'"></canvas><div>';
-        
+
       }
 
       return '<pre><code class="'
@@ -1328,7 +1328,7 @@ function renderAll() {
     val = File.find().fetch()[0].script;
     val_arr = val.split("\n");
     var out = marked(val , {
-        xhtml: true, 
+        xhtml: true,
         renderer: renderer,
         gfm: true,
         tables: true,
@@ -1391,7 +1391,7 @@ Template.svgDinamic.onRendered(function(){
     var labels = editor.group().attr('id', 'labels');
 
     buildWBackground();
-    
+
     console.log('load file template')
     renderedTemplates["show_meteor_file_svg"] = Blaze.renderWithData(Template.show_meteor_file_svg, {"_id":this.data._id, dinamic: true}, document.getElementById("viewport"));
     //var g0 = SVG(fileId);
@@ -1520,7 +1520,7 @@ Template.svgViewer.onRendered(function(){
 
             var newlayers = [], index = 0;
             for(var i = 0; i < kids.length; i++){
-                if(kids[i].type == 'g'){     
+                if(kids[i].type == 'g'){
                     if(newlayers[index]){
                         index ++;
                     }
@@ -1536,11 +1536,11 @@ Template.svgViewer.onRendered(function(){
 
 
             Session.set("fileId", svg.attr('id'))
-            
+
             if(svg.attr('height') && svg.attr('width')){
                 box.height = svg.attr('height')
                 box.width = svg.attr('width')
-                //if points, ~convert to px 
+                //if points, ~convert to px
                 if(typeof box.height == 'string' && box.height.indexOf('pt') != -1)
                     box.height = parseFloat(box.height) * 1.333
                 else
@@ -1556,7 +1556,7 @@ Template.svgViewer.onRendered(function(){
             Session.set('fileHeight', box.height)
             grey.size(box.width,box.height)
             background.size(box.width,box.height)
-            
+
             if(window.innerHeight / box.height < window.innerWidth / box.width){
                 var scale = window.innerHeight / box.height
                 var startmatrix = scale + ',0,0,' + scale + ',' + ((window.innerWidth - box.width*scale) / 2) + ',0'
