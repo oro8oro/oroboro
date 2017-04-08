@@ -846,9 +846,9 @@ Template.svgEditor.rendered = function(){
     Session.set("fileId", fileId);
     Session.set('fileWidth', this.data.width);
     Session.set('fileHeight', this.data.height);
-    console.log(file.permissions);
-    console.log(Meteor.userId());
-    if(file.permissions.edit.indexOf(Meteor.userId()) != -1 || file.permissions.edit.length == 0 || Meteor.userId() == 'BQcJJQWRT32zEqdjG' || Meteor.userId() == 'aEYrN3Fo2R5uv9peZ')
+    console.log('file.permissions', file.permissions);
+    console.log('isAdmin?', Meteor.userId(), Roles.userIsInRole(Meteor.userId(), 'admin'));
+    if(file.permissions.edit.indexOf(Meteor.userId()) != -1 || file.permissions.edit.length == 0 || Roles.userIsInRole(Meteor.userId(), 'admin'))
         var enableEdit = "true";
     else
         var enableEdit = "false";
