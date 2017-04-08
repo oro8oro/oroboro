@@ -577,18 +577,6 @@ buildWBackground = function(){
     });
 }
 
-
-function keyControlls(key, callback){
-    document.addEventListener('keydown', function(e){
-        if(e.keyIdentifier == key && e.altKey && global_oro_variables.selected.members && global_oro_variables.selected.members.length > 0){
-            e.preventDefault();
-            e.stopPropagation();
-            if(callback)
-                callback();
-        }
-    })
-}
-
 renderedTemplates = [];
 g0 = undefined;
 
@@ -797,38 +785,50 @@ Template.svgEditor.rendered = function(){
         }
   }, false);
 
-    keyControlls("U+0044", menuItemDelete); //D
-    keyControlls("U+0043", menuItemClone); //C
-    keyControlls("U+0047", menuItemGroup); //G
-    keyControlls("U+0055", menuItemUnGroup); //U
-    keyControlls("U+0041", menuItemAddElement); //A
-    keyControlls("U+0046", menuItemToFront); //F
-    keyControlls("U+0042", menuItemToBack); //B
-    keyControlls("U+004C", menuItemLockGroup); //L
-    keyControlls("Up", menuItemBox); //UpArrow
-    keyControlls("U+0050", function(){ //P
-        if(global_oro_variables.selected.members){
-            var id = global_oro_variables.selected.members[0].attr('selected');
-            var index = global_oro_variables.selected.members.indexOf(SVG.get('box_'+id));
-            global_oro_variables.selected.members.splice(index,1);
-            SVG.get('box_'+id).remove();
-            var sel = buildSelectorPoints(id);
-            global_oro_variables.selected.add(sel);
-            SVG.get(sel.attr('selected')).fixed();
+    var keyControlls = {
+      "∂": menuItemDelete, //D
+      "ç": menuItemClone, //C
+      "©": menuItemGroup, //G
+      "√": menuItemUnGroup, //V
+      "å": menuItemAddElement, //A
+      "ƒ": menuItemToFront, //F
+      "∫": menuItemToBack, //B
+      "¬": menuItemLockGroup, //L
+      "ArrowUp": menuItemBox, //UpArrow
+      "π": function() { //P
+          if(global_oro_variables.selected.members && global_oro_variables.selected.members.length){
+              var id = global_oro_variables.selected.members[0].attr('selected');
+              var index = global_oro_variables.selected.members.indexOf(SVG.get('box_'+id));
+              global_oro_variables.selected.members.splice(index,1);
+              SVG.get('box_'+id).remove();
+              var sel = buildSelectorPoints(id);
+              global_oro_variables.selected.add(sel);
+              SVG.get(sel.attr('selected')).fixed();
+          }
+      },
+      "£": function() { //3
+          if(global_oro_variables.selected.members && global_oro_variables.selected.members.length){
+              var id = global_oro_variables.selected.members[0].attr('selected');
+              var index = global_oro_variables.selected.members.indexOf(SVG.get('box_'+id));
+              global_oro_variables.selected.members.splice(index,1);
+              SVG.get('box_'+id).remove();
+              var sel = buildSelector3D(id);
+              global_oro_variables.selected.add(sel);
+              SVG.get(sel.attr('selected')).fixed();
+          }
+      },
+      "µ": menuItemImportSelector //M
+    };
+
+    document.addEventListener('keydown', function(e){
+      //console.log('keydown', e, e.key, e.altKey, global_oro_variables.selected.members, keyControlls[e.key])
+
+      if(e.altKey && keyControlls[e.key]){
+            e.preventDefault();
+            e.stopPropagation();
+            keyControlls[e.key]();
         }
     })
-    keyControlls("U+0033", function(){ //3
-        if(global_oro_variables.selected.members){
-            var id = global_oro_variables.selected.members[0].attr('selected');
-            var index = global_oro_variables.selected.members.indexOf(SVG.get('box_'+id));
-            global_oro_variables.selected.members.splice(index,1);
-            SVG.get('box_'+id).remove();
-            var sel = buildSelector3D(id);
-            global_oro_variables.selected.add(sel);
-            SVG.get(sel.attr('selected')).fixed();
-        }
-    })
-    keyControlls("U+0049", menuItemImportSelector);//I
 
     //buildColorPicker();
 
