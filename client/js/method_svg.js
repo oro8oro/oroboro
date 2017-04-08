@@ -430,7 +430,10 @@ skewPath = function(item, anglex, angley){
         skewx = Math.tan(anglex),
         skewy = Math.tan(angley);
     for(p in points){
-        if(points[p][0] != 'Z'){
+        if(points[p][0].match(/z/i)) {
+          points[p][0] = 'Z';
+        }
+        else {
             po = transformPoint(points[p][1], points[p][2], [{a:1, b:skewx, c:skewy, d:1, e:0, f:0}])
             points[p][1] = po[0];
             points[p][2] = po[1];
@@ -669,7 +672,10 @@ multiplyMatrix = function (a, b) {
 transformPath = function(pathArray, id){
     var m = SVG.get(id).node.getCTM();
     for(p in pathArray){
-        if(pathArray[p][0] != 'Z'){
+        if(pathArray[p][0].match(/z/i)) {
+          pathArray[p][0] = 'Z';
+        }
+        else {
             var point = transformPoint(pathArray[p][1], pathArray[p][2], [m]);
             pathArray[p][1] = point[0];
             pathArray[p][2] = point[1];
@@ -1880,7 +1886,7 @@ buildMidd = function(p, points, hinge, midd, attr, id, hinges, midds, attrs, no)
 }
 
 buildSubPathPoints = function(points, hinge, midd, attr, id, hinges, midds, attrs, no, startlines){
-    if(points.subpath[points.subpath.length-1][0] == 'Z'){
+    if(points.subpath[points.subpath.length-1][0].match(/z/i)){
         points.subpath.splice(0,0,points.subpath[points.subpath.length-2])
         points.subpath.splice(points.subpath.length-1,1,points.subpath[1])
     }
@@ -2111,7 +2117,7 @@ saveItemLocalisation = function(id){
             upd.type = 'complex_path';
         }
         var p = item.array.value
-        if(p[p.length-1][0] == "Z")
+        if(p[p.length-1][0].match(/z/i))
             upd.closed = 'true';
         else
             upd.closed = 'false';
@@ -2274,11 +2280,11 @@ updateItem = function(id, fields){
                 SVG.get(fields.groupId).add(SVG.get(id));
             if(fields.closed){
                 var p = SVG.get(id).array.value;
-                if(fields.closed == 'true' && p[p.length-1][0] != 'Z'){
+                if(fields.closed == 'true' && !p[p.length-1][0].match(/z/i)){
                     p.push(['Z']);
                     SVG.get(id).plot(p).attr("closed", "true");
                 }
-                if(fields.closed == 'false' && p[p.length-1][0] == 'Z'){
+                if(fields.closed == 'false' && p[p.length-1][0].match(/z/i)){
                     p.pop();
                     SVG.get(id).plot(p).attr("closed", "false");
                 }
@@ -3221,7 +3227,7 @@ joinPaths = function(pathsArr){
 
 reversePath = function(path){
     var arr = path.array.value;
-    if(arr[arr.length-1][0] == 'Z')
+    if(arr[arr.length-1][0].match(/z/i))
         var e = 1;
     else
         var e = 0;
@@ -3242,9 +3248,9 @@ reversePath = function(path){
             }
             else
                 newarr.push([ 'L', arr[i][1], arr[i][2] ]);
-        }  
+        }
     }
-    if(arr[arr.length-1][0] == 'Z')
+    if(arr[arr.length-1][0].match(/z/i))
         newarr.push(['Z']);
     newarr[0][0] = 'M';
     /*
@@ -3843,7 +3849,7 @@ pointSymmetry = function(parameters, update){
         a = angle * (r+1);
         tempscale = tempscale * dscale;
         for(var i = 0 ; i < arrs[r].length; i++){
-            if(arrs[r][i][0] != 'Z'){
+            if(!arrs[r][i][0].match(/z/i)) {
                 var len = arrs[r][i].length;
                 if(tempscale > 0){
                     dx = obj.pointX - (obj.pointX - arrs[r][i][len-2]) * tempscale
@@ -3880,8 +3886,12 @@ pointSymmetry = function(parameters, update){
                     arrs[r][i][4] = a2[1];
                 }
             }
+            else {
+              arrs[r][i][0] = 'Z';
+            }
         }
         paths[r] = path.clone()
+        //console.log('-----pointSymmetry result', r, JSON.stringify(arrs[r]))
         paths[r].plot(arrs[r]).attr('id', 'pointSymmetry_' + r);
     }
 
@@ -4093,9 +4103,12 @@ simpleLineSymmetry = function(obj, paths){
         }
 
         for(var i = 0 ; i < arrs[r].length; i++){
-            if(arrs[r][i][0] != 'Z'){
+            if(arrs[r][i][0].match(/z/i)){
+              arrs[r][i][0] = 'Z';
+            }
+            else {
                 var len = arrs[r][i].length;
-            
+
                 if(m1 != Infinity){
                     b2 = arrs[r][i][len-1] - m2 * arrs[r][i][len-2];
                     x = (b2-b1) / (m1-m2);
