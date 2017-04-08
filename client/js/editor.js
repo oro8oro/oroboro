@@ -1,5 +1,5 @@
-buildMenu = function buildMenu(editor,subject){   
-    console.log(subject); 
+buildMenu = function buildMenu(editor,subject){
+    console.log(subject);
     var group = Group.findOne({uuid: subject});
     console.log(group);
     var menu = editor.group().attr("id", "svgMenu").attr("uuid", subject);
@@ -59,7 +59,7 @@ menuItemGroup = function menuItemGroup(){
                 console.log(error);
             if(id)
                 for(i in ids)
-                    Item.update({_id: ids[i]}, {$set: {groupId: id}});   
+                    Item.update({_id: ids[i]}, {$set: {groupId: id}});
         });*/
     }
 }
@@ -84,7 +84,7 @@ menuItemUnGroup = function menuItemUnGroup(){
 
             for(var i in grids)
                 Meteor.call('update_document', 'Group', grids[i], upd);
-            
+
             if(type != 'parametrizedGroup')
                 for(var i in itids)
                     Meteor.call('update_document', 'Item', itids[i], upd);
@@ -107,7 +107,7 @@ menuItemUnGroup = function menuItemUnGroup(){
                     }
                 }/*
                 for(var i in itids){
-                    
+
                     var parameters = Item.findOne({_id: itids[i]}).parameters
                     if(parameters && parameters.parametrizedGroup){
                         upd.parameters = parameters
@@ -228,7 +228,7 @@ updateItemDB = function updateItemDB(item, groupId, locked){
                     upd.parameters = param.parameters;
                     upd.closed = "true";
                 }
-                else 
+                else
                     if(['line', 'polyline', 'polygon'].indexOf(item.type) != -1){
                         upd.type = "simple_path";
                         if(item.type == 'line'){
@@ -325,7 +325,7 @@ updateFileDB = function updateFileDB(root){
 
     var newlayers = [], index = 0;
     for(var i = 0; i < kids.length; i++){
-        if(kids[i].type == 'g'){     
+        if(kids[i].type == 'g'){
             if(newlayers[index]){
                 index ++;
             }
@@ -340,8 +340,8 @@ updateFileDB = function updateFileDB(root){
     console.log(root.children())
     root.each(function(i, children) {
         console.log(this);
-        updateGroupDB(this, id, true); 
-    }); 
+        updateGroupDB(this, id, true);
+    });
     if(dbids.items.length > 0 || dbids.groups.length > 0)
         for(var i = 0; i < dbids.items.length; i++)
             if(newids.indexOf(dbids.items[i]) == -1){
@@ -385,7 +385,7 @@ absorbSVG = function absorbSVG(code, its, groupparentId, locked){
             var newit = SVG.get(Session.get("fileId")).svg(code);
             console.log(newit);
             var newids = [];
-            
+
             newit.roots(function(){
                 console.log(this);
                 var itemid = this.attr("id");
@@ -415,7 +415,7 @@ absorbSVG = function absorbSVG(code, its, groupparentId, locked){
                     else
                         removeGroup(elemids[i]);
                 }
-                
+
         }
     }
 }
@@ -552,13 +552,13 @@ menuItemParseCsv = function menuItemParseCsv(){
         var f = File.findOne({_id: Session.get('fileId')});
         var no = File.find({uuid: f.uuid}).count();
         no++;
-        //var deps = Dependency.find({fileId1: id}).fetch(); TODO: non-struct dependencies are cloned? 
+        //var deps = Dependency.find({fileId1: id}).fetch(); TODO: non-struct dependencies are cloned?
         delete f._id;
         if(f.creatorId != Meteor.userId())
             f.permissions.edit = [Meteor.userId()];
         f.creatorId = Meteor.userId();
         f.dateModified = new Date();
-        f.permissions.view = [];    
+        f.permissions.view = [];
         f.uuid = f.uuid+no;
         f.selected = [];
         console.log(f);
@@ -732,7 +732,7 @@ createLayerMenu = function createLayerMenu(x,y){
                     //SVG.get(layerId).add(SVG.get(selections[s].attr("selected")));
                 }
                 else{
-                    if(Session.get("selectedLayer") != this.attr("layer"))   
+                    if(Session.get("selectedLayer") != this.attr("layer"))
                         Session.set("selectedLayer", this.attr("layer"));
                     else
                         Session.set("selectedLayer", '');
@@ -878,7 +878,7 @@ menuItemLayer = function menuItemLayer(){
     if(SVG.get("layersGroup").visible())
             SVG.get("layersGroup").hide();
     else
-        SVG.get("layersGroup").show();         
+        SVG.get("layersGroup").show();
 }
 
 menuItemClose = function menuItemClose(){}
@@ -1272,7 +1272,7 @@ callFilebrowserModal = function(noshow, callback){
     console.log(box2)
             var width = box1.width + box2.width
             console.log(width)
-            
+
             //$('#modal-container').css({'margin': '0px auto;', 'width': width})
             //$('#modal-content').css({'margin-left': - box2.left});
 */
@@ -1508,7 +1508,7 @@ menuItemTextPath = function menuItemTextPath(){
             type: 'parametrizedGroup',
             ordering: text.parent.index(text.parent.last())+1,
             locked: text.attr('id') + ',' + path.attr('id'),
-            parameters: { 
+            parameters: {
                 callback: 'paraTextPath',
                 params: {
                     elements: {
@@ -1555,7 +1555,7 @@ menuItemPathOnPath = function menuItemPathOnPath(){
             type: 'parametrizedGroup',
             ordering: path1.parent.index(path1.parent.last())+1,
             locked: path1.attr('id') + ',' + path2.attr('id'),
-            parameters: { 
+            parameters: {
                 callback: 'paraPathOnPath',
                 params: {
                     elements: {
@@ -1599,7 +1599,7 @@ menuItemPointSymmetry = function menuItemPointSymmetry(){
             type: 'parametrizedGroup',
             ordering: path.parent.index(path.parent.last())+1,
             locked: id,
-            parameters: { 
+            parameters: {
                 callback: 'pointSymmetry',
                 params: {
                     elements: {
@@ -1635,7 +1635,7 @@ menuItemLineSymmetry = function menuItemLineSymmetry(){
             type: 'parametrizedGroup',
             ordering: path.parent.index(path.parent.last())+1,
             locked: id,
-            parameters: { 
+            parameters: {
                 callback: 'lineSymmetry',
                 params: {
                     elements: {
@@ -1673,7 +1673,7 @@ menuItemItemArray = function menuItemItemArray(){
             type: 'parametrizedGroup',
             ordering: path.parent.index(path.parent.last())+1,
             locked: id,
-            parameters: { 
+            parameters: {
                 callback: 'itemArray',
                 params: {
                     elements: {
@@ -1772,7 +1772,7 @@ menuItemQrCode = function(){
             type: 'parametrizedGroup',
             ordering: path.parent.index(path.parent.last())+1,
             locked: id,
-            parameters: { 
+            parameters: {
                 callback: 'paraQrCode',
                 params: {
                     elements: {

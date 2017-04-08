@@ -91,7 +91,7 @@ datGuiParam = function(item){
     this.x = 0;
     this.y = 0;
     this.cx = 0;
-    this.cy = 0; 
+    this.cy = 0;
     this.fillColor = '#000000';
     this.fillOpacity = 1;
     this.strokeColor = '#000000';
@@ -100,7 +100,7 @@ datGuiParam = function(item){
     this.strokeDasharray = '';
     this.strokeLinejoin = '';
     this.strokeLinecap = '';
-    this.opacity = 1; 
+    this.opacity = 1;
     this.fontStyle = 'normal';
     this.fontWeight = 'normal';
     this.fontFamily = 'Sans serif';
@@ -138,7 +138,7 @@ datGuiParam = function(item){
                 this[elem[i]] = it.parameters.params.elements[elem[i]];
                 this['select_' + elem[i]] = false;
             }
-        }  
+        }
         if(item.attr('type') == 'pathEquation'){
             var k = Object.keys(it.parameters.params)
             for(var i = 0; i < k.length; i++)
@@ -160,7 +160,7 @@ datGuiParam = function(item){
             this.swap = function(){
                 Meteor.call('update_document', 'Connector', item.attr('connection'), {source: connector.target, target: connector.source});
             }
-        } 
+        }
         if(item.attr('type') == 'gradient'){
             var k = Object.keys(it.parameters.params);
             var keys;
@@ -175,7 +175,7 @@ datGuiParam = function(item){
                 for(i = 0; i < keys.length; i++)
                     this[e + '_' + keys[i]] = it.parameters.params.elements[e][keys[i]];
             }
-        } 
+        }
         if(item.attr("type") == 'embeddediFrame' || item.attr("type") == 'embeddedHtml' || item.attr("type") == 'markdown'){
             this.content = it.text;
             this.x = item.attr("x");
@@ -310,7 +310,7 @@ datGuiParam = function(item){
         this.x = '0';
         this.y = '0';
         this.cx = '0';
-        this.cy = '0'; 
+        this.cy = '0';
         this.fillColor = '#000000';
         this.fillOpacity = '1';
         this.strokeColor = '#000000';
@@ -319,7 +319,7 @@ datGuiParam = function(item){
         this.strokeDasharray = '';
         this.strokeLinejoin = '';
         this.strokeLinecap = '';
-        this.opacity = '1'; 
+        this.opacity = '1';
         this.fontStyle = 'normal';
         this.fontWeight = 'normal';
         this.fontFamily = 'Sans serif';
@@ -619,7 +619,7 @@ buildDatGui = function(gui, item, type, no){
                     });
                 }
             }
-            var genPath = f7.add(param, 'genPath'); 
+            var genPath = f7.add(param, 'genPath');
         }
         if(type == 'multiple_subjects'){
             var elems = global_oro_variables.selected.members;
@@ -664,7 +664,7 @@ buildDatGui = function(gui, item, type, no){
                 Meteor.call('update_document', 'Connector', item.attr('connection'), {label: value});
             })
             var swap = f9.add(param, 'swap');
-        } 
+        }
         if(item.type == 'path'){
             if(f11)
                 var close = f11.add(param, 'closeOpen');
@@ -775,7 +775,7 @@ buildDatGui = function(gui, item, type, no){
                 var stroked = f1.add(param, 'strokeDasharray')
                 var lj = Schemas.Item.schema()['palette.strokeLinejoin'].allowedValues
                 var lc = Schemas.Item.schema()['palette.strokeLinecap'].allowedValues
-    
+
                 var strokelj = f1.add(param, 'strokeLinejoin', lj)
                 var strokelc = f1.add(param, 'strokeLinecap', lc)
                 if(['para_simple_path', 'para_complex_path', 'pathEquation'].indexOf(item.attr("type")) == -1 && (!item.attr('role') || item.attr('role') != 'connector'))
@@ -816,7 +816,7 @@ buildDatGui = function(gui, item, type, no){
                         console.log(value)
                         menuItemLighten(value);
                         var elem = SVG.get(global_oro_variables.selected.members[0].attr("selected"));
-                        if(!SVG.get('simplify_noPoints'))   
+                        if(!SVG.get('simplify_noPoints'))
                             var noPoints = SVG.get('svgEditor').text(String(SVG.get('clone_'+elem.attr("id")).array.value.length)).move(0,0).attr("id", 'simplify_noPoints');
                         else
                             SVG.get('simplify_noPoints').text(String(SVG.get('clone_'+elem.attr("id")).array.value.length));
@@ -858,12 +858,12 @@ buildDatGui = function(gui, item, type, no){
                 var endtype = f10.add(param, 'endType', ['openSquare', 'openRound', 'openButt', 'closedLine', 'closedPolygon']).onChange(function(value){
                     menuItemOffset(true, 'endType', value)
                 }).onFinishChange(function(value){
-                    
+
                 })
                 var delta = f10.add(param, 'delta').step(0.5).onChange(function(value){
                     menuItemOffset(true, 'delta', value)
                 }).onFinishChange(function(value){
-                    
+
                 })
                 //var repetitions = f10.add(param, 'repetitions').step(1);
                 var clear = f10.add(param, 'clear')
@@ -960,7 +960,7 @@ buildDatGui = function(gui, item, type, no){
                     });
                 }
             }
-            if(['simple_path', 'complex_path', 'para_simple_path', 'para_complex_path', 'text', 'pathEquation'].indexOf(item.attr('type')) != -1){
+            if(['simple_path', 'complex_path', 'para_simple_path', 'para_complex_path', 'text', ''].indexOf(item.attr('type')) != -1){
                 fill.onChange(function(value){
                     item.attr('fill', value);
                     setFill(value);
@@ -1146,7 +1146,7 @@ buildDatGui = function(gui, item, type, no){
                         item.opacity(0);
                         menuItemSimplifySC(range-value);
                         var elem = SVG.get(global_oro_variables.selected.members[0].attr("selected"));
-                        if(!SVG.get('simplify_noPoints'))   
+                        if(!SVG.get('simplify_noPoints'))
                             var noPoints = SVG.get('svgEditor').text(String(SVG.get('clone_'+elem.attr("id")).array.value.length)).move(0,0).attr("id", 'simplify_noPoints');
                         else
                             SVG.get('simplify_noPoints').text(String(SVG.get('clone_'+elem.attr("id")).array.value.length));
@@ -1349,7 +1349,7 @@ buildDatGui = function(gui, item, type, no){
             var strokeDasharray = f6.add(param, 'strokeDasharray');
             var strokeLinejoin = f6.add(param, 'strokeLinejoin');
             var strokeLinecap = f6.add(param, 'strokeLinecap');
-            var opacity = f6.add(param, 'opacity'); 
+            var opacity = f6.add(param, 'opacity');
             var text = f6.add(param, 'text');
             var fontStyle = f6.add(param, 'fontStyle');
             var fontWeight = f6.add(param, 'fontWeight');
@@ -1395,7 +1395,7 @@ buildDatGui = function(gui, item, type, no){
                     //var secPoint1 = source.array.pointxy(1);
                     //var secPoint2 = dest.array.pointxy(1);
                     //var angle1s = getAngle({x:source.cx(), y: source.cy()}, {x: secPoint1.x, y: secPoint1.y});
-                    //var angle2s = getAngle({x:source.cx(), y: source.cy()}, {x: secPoint2.x, y: secPoint2.y}); 
+                    //var angle2s = getAngle({x:source.cx(), y: source.cy()}, {x: secPoint2.x, y: secPoint2.y});
                     /*
                     if(0 <= angle1s-angle1 <= 180 && (angle2s-angle2 > 180 || angle2s-angle2 < 0))
                         source.plot(reversePath(source));
@@ -1412,7 +1412,7 @@ buildDatGui = function(gui, item, type, no){
                     var secPoint1 = source.array.pointxy(1);
                     var secPoint2 = dest.array.pointxy(1);
                     var angle1s = getAngle({x:source.cx(), y: source.cy()}, {x: secPoint1.x, y: secPoint1.y});
-                    var angle2s = getAngle({x:dest.cx(), y: dest.cy()}, {x: secPoint2.x, y: secPoint2.y}); 
+                    var angle2s = getAngle({x:dest.cx(), y: dest.cy()}, {x: secPoint2.x, y: secPoint2.y});
 
                     if((angle1s-angle1) * (angle2s-angle2) < 0){
                         source.plot(reversePath(source));
