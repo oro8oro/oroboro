@@ -10,7 +10,7 @@ buildMenu = function buildMenu(editor,subject){
 }
 
 menuItemBox = function menuItemBox(){
-    if(global_oro_variables.selected.members.length > 0 ){
+    if(global_oro_variables.selected.members && global_oro_variables.selected.members.length){
         var elem = global_oro_variables.selected.members[0];
         var selected = SVG.get(elem.attr("selected"));
         console.log("Type: ", selected.attr("type"));
@@ -128,7 +128,7 @@ menuItemUnGroup = function menuItemUnGroup(){
 }
 
 menuItemLockGroup = function menuItemLockGroup(){
-    if(global_oro_variables.selected.members){
+    if(global_oro_variables.selected.members && global_oro_variables.selected.members.length){
         var id = global_oro_variables.selected.members[0].attr('selected');
         if(!SVG.get(id).attr('locked') || SVG.get(id).attr('locked') == 'null'){
             var ids = recursive_group_ids(id);
@@ -960,6 +960,8 @@ menuItemIntersectSS = function menuItemIntersectSS(){
 }
 
 menuItemDelete = function menuItemDelete(){
+    if(!global_oro_variables.selected.members)
+      return;
     var selected = global_oro_variables.selected.members;
     console.log(selected);
     var its = [], grs = [], conns = [];
@@ -981,8 +983,10 @@ menuItemDelete = function menuItemDelete(){
 }
 
 menuItemClone = function menuItemClone(selected){
-    if(typeof selected === 'undefined')
-        var selected = global_oro_variables.selected.members;
+    if(!selected)
+        selected = global_oro_variables.selected.members;
+    if(!selected && !selected.length)
+      return;
     for(s in selected){
         var it = SVG.get(selected[s].attr("selected"));
         if(it.parent.attr('type') == 'parametrizedGroup'){
@@ -1025,6 +1029,8 @@ menuItemBrowse = function menuItemBrowse(){
 }
 
 menuItemToBack = function menuItemToBack(){
+    if(!global_oro_variables.selected.members && !global_oro_variables.selected.members.length)
+      return;
     var id = global_oro_variables.selected.members[0].attr("selected");
     SVG.get(id).back();
     SVG.get(id).parent.each(function(i,children){
@@ -1036,6 +1042,8 @@ menuItemToBack = function menuItemToBack(){
 }
 
 menuItemToFront = function menuItemToFront(){
+    if(!global_oro_variables.selected.members && !global_oro_variables.selected.members.length)
+      return;
     var id = global_oro_variables.selected.members[0].attr("selected");
     SVG.get(id).front();
     SVG.get(id).parent.each(function(i,children){
