@@ -24,6 +24,7 @@ Meteor.publishComposite('fileKids', function(fileId, options) {
   check(options, Match.Optional(Object));
 
   options = options || {};
+  options.sort = {dateModified: -1};
 
   return {
     find: function() {
