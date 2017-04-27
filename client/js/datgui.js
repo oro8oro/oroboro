@@ -374,7 +374,8 @@ buildDatGui = function(gui, item, type, no){
             item.transform("matrix", value);
             positionSelector(item.attr("id"));
         }).onFinishChange(function(value){
-            Meteor.call('update_document', 'Group', item.attr("id"), {transform: value});
+            //Meteor.call('update_document', 'Group', item.attr("id"), {transform: value});
+            oro.wraps.update_document('Group', item.attr("id"), {transform: value});
         });
         translateX.onChange(function(value){
             var m = item.transform();
@@ -537,7 +538,8 @@ buildDatGui = function(gui, item, type, no){
                     var pointList = JSON.stringify(pathArraySvgOro(SVG.get(item.attr('id')).array.valueOf()))
                     var set = {parameters: it.parameters, pointList: pointList}
                     console.log(set);
-                    Meteor.call('update_document', 'Item', item.attr('id'), set);
+                    //Meteor.call('update_document', 'Item', item.attr('id'), set);
+                    oro.wraps.update_document('Item', item.attr('id'), set);
                 });
             }
             var genPath = f7.add(param, 'genPath');
@@ -602,7 +604,8 @@ buildDatGui = function(gui, item, type, no){
                         set.locked = elems.join(',');
                     }
                     console.log(set);
-                    Meteor.call('update_document', 'Group', item.attr('id'), set);
+                    //Meteor.call('update_document', 'Group', item.attr('id'), set);
+                    oro.wraps.update_document('Group', item.attr('id'), set);
                 });
                 if(elem.indexOf(all[i]) != -1){
                     selects[i] = f7.add(param, 'select_'+all[i]).onChange(function(value){
@@ -763,7 +766,8 @@ buildDatGui = function(gui, item, type, no){
                         }
                     });
                     it.parameters.latex = value;
-                    Meteor.call('update_document', 'Item', item.attr("id"), {text: text, parameters: it.parameters});
+                    //Meteor.call('update_document', 'Item', item.attr("id"), {text: text, parameters: it.parameters});
+                    oro.wraps.update_document('Item', item.attr("id"), {text: text, parameters: it.parameters});
                 });
             }
             if(['simple_path', 'complex_path', 'para_simple_path', 'para_complex_path', 'text', 'pathEquation'].indexOf(item.attr('type')) != -1){
@@ -884,7 +888,8 @@ buildDatGui = function(gui, item, type, no){
                     item.attr("src", value);
                     item.node.childNodes[0].setAttribute("src", value);
                 }).onFinishChange(function(value){
-                    Meteor.call('update_document', 'Item', item.attr("id"), {text: value});
+                    //Meteor.call('update_document', 'Item', item.attr("id"), {text: value});
+                    oro.wraps.update_document('Item', item.attr("id"), {text: value});
                 });
                 w.onChange(function(value){
                     if(param.maintainRatio){
@@ -897,7 +902,8 @@ buildDatGui = function(gui, item, type, no){
                 })
                 w.onFinishChange(function(value){
                     var points = [item.attr("x"), item.attr("y"), value, item.attr("height")].join(',');
-                    Meteor.call('update_document', 'Item', item.attr("id"), {pointList: points});
+                    //Meteor.call('update_document', 'Item', item.attr("id"), {pointList: points});
+                    oro.wraps.update_document('Item', item.attr("id"), {pointList: points});
                 })
                 h.onChange(function(value){
                     if(param.maintainRatio){
@@ -910,7 +916,8 @@ buildDatGui = function(gui, item, type, no){
                 })
                 h.onFinishChange(function(value){
                     var points = [item.attr("x"), item.attr("y"), item.attr("width"), value].join(',');
-                    Meteor.call('update_document', 'Item', item.attr("id"), {pointList: points});
+                    //Meteor.call('update_document', 'Item', item.attr("id"), {pointList: points});
+                    oro.wraps.update_document('Item', item.attr("id"), {pointList: points});
                 })
             }
             if(item.attr("type") == 'embeddedHtml' || item.attr("type") == 'markdown'){
@@ -1213,7 +1220,8 @@ buildDatGui = function(gui, item, type, no){
                         rxi = param.rx;
                         ryi = param.ry;
                         var points = window[it.parameters.callback](vals, value);
-                        Meteor.call('update_document', 'Item', item.attr("id"), {pointList: points, parameters: par});
+                        //Meteor.call('update_document', 'Item', item.attr("id"), {pointList: points, parameters: par});
+                        oro.wraps.update_document('Item', item.attr("id"), {pointList: points, parameters: par});
                     });
                 }
             }
@@ -1278,13 +1286,14 @@ buildDatGui = function(gui, item, type, no){
                         }
                         it.parameters.params = parameters;
                         console.log(it.parameters)
-                        Meteor.call('update_document', 'Item', item.attr('id'), {parameters: it.parameters});
+                        //Meteor.call('update_document', 'Item', item.attr('id'), {parameters: it.parameters});
+                        oro.wraps.update_document('Item', item.attr("id"), {parameters: it.parameters});
                         })
                 }
             }
         }
     }
-    else{
+    else {
         var f = File.findOne({_id: Session.get('fileId')});
         var cr = Meteor.users.findOne({_id: f.creatorId});
         var cr = f5.add(param, 'creator', [cr.emails[0].address.substring(0,cr.emails[0].address.indexOf('@'))]);

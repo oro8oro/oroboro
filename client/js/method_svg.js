@@ -1,5 +1,6 @@
 baselinePoints = [];
 selection = [], selectionno = [];
+var oro = global_oro_variables;
 panCallback = function(a){
         a = a || SVG.get("viewport").node.getCTM();
 
@@ -2131,8 +2132,8 @@ saveItemLocalisation = function(id){
 
     upd["pointList"] = val;
     console.log('saveItemLocalisation: ' + JSON.stringify(upd))
-    Meteor.call('update_document', "Item", id, upd);
-
+    //Meteor.call('update_document', "Item", id, upd);
+    oro.wraps.update_document("Item", id, upd);
 }
 
 updatePalette = function(item, palette){
@@ -3412,77 +3413,6 @@ cloneGroup = function cloneGroup(gr, parentId, parent){
     console.log('/cloneGroup');
 }
 
-cloneFile = function cloneFile(id, callb){
-    console.log('cloneFilestart');
-    var f = File.findOne({_id: id});
-    var no = File.find({uuid: f.uuid}).count();
-    var deps = Dependency.find({fileId1: id}).fetch();
-    var groups = Group.find({fileId: id}).fetch();
-    f.original = f._id;
-    delete f._id;
-    f.creatorId = Meteor.userId();
-    f.dateModified = new Date();
-    f.permissions.view = [];
-    f.permissions.edit = [Meteor.userId()];
-    f.uuid = f.uuid+(no+1);
-    f.groupids = [];
-    f.itemids = [];
-    f.selected = [];
-    f.noofchildren = 0
-    console.log(f);
-    Meteor.call('insert_document', 'File', f, function(err, res){
-        if(err) console.log(err);
-        if(res){
-            console.log(res);
-            for(d in deps){
-                deps[d].fileId1 = res;
-                delete deps[d]._id
-                Meteor.call('insert_document', 'Dependency', deps[d]);
-            }
-            for(g in groups)
-                cloneGroup(groups[g], res, 'fileId');
-            //return res;
-            if(callb)
-                callb(res);
-            //window.open('/filem/'+res, '_blank');
-        }
-    });
-}
-
-cloneGroupFile = function(id, callb){
-        console.log('cloneFilestart');
-    var f = File.findOne({_id: id});
-    var no = File.find({uuid: f.uuid}).count();
-    var deps = Dependency.find({fileId1: id}).fetch();
-    var groups = Group.find({fileId: id}).fetch();
-    f.original = f._id;
-    delete f._id;
-    f.creatorId = Meteor.userId();
-    f.dateModified = new Date();
-    f.permissions.view = [];
-    f.permissions.edit = [Meteor.userId()];
-    f.uuid = f.uuid+(no+1);
-    f.groupids = [];
-    f.itemids = [];
-    console.log(f);
-    Meteor.call('insert_document', 'File', f, function(err, res){
-        if(err) console.log(err);
-        if(res){
-            console.log(res);
-            for(d in deps){
-                deps[d].fileId1 = res;
-                delete deps[d]._id
-                Meteor.call('insert_document', 'Dependency', deps[d]);
-            }
-            for(g in groups)
-                cloneGroup(groups[g], res, 'fileId');
-            //return res;
-            if(callb)
-                callb(res);
-            //window.open('/filem/'+res, '_blank');
-        }
-    });
-}
 
 deepClone = function(orig,i,clone){
     if(typeof clone === 'undefined'){
@@ -3607,7 +3537,8 @@ paraTextPath = function(parameters, update){
     if(update){
         var output = SVG.get(path.parent.attr('id')).node.outerHTML;
         parameters.output = output;
-        Meteor.call('update_document', 'Group', path.parent.attr('id'), {parameters: parameters});
+        //Meteor.call('update_document', 'Group', path.parent.attr('id'), {parameters: parameters});
+        oro.wraps.update_document('Group', path.parent.attr('id'), {parameters: parameters});
     }
 }
 
@@ -3670,7 +3601,8 @@ paraPathOnPath = function(parameters, update){
     if(update){
         var output = SVG.get(path1.parent.attr('id')).node.outerHTML;
         parameters.output = output;
-        Meteor.call('update_document', 'Group', path1.parent.attr('id'), {parameters: parameters});
+        //Meteor.call('update_document', 'Group', path1.parent.attr('id'), {parameters: parameters});
+        oro.wraps.update_document('Group', path1.parent.attr('id'), {parameters: parameters});
     }
 }
 
@@ -3694,7 +3626,8 @@ paraGradient = function(item){
                 if(item.type != 'g'){
                     var palette = Item.findOne({_id: item.attr('id')}).palette;
                     palette.fillColor = gradient.fill();
-                    Meteor.call('update_document', 'Item', item.attr('id'), {palette: palette});
+                    //Meteor.call('update_document', 'Item', item.attr('id'), {palette: palette});
+                    oro.wraps.update_document('Item', item.attr('id'), {palette: palette});
                 //item.fill(SVG.get(this.attr('gradient')));
                 }
             }
@@ -3900,7 +3833,8 @@ pointSymmetry = function(parameters, update){
     if(update){
         var output = SVG.get(path.parent.attr('id')).node.outerHTML;
         parameters.output = output;
-        Meteor.call('update_document', 'Group', path.parent.attr('id'), {parameters: parameters});
+        //Meteor.call('update_document', 'Group', path.parent.attr('id'), {parameters: parameters});
+        oro.wraps.update_document('Group', path.parent.attr('id'), {parameters: parameters});
     }
     return path.parent;
 }
@@ -4066,7 +4000,8 @@ lineSymmetry = function(parameters, update){
     if(update){
         var output = SVG.get(path.parent.attr('id')).node.outerHTML;
         parameters.output = output;
-        Meteor.call('update_document', 'Group', path.parent.attr('id'), {parameters: parameters});
+        //Meteor.call('update_document', 'Group', path.parent.attr('id'), {parameters: parameters});
+        oro.wraps.update_document('Group', path.parent.attr('id'), {parameters: parameters});
     }
     return path.parent;
 }
@@ -4243,7 +4178,8 @@ itemArray = function(parameters, update){
     if(update){
         var output = SVG.get(path.parent.attr('id')).node.outerHTML;
         parameters.output = output;
-        Meteor.call('update_document', 'Group', path.parent.attr('id'), {parameters: parameters});
+        //Meteor.call('update_document', 'Group', path.parent.attr('id'), {parameters: parameters});
+        oro.wraps.update_document('Group', path.parent.attr('id'), {parameters: parameters});
     }
     return path.parent;
 }
@@ -4309,7 +4245,8 @@ paraQrCode = function(parameters, update){
     if(update){
         var output = SVG.get(obj.elements.group).node.outerHTML;
         parameters.output = output;
-        Meteor.call('update_document', 'Group', obj.elements.group, {parameters: parameters});
+        //Meteor.call('update_document', 'Group', obj.elements.group, {parameters: parameters});
+        oro.wraps.update_document('Group', obj.elements.group, {parameters: parameters});
     }
 
     return qrcodesvg;

@@ -29,7 +29,7 @@ insertDep = function(){
     var upd = getDoc();
     if(upd){
         Meteor.call('insert_document', 'Dependency', upd, function(err, res){
-            if(err) console.log(err); 
+            if(err) console.log(err);
             if(res) console.log(res);
         });
         /*
@@ -53,7 +53,7 @@ updateDep = function(){
     if(upd){
         var old = Dependency.findOne({_id: Session.get('currentDependency')});
         Meteor.call('update_document', 'Dependency', Session.get('currentDependency'), upd, function(err, res){
-            if(err) console.log(err); 
+            if(err) console.log(err);
             if(res) console.log(res);
         });
         if(upd.type == 1 || upd.type == 3){
@@ -155,7 +155,7 @@ setDep = function(no){
                 $('#selecttype').val(d.type);
             }
             else
-                Session.set('currentDependency', '');       
+                Session.set('currentDependency', '');
             $('#file'+no2).val('');
         }
     }

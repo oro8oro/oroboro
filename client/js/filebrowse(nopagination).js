@@ -1,125 +1,57 @@
-allfiles = {};
-allfileslength = 0;
 countB = 0;
 bscale = 0.1;
 noedit = 'JZXXMo5N38iwgfNAG'
-subscriptions = {}
-
-reloadSubscriptions = function(){
-    var p = Session.get('browseParams')
-    if(p.id == 'PRRyiPWSw8xj82T8F'){
-        if(subscriptions.userWork)
-            subscriptions.userWork.stop()
-        //console.log(p)
-        subscriptions.userWork = Meteor.subscribe('userWork', 'image/svg+xml', p.start-1, p.dim*p.dim, function(){
-            console.log('userWork')
-            //console.log(JSON.stringify(File.find({$and: [{creatorId: Meteor.userId()}, {fileType:'image/svg+xml'}]}, {sort: {dateModified: -1}}).fetch()))
-        })
-        Meteor.call('count', 'File', {creatorId: Meteor.userId()}, function(err, res){
-            if(err)
-                console/log(err)
-            if(res){
-                console.log('allfileslength: ' + res)
-                allfileslength = res
-            }
-        })
-    }
-    else{
-        Meteor.call('count', 'Dependency', {fileId2: p.id, type: 1}, function(err, res){
-            if(err)
-                console/log(err)
-            if(res){
-                //console.log('allfileslength: ' + res)
-                allfileslength = res
-            }
-        })
-
-        Meteor.call('getDependantFileIds', p.id, 'fileId2', 1, p.start-1, p.dim*p.dim, function(err, res){
-            if(err)
-                console.log(err)
-            if(res){
-                //console.log('DependantFileIds: '+res)
-                if(subscriptions.getDependantFileIds)
-                    subscriptions.getDependantFileIds.stop()
-                subscriptions.getDependantFileIds = Meteor.subscribe('filespublish', res, function(){
-                    //console.log('filespublishhhhhhhhhhhhhhed')
-                })
-
-                if(subscriptions.groups)
-                    for(var s in subscriptions.groups)
-                        subscriptions.groups[s].stop()
-                if(subscriptions.items)
-                    for(var s in subscriptions.items)
-                        subscriptions.items[s].stop()
-                subscriptions.groups = []
-                subscriptions.items = []
-                for(var k in res){
-                    Meteor.call('getComponentsIds', res[k], function(err, res2){
-                        if(err)
-                            console.log(err)
-                        if(res2){
-                            subscriptions.groups.push(Meteor.subscribe('groupspublish', res2.groups))
-                            subscriptions.items.push(Meteor.subscribe('itemspublish', res2.items))
-                        }
-                    })
-                }
-            }
-        })
-
-        Meteor.call('getRelatedFiles', p.id, function(err, res){
-            if(err)
-                console.log(err)
-            if(res){
-                //console.log('RelatedFiles: ' + res)
-                if(subscriptions.getRelatedFiles)
-                    subscriptions.getRelatedFiles.stop()
-                subscriptions.getRelatedFiles = Meteor.subscribe('filespublish', res)
-            }
-        })
-
-        Meteor.call('getDepsIds', p.id, 'fileId2', 1, p.start-1, p.dim*p.dim, function(err, res){
-            if(err)
-                console.log(err)
-            if(res){
-                //console.log('DepsIds: '+res)
-                if(subscriptions.getDepsIds)
-                    subscriptions.getDepsIds.stop()
-                subscriptions.getDepsIds = Meteor.subscribe('dependenciespublish', res)
-            }
-        })
-        /*
-        Meteor.call('getUsers', p.id, function(err, res){
-            if(err)
-                console.log(err)
-            if(res){
-                //console.log('users: '+res)
-                if(subscriptions.getUsers)
-                    subscriptions.getUsers.stop()
-                subscriptions.getUsers = Meteor.subscribe('userspublish', res)
-            }
-        })*/
-    }
+subsConfig = {
+    cacheLimit: 40,
+    expireIn: 20 //minutes
+}
+FileSubs = new SubsManager(subsConfig);
+vips = global_oro_variables.vips;
+op = {
+  navBefore: 0.2,
+  navAfter: 0.5
+}
+redirect = function(params) {
+  //console.log('params', JSON.stringify(params));
+  Router.go('/browse/file/' + params.id + '/' + params.start + '/' + params.dim + ( params.buttons || '' ));
 }
 
-reloadFilebrowser = function(params){
-    console.log('reloadFilebrowser');
-    if(allfiles[Session.get('browseParams').id]){
-        SVG.get('browserContent').clear();
-        //console.log(params)
+Template.filebrowse.onCreated(function() {
+  var self = this;
+  this.files = new ReactiveVar();
+  this.subs = {};
+  this.menuDefsVals = {
+    vips: [],
+    anon: ['menuItemExport', 'menuItemSearch'],
+    logged: ['menuItemEdit', 'menuItemClone', 'menuItemDelete', 'menuItemExport', 'menuItemSearch']
+  }
+  this.menuDefs = new ReactiveVar();
 
-        browserContent(params);
-        navButtons(params);
-        fileBMenu();
+  this.autorun(function() {
+    var data = Template.currentData();
+    if(data) {
+      var start = parseInt(data.start),
+        dim = parseInt(data.dim);
 
-        console.log('start autorun crumbs')
-        SVG.get('Bcrumbs').clear()
-        fileBcrumbs(params.id);
-        console.log('end autorun crumbs');
+      self.subs.filepublish = FileSubs.subscribe('filepublish', data.id);
+      self.subs.fileParents = FileSubs.subscribe('fileParents', data.id);
+      self.subs.fileRelated = FileSubs.subscribe('fileRelated', data.id);
+
+      if(self.subs.fileKids) {
+        self.subs.fileKids.stop();
+      }
+      if(data.id != vips.myWork) {
+        self.subs.fileKids = Meteor.subscribe('fileKids', data.id, {skip: (start - 1) * dim*dim, limit: dim*dim });
+      }
+      else {
+        self.subs.fileKids = Meteor.subscribe('userWork', 'image/svg+xml', (start - 1) * dim*dim, dim*dim);
+
+      }
     }
-}
+  });
+});
 
 Template.filebrowse.onRendered(function(){
-    console.log('start');
     var self = this;
     countB = 0;
 
@@ -137,8 +69,6 @@ Template.filebrowse.onRendered(function(){
         Session.set('defaultButtons', 'nobuttons')
 
     Session.set("fileBCallback", this.data.callback);
-    var params = {start:start, dim:dim, col: this.data.col, id: this.data.id, buttons: this.data.buttons, login: this.data.login};
-    Session.set('browseParams', {start:start, dim:dim, col: this.data.col, id: this.data.id, buttons: this.data.buttons, login: this.data.login});
     var browser = SVG('filebrowsediv')
     browser.attr('id', 'fileBrowse');
     var browserContent = browser.group().attr('id', 'browserContent');
@@ -152,113 +82,57 @@ Template.filebrowse.onRendered(function(){
     }
 
     self.autorun(function(){
-        var login = Meteor.userId()
-        if(SVG.get('menu_defs')){
-            SVG.get('menu_defs').remove()
-            reloadSubscriptions()
-        }
-    })
-
-    self.autorun(function(){
-        var p = Session.get('browseParams')
-        reloadSubscriptions();
-    })
-
-    self.autorun(function(){
-        var deps = Dependency.find({fileId2: Session.get('browseParams').id}).fetch();
-        console.log('deps autorun');
-        //console.log(JSON.stringify(deps));
-        if(deps.length > 0){
-            var params = Session.get('browseParams');
-
-            var idss = [];
-            for(var d in deps)
-                idss.push(deps[d].fileId1);
-
-            var data = File.find({_id: {$in: idss}}, {sort: {dateModified: -1}}).fetch();
-
-            if(data.length > 0 && JSON.stringify(allfiles[params.id]) != JSON.stringify(data)){
-                allfiles = {};
-                allfiles[params.id] = data;
-
-
-                console.log('start reloadFilebrowser');
-                reloadFilebrowser(params);
-                console.log('end reloadFilebrowser');
-
-            }
-        }
-    })
-
-    self.autorun(function(){
-        var data = File.find({$and: [{creatorId: Meteor.userId()}, {fileType:'image/svg+xml'}]}, {sort: {dateModified: -1}}).fetch();
-        if(data.length > 0 && Session.get('browseParams').id == 'PRRyiPWSw8xj82T8F'){
-            console.log('yes ' + JSON.stringify(Session.get('browseParams')));
-            var params = Session.get('browseParams');
-            allfiles = {};
-            allfiles[params.id] = data;
-            console.log(allfiles[params.id]);
-
-            console.log('start reloadFilebrowser');
-            reloadFilebrowser(params);
-            console.log('end reloadFilebrowser');
-        }
-    })
-/*
-    self.autorun(function () {
-        var gr = Group.findOne({$or: [{_id: Session.get('fileBId').id}, {fileId: Session.get('fileBId').id} ]});
-        console.log('allfiles group/item')
-        console.log(gr);
-        if(Dependency.find({fileId2: Session.get('fileBId').id}).fetch().length == 0){
-            var fileBId = Session.get('fileBId');
-            var params = Session.get('browseParams');
-            var data = [];
-            if(fileBId.col == 'group'){
-                if(Group.findOne({_id: fileBId.id}))
-                    var q = {groupId: fileBId.id};
-                else
-                    var q = {fileId: fileBId.id}
-                console.log(q);
-                data = Group.find(q, {sort: {ordering: 1}}).fetch();
-                console.log(data);
-
-                 //var items = Item.find({groupId: params.id}, {sort: {ordering: 1}}).fetch();
-                //console.log(items);
-                //if(items.length > 0){
-                //    var lim = allfiles[params.id].length;
-                //    allfiles[params.id] = allfiles[params.id].concat(items);
-                //}
-            }
-            else if(fileBId.col == 'item'){
-                data = Item.find({groupId: fileBId.id}, {sort: {ordering: 1}}).fetch();
-                console.log(data);
-            }
-
-            if(data.length > 0){
-                allfiles = {};
-                allfiles[fileBId.id] = data;
-
-                console.log(allfiles[fileBId.id]);
-
-                if(params.id != fileBId.id){
-                    params.id = fileBId.id;
-                    params.col = fileBId.col;
-                    params.start = 1;
-                    Session.set('browseParams', params);
-                }
-                else{
-                    console.log('start reloadFilebrowser');
-                    reloadFilebrowser(params);
-                    console.log('end reloadFilebrowser');
-                }
-            }
-        }
-    })
-*/
-
-    self.autorun(function(){
        var win = Session.get("window");
        SVG.get('fileBrowse').attr({ "width": win.w, "height": win.h})
+    });
+
+    this.autorun(function() {
+      var ready = self.subs.fileKids.ready();
+      var fready = self.subs.filepublish.ready();
+
+      if(ready && fready) {
+        var data = self.data;
+        data.start = parseInt(data.start);
+        data.dim = parseInt(data.dim);
+
+        if(data.id != vips.myWork) {
+          var files = Dependency.find({fileId2: Template.currentData().id, type:1}, {sort: {dateModified: -1}})
+            .map(function(dep) {
+              return File.findOne({_id: dep.fileId1});
+            });
+        }
+        else {
+          var files = File.find({$and: [{creatorId: Meteor.userId()}, {fileType:'image/svg+xml'}]}, {sort: {dateModified: -1}}).fetch();
+        }
+
+        SVG.get('browserContent').clear();
+
+        showBrowserContent(self.data, files);
+        navButtons(self.data, files);
+        fileBMenu(self.data, files);
+        self.files.set(files);
+      }
+    });
+
+    this.autorun(function() {
+      var ready = self.subs.fileParents.ready();
+      if(ready) {
+        console.log('fileParents ready');
+        SVG.get('Bcrumbs').clear()
+        fileBcrumbs(self.data);
+      }
+    });
+
+    this.autorun(function() {
+      var userId = Meteor.userId();
+      var files = self.files.get();
+      console.log('userId', userId);
+      if(files) {
+        if(SVG.get('menu_defs')) {
+          SVG.get('menu_defs').remove();
+        }
+        fileBMenu(self.data, files);
+      }
     });
 })
 
@@ -269,9 +143,9 @@ Template.filebrowse.events({
             var id = e.currentTarget.getAttribute('id');
             var i = Number(id.substring(id.lastIndexOf("_")+1));
             var fileId = SVG.get("file_"+i).attr("fileId")
-            if(File.findOne({_id: fileId}).noofchildren > 0 || fileId == 'PRRyiPWSw8xj82T8F'){
+            if(File.findOne({_id: fileId}).noofchildren > 0 || fileId == vips.myWork){
                 console.log('other subscription');
-                var params = Session.get('browseParams');
+                var params = t.data;
                 var defaultButtons = Session.get('defaultButtons');
                 if(params.buttons != defaultButtons){
                     if(defaultButtons == 'buttons')
@@ -282,40 +156,40 @@ Template.filebrowse.events({
                 params.id = fileId
                 params.col = SVG.get("file_"+i).attr("col")
                 params.start = 1
-                Session.set('browseParams', params);
+
+                redirect(params);
             }
             else if(window.windowType == 'svgEditor' || window.parent.windowType == 'svgEditor')
                 window.parent[Session.get("fileBCallback")](SVG.get("file_"+i).attr("fileId"));
-            else if(fileId == 'w7kkK7GvdDWz29Bdz')
+            else if(fileId == vips.tutorial)
                 window.open('/md/tutorial', '_blank'); //tutorial
-            else if(fileId == 'mmZmkPGbRDEhuBg5p')
+            else if(fileId == vips.playground)
                 window.open('/filem/eGfQyh6jCqxeEYmex', '_blank');//playground
-            else if(fileId == 'AXPzGY3BcQdNCXMyC')
+            else if(fileId == vips.development)
                 window.open('https://github.com/oro8oro/oroboro', '_blank'); //github
-            else if(fileId == "37u7npbMF6NvccC6u")
+            else if(fileId == vips.about)
                 window.open('/md/AboutOroboro', '_blank');//about us
         }
         console.log('/click file')
     }
 })
 
-browserContent = function(params){
+showBrowserContent = function(params, files){
     console.log('browserContent');
     var start = params.start,
         dim = params.dim,
         col = params.col,
         parent;
-
+        console.log('col', col)
     if(col == 'file')
         parent = File.findOne({_id: params.id});
     else{
         var path = getElementPath(params.id);
         parent = File.findOne({_id: path[path.length-1]});
     }
-
+    console.log('parent', parent)
     Session.set('parentDims', {w: parent.width, h: parent.height});
 
-    var files = allfiles[params.id]
     $('body').attr({"class": "no_scroll"}).css({margin:0,padding:0});
     var browser = SVG.get('fileBrowse');
     browser.viewbox(0,0,parent.width,parent.height);
@@ -361,6 +235,12 @@ browserContent = function(params){
         svg[i].attr({preserveAspectRatio: "xMidYMid meet"})
         svg[i].viewbox(0,0,f.width,f.height);
         svg[i].image(imagepath);
+        /*if(files[i].svg) {
+          svg[i].nested().svg(files[i].svg)
+        }
+        else {
+          Meteor.call('setSvg', files[i]._id);
+        }*/
         bkg[i] = gr[i].rect(parent.width,parent.height).fill('#FFFFFF').attr('id','background_'+i).opacity(0);
         x=x+parent.width/dim;
         gr[i].on('mouseover', function(){
@@ -378,7 +258,7 @@ browserContent = function(params){
                       clone.on('click', function() {
                         var name = k.attr('data-action');
                         console.log('name', name);
-                        window[name]();
+                        window[name](params);
                       });
                     });
                     //container.scale(0.8 * Number(vb[2]) / container.bbox().width);
@@ -397,32 +277,30 @@ browserContent = function(params){
     console.log('/browserContent');
 }
 
-navButtons = function(params){
-    console.log('navButtons');
+navButtons = function(params, files){
+    console.log('navButtons', JSON.stringify(params));
 
     var start = params.start;
     var dim = params.dim;
-    var col = params.col;
     var browser = SVG.get('fileBrowse');
     var dims = Session.get('parentDims');
+    var allfileslength = File.findOne(params.id).noofchildren;
 
     var nav = {};
-    if(Math.ceil(start/(dim*dim)) == 1)
+    if(start == 1)
         nav.p = false;
     else
         nav.p = true;
 
-    if(Math.ceil(allfileslength / (dim*dim)) == 1 || Math.ceil(start/(dim*dim)) == Math.ceil(allfileslength / (dim*dim)))
+    if(Math.ceil(allfileslength / (dim*dim)) == 1 || start == Math.ceil(allfileslength / (dim*dim)))
         nav.n = false;
     else
         nav.n = true;
-    if(!nav.p)
-        if(SVG.get('previousButtonUse'))
-            SVG.get('previousButtonUse').remove();
-    if(!nav.n)
-        if(SVG.get('nextButtonUse'))
-            SVG.get('nextButtonUse').remove();
-    if(!nav.p && !nav.p){
+    if(!nav.p && SVG.get('previousButtonUse'))
+      SVG.get('previousButtonUse').remove();
+    if(!nav.n && SVG.get('nextButtonUse'))
+      SVG.get('nextButtonUse').remove();
+    if(!nav.p && !nav.p) {
         if(SVG.get('pagination'))
             SVG.get('pagination').remove();
         if(SVG.get('slider'))
@@ -441,17 +319,18 @@ navButtons = function(params){
         if(SVG.get('nextButtonUse'))
             SVG.get('nextButtonUse').remove();
         var n = SVG.get('fileBrowse').use(SVG.get('nextButton')).attr('id', 'nextButtonUse');
-        n.opacity(0.1);
+        n.opacity(op.navBefore);
 
         n.on('click', function(event){
-            var ini = start+dim*dim;
-            Session.set('browseParams', {start:ini, dim:dim, col: col, id: params.id, buttons: params.buttons, login: params.login});
+          console.log('n on click', params.start, JSON.stringify(params));
+            params.start += 1;
+            redirect(params);
         })
         n.on('mouseover', function(event){
-            this.opacity(0.3);
+            this.opacity(op.navAfter);
         })
         n.on('mouseout', function(event){
-            this.opacity(0.1);
+            this.opacity(op.navBefore);
         })
     }
     if(nav.p){
@@ -465,19 +344,20 @@ navButtons = function(params){
         if(SVG.get('previousButtonUse'))
             SVG.get('previousButtonUse').remove();
         var p = SVG.get('fileBrowse').use(SVG.get("previousButton"));
-        p.opacity(0.1).attr('id', 'previousButtonUse');
+        p.opacity(op.navBefore).attr('id', 'previousButtonUse');
 
         p.on('click', function(event){
-            var ini = start-dim*dim;
-            if(ini > 0){
-                Session.set('browseParams', {start:ini, dim:dim, col: col, id: params.id, buttons: params.buttons, login: params.login});
+          params.start -= 1;
+          console.log('prev click', JSON.stringify(params));
+            if(params.start > 0){
+              redirect(params);
             }
         })
         p.on('mouseover', function(event){
-            this.opacity(0.3);
+            this.opacity(op.navAfter);
         })
         p.on('mouseout', function(event){
-            this.opacity(0.1);
+            this.opacity(op.navBefore);
         })
     }
     if(nav.p || nav.n){
@@ -485,10 +365,9 @@ navButtons = function(params){
             var pages = browser.group().attr("id","pagination").opacity(0.3);
         var pages = SVG.get('pagination');
         pages.clear();
-        var currentpg = Math.ceil(start/(dim*dim));
         var allpg = Math.ceil(allfileslength / (dim*dim));
 
-        pages.text(currentpg + '/' + allpg).move(dims.w+20, 20).font({size: 30, family: 'Sans-serif'}).attr('id', 'paginationtext');
+        pages.text(start + '/' + allpg).move(dims.w+20, 20).font({size: 30, family: 'Sans-serif'}).attr('id', 'paginationtext');
 
         var st = 100
                 , en = dims.h - 250
@@ -511,17 +390,18 @@ navButtons = function(params){
                 })
                 segs[i].on('mouseout', function(e){
                     this.opacity(0.3);
-                    var params = Session.get('browseParams');
-                    SVG.get('paginationtext').text(Math.ceil(params.start/(params.dim*params.dim)) + '/' + allpg);
+                    SVG.get('paginationtext').text(params.start + '/' + allpg);
                 })
                 segs[i].on('click', function(e){
                     SVG.get('slidercontrol').cy(this.y()+this.height()/2);
-                    var page = Math.floor((this.cy() - st) / step);
-                    Session.set('browseParams', {start: page*dim*dim+1, dim:dim, col: col, id: params.id, buttons: params.buttons, login: params.login});
+                    var page = Math.floor((this.cy() - st) / step) + 1;
+                    params.start = page;
+                    redirect(params);
                 })
             }
             var cw = wd*2;
-            var sl = slider.circle(cw).center(slidex+wd/2, st+step/2).attr('id', 'slidercontrol').stroke({width:0}).fill('#000000').opacity(0.3).on('mouseover', function(){
+            var sliderstarty = st+step/2 + step*(params.start-1);
+            var sl = slider.circle(cw).center(slidex+wd/2, sliderstarty).attr('id', 'slidercontrol').stroke({width:0}).fill('#000000').opacity(0.3).on('mouseover', function(){
                     this.opacity(0.5)
                 }).on('mouseout', function(){
                     this.opacity(0.3)
@@ -542,24 +422,23 @@ navButtons = function(params){
                 SVG.get('paginationtext').text(page + '/' + allpg);
             });
             sl.on('dragend', function(e){
-                var page = Math.floor((this.cy() - st) / step);
-                Session.set('browseParams', {start: page*dim*dim+1, dim:dim, col: col, id: params.id, buttons: params.buttons, login: params.login});
+                var page = Math.floor((this.cy() - st) / step) + 1;
+                params.start = page;
+                redirect(params);
             });
         }
         else{
-            SVG.get('slidercontrol').cy(st + step * (currentpg-1) + step/2);
+            SVG.get('slidercontrol').cy(st + step * (start-1) + step/2);
         }
     }
     console.log('/navButtons');
 }
 
-fileBMenu = function(){
+fileBMenu = function(params, files){
     console.log('fileBMenu');
 
-    var params = Session.get('browseParams');
     var start = params.start, dim = params.dim, col = params.col, id = params.id;
     var browser = SVG.get('fileBrowse');
-    var partfiles = allfiles[params.id]
     var bscale = 0.16;
 
     if(!params.buttons || params.buttons != 'nobuttons'){
@@ -584,7 +463,7 @@ fileBMenu = function(){
                         this.parent.opacity(0.7);
                     }).mousedown(function(){
                         console.log('mousedown img');
-                        editIt()
+                        editIt(params)
                     });
 
                 var menuBclone = menu.group()
@@ -603,7 +482,7 @@ fileBMenu = function(){
                         this.parent.opacity(0.7);
                     }).mousedown(function(){
                         console.log('mousedown img');
-                        editCloneIt()
+                        editCloneIt(params)
                     });
 
                 menuBdelete = menu.group()
@@ -621,7 +500,7 @@ fileBMenu = function(){
                         this.parent.opacity(0.7);
                     }).mousedown(function(){
                         console.log('mousedown img');
-                        removeIt()
+                        removeIt(params)
                     });
                 skipx = 3
             }
@@ -640,8 +519,8 @@ fileBMenu = function(){
                 }).on('mouseout', function(event){
                     this.parent.opacity(0.7);
                 }).mousedown(function(){
-                    console.log('mousedown img');
-                    exportIt()
+                    console.log('mousedown img', JSON.stringify(params));
+                    exportIt(params)
                 });
 
 
@@ -661,7 +540,7 @@ fileBMenu = function(){
                     this.parent.opacity(0.7);
                 }).mousedown(function(){
                     console.log('mousedown img');
-                    viewIt()
+                    viewIt(params)
                 });
 
             console.log('/created menu_defs')
@@ -677,7 +556,7 @@ fileBMenu = function(){
                 this.size(loader.width, loader.height)
             })
             folder.attr("id", 'folder').on('click', function(){
-                browseIt();
+                browseIt(params);
             });
             console.log('/created folder')
         }
@@ -694,13 +573,13 @@ fileBMenu = function(){
         }*/
     }
     //for(i = 0; i < len; i++){
-    for(i = 0; i < partfiles.length; i++){
+    for(i = 0; i < files.length; i++){
         var vb = SVG.get('fileBrowse').attr("viewBox").split(" ");
         if(!params.buttons || params.buttons != 'nobuttons'){
             var gbox = SVG.get('group_'+i).bbox();
             var gm = SVG.get('group_'+i).transform();
             if(col == 'file'){
-                if(partfiles[i].noofchildren > 0){
+                if(files[i].noofchildren > 0){
                     var fold = SVG.get("group_"+i).group().scale(bscale).fill('none');
                     fold.use(SVG.get('folder'));
                     fold.rect(1024,1024).radius(512).fill('#59534d').opacity(0.6);
@@ -741,10 +620,12 @@ fileBMenu = function(){
     }
     console.log('/fileBMenu');
 }
-fileBcrumbs = function(fileid){
+
+fileBcrumbs = function(params){
     console.log('fileBcrumbs');
-    var params = Session.get('browseParams');
-    var start = params.start, dim = params.dim, col = params.col, id = params.id;
+
+    var start = params.start, dim = params.dim, col = params.col, id = params.id,
+    fileid = params.id;
     if(col == "file"){
         var parent = File.findOne({_id: fileid});
         var path = parent.structuralpath;
@@ -811,7 +692,6 @@ fileBcrumbs = function(fileid){
         crumbsarr[i].on('click', function(){
             i = this.attr("id").substring(this.attr("id").indexOf('_')+1);
 
-            var params = Session.get('browseParams')
             if(noedit.indexOf(path[i]) != -1){
                 Session.set('defaultButtons', 'buttons');
                 params.buttons = 'nobuttons'
@@ -819,7 +699,7 @@ fileBcrumbs = function(fileid){
             params.id = path[i]
             params.col = cols[i]
             params.start = 1
-            Session.set('browseParams', params);
+            redirect(params);
         });
         y = y + f.height*scale + 20;
         gr[i].on('mouseover', function(){
@@ -834,78 +714,51 @@ fileBcrumbs = function(fileid){
     console.log('/fileBcrumbs');
 }
 
-editIt = function editIt(){
-    var params = Session.get('browseParams');
+editIt = function editIt(params) {
     if(params.col == 'file')
         window.open('/'+ params.col +'m/'+Session.get("fileBIt"), '_blank');
     //else
 
 }
 
-viewIt = function viewIt(){
-    var params = Session.get('browseParams');
+viewIt = function viewIt(params) {
     window.open('/viewer?url='+ params.col +'/'+Session.get("fileBIt"), '_blank');
 }
 
-exportIt = function(){
-    var params = Session.get('browseParams');
+exportIt = function(params) {
     window.open('/'+ params.col +'/'+Session.get("fileBIt"), '_blank');
 }
 
-editCloneIt = function editCloneIt(){
+editCloneIt = function editCloneIt(params){
     console.log('editCloneItstart')
     if(Meteor.userId()){
-        var params = Session.get('browseParams');
         if(params.col == 'file')
-            cloneFile(Session.get("fileBIt"), function(res){
-                Meteor.subscribe('filepublish', res, function(err, res2){
-                    reloadSubscriptions()
-                })
-                Meteor.setTimeout(function(){
-                    Meteor.call('getComponentsIds', res, function(err, res2){
-                        if(err)
-                            console.log(err)
-                        if(res2){
-                            subscriptions.groups.push(Meteor.subscribe('groupspublish', res2.groups))
-                            subscriptions.items.push(Meteor.subscribe('itemspublish', res2.items))
-                        }
-                    })
-                }, 10000)
+            Meteor.call('cloneFile', Session.get("fileBIt"), function(err, res){
+              if(err) console.log(err)
+              if(res) {
+                console.log('clonefile res', res);
                 window.open('/filem/'+res, '_blank');
+              }
             });
-        else
-            cloneGroupFile(Session.get("fileBIt"), function(res){
-                Meteor.subscribe('filepublish', res, function(err, res2){
-                    reloadSubscriptions()
-                })
-                Meteor.setTimeout(function(){
-                    Meteor.call('getComponentsIds', res, function(err, res2){
-                        if(err)
-                            console.log(err)
-                        if(res2){
-                            subscriptions.groups.push(Meteor.subscribe('groupspublish', res2.groups))
-                            subscriptions.items.push(Meteor.subscribe('itemspublish', res2.items))
-                        }
-                    })
-                }, 10000)
-                window.open('/filem/'+res, '_blank');
-            });
+        /*else
+            Meteor.call('cloneGroupFile', Session.get("fileBIt"), function(err, res){
+              console.log('cloneGroupFile res', res)
+              window.open('/filem/'+res, '_blank');
+            });*/
     }
 }
 
-browseIt = function browseIt(){
-    var params = Session.get('browseParams');
+browseIt = function browseIt(params){
     var defaultButtons = Session.get('defaultButtons');
     if(params.buttons != defaultButtons){
         params.buttons = defaultButtons;
     }
     params.id = Session.get('fileBIt')
     params.start = 1
-    Session.set('browseParams', params);
+    redirect(params);
 }
 
-disectIt = function disectIt(){
-    var params = Session.get('browseParams');
+disectIt = function disectIt(params){
     var col = 'item';
     if(params.col == 'file')
         var col = 'group';
@@ -917,31 +770,25 @@ disectIt = function disectIt(){
     params.id = Session.get('fileBIt')
     params.col = col
     params.start = 1
-    Session.set('browseParams', params)
+    redirect(params);
 
 }
 
-removeIt = function removeIt(){
+removeIt = function removeIt(params){
     if(File.findOne({_id: Session.get("fileBIt")}).creatorId == Meteor.userId() || Meteor.user().profile.role == 'admin'){
-        var params = Session.get('browseParams');
         if(params.col == 'file')
-            removeFile(Session.get("fileBIt"), function(){
-                reloadSubscriptions()
-            });
+            removeFile(Session.get("fileBIt"), function(){});
         else
             if(params.col == 'group'){
                 if(Group.findOne({_id: Session.get("fileBIt")}).fetch().length > 0)
                     removeGroup(Session.get("fileBIt"), true, function(){
-                reloadSubscriptions()
             });
                 else
                     removeItem(Session.get("fileBIt"), function(){
-                reloadSubscriptions()
             });
             }
             else
                 removeItem(Session.get("fileBIt"), function(){
-                reloadSubscriptions()
             });
     }
 }

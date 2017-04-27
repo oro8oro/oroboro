@@ -5,16 +5,32 @@
 # but you can also edit it by hand.
 
 meteor-platform
+check
+reactive-var
 insecure
+
+mrt:moment
+
 accounts-password
+accounts-ui
 alanning:roles
+
 aldeed:simple-schema
 aldeed:collection2
-mrt:moment
+reywood:publish-composite
+matb33:collection-hooks
+
+
 iron:router
 manuelschoebel:wait-on-lib
 nimble:restivus
-matb33:collection-hooks
+
 markdown
-accounts-ui
 perak:markdown
+
+#kadira:flow-router
+#kadira:blaze-layout
+#meteorhacks:picker
+
+meteorhacks:subs-manager
+meteorhacks:kadira
