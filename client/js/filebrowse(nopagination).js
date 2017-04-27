@@ -96,9 +96,15 @@ Template.filebrowse.onRendered(function(){
         data.dim = parseInt(data.dim);
 
         if(data.id != vips.myWork) {
-          var files = Dependency.find({fileId2: Template.currentData().id, type:1}, {sort: {dateModified: -1}})
-            .map(function(dep) {
-              return File.findOne({_id: dep.fileId1});
+          var files = [];
+          Dependency.find({
+            fileId2: Template.currentData().id, type:1
+          }, {sort: {dateModified: -1}})
+            .forEach(function(dep) {
+              var f = File.findOne({_id: dep.fileId1});
+              if(f) {
+                files.push(f);
+              }
             });
         }
         else {
