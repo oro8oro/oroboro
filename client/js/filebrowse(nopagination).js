@@ -734,8 +734,11 @@ editCloneIt = function editCloneIt(params){
     if(Meteor.userId()){
         if(params.col == 'file')
             Meteor.call('cloneFile', Session.get("fileBIt"), function(err, res){
-              console.log('clonefile res', res)
-              window.open('/filem/'+res, '_blank');
+              if(err) console.log(err)
+              if(res) {
+                console.log('clonefile res', res);
+                window.open('/filem/'+res, '_blank');
+              }
             });
         /*else
             Meteor.call('cloneGroupFile', Session.get("fileBIt"), function(err, res){
