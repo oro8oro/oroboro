@@ -199,24 +199,6 @@ Meteor.publish('file', function(fileId){
             {target: { $in: f.itemids}},
             ]})
     ]
-
-
-    /*
-    //get group and items ids
-    var kidsIds = file_components_ids(fileId);
-    kidsIds.groups = kidsIds.groups.reverse();
-    kidsIds.items = kidsIds.items.reverse();
-    var doc = File.findOne({_id: fileId});
-    var userIds = [doc.creatorId].concat(doc.permissions.view).concat(doc.permissions.edit).concat(doc.selected);
-    var fileIds = [fileId].concat(doc.structuralpath).concat(doc.dependencypath)
-
-    return [ 
-        Group.find({_id: {$in: kidsIds.groups}}),
-        Item.find({_id: {$in: kidsIds.items}}),
-        Meteor.users.find({_id: {$in: userIds}}),
-        File.find({_id: {$in: fileIds}})
-        ];
-    */
 });
 
 Meteor.publish('userWork', function(type, skip, limit){
@@ -243,7 +225,7 @@ Meteor.publish('filebrowse', function(id, col){
             var kidsIds = {items: [], groups: []}
             var deps = [];
             for(var i = 0; i < kids.length; i++){
-                
+
                 var d = Dependency.find({fileId2: kids[i], type: 1}).map(function(doc){
                     return doc._id;
                 })
@@ -287,7 +269,7 @@ Meteor.publish('filebrowse', function(id, col){
         }
     });
 
-    return [ 
+    return [
         Group.find({_id: {$in: kidsIds.groups}}),
         Item.find({_id: {$in: kidsIds.items}}),
         Meteor.users.find({_id: {$in: userIds}}),
@@ -344,7 +326,7 @@ Meteor.publish('filebrowsePage', function(id, col, start, dim){
         }
     });
 
-    return [ 
+    return [
         Group.find({_id: {$in: kidsIds.groups}}),
         Item.find({_id: {$in: kidsIds.items}}),
         Meteor.users.find({_id: {$in: userIds}}),
@@ -367,26 +349,3 @@ Meteor.publish('filemd', function(q){
                 {uuid: q}
                 ]});
 })
-
-
-
-/*
-Meteor.publish('tabular_files', function (tableName, ids, fields) {
-    check(tableName, String);
-    check(ids, [String]);
-    check(fields, Match.Optional(Object));
-    Publish.relations(this, File.find({_id: {$in: ids}}, {fields: fields}), function (id, doc) {  
-          doc.fileId2 = this.changeParentDoc(Dependency.find({fileId1: doc._id},{fileId2:1, _id: 0}), function (id, doc){   
-                return doc.fileId2;
-            }, 'fileId2');
-          doc.imagePath = this.changeParentDoc(Images.find({_id: doc.image}), function (id, doc){
-                var key = doc.copies.images.key.replace(/-/g,"/");
-                return {name: doc.original.name, src: "cfs/files/"+key};
-        }, 'imagePath');
-          doc.creator = this.changeParentDoc(Meteor.users.find({_id: doc.creatorId}), function (id, doc){
-                return doc.profile.name;
-            }, 'creator');
-      });
-      return this.ready();
-});
-*/

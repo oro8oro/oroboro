@@ -109,7 +109,7 @@ recursive_group = function recursive_group(group){
         script = script + '>';
         if(group.type == "layer")
             script = script + '<title>' + group._id + '</title>';
-    
+
         script = script + build_group(group);
         if(subgroups.length > 0){
             for(g in subgroups)

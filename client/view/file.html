@@ -1,51 +1,3 @@
-<!--
-<template name="files">
-    {{#if isInRole 'admin'}}
-        {{> insert_file}}
-    {{/if}}
-    {{> view_files}}
-</template>
-
-<template name="insert_file">
-    <div class="insert_button">
-        {{#afModal class="btn btn-default btn-block" collection="File" fields="uuid,title,width,height,image,fileType,script,permissions,dateModified" id="insert_file" operation="insert" buttonContent="Insert File" title="Insert a New File" buttonClasses="btn-primary"}}New File{{/afModal}}
-    </div>
-</template>
-
-<template name="view_files">
-    {{> tabular table=TabularTables.File class="table table-striped table-bordered table-condensed"}}
-</template>
-
-<template name="operation_file">
-    <div class="block">
-        <div class="flex">
-            <div class="update_button">
-                {{#if isInRole 'admin'}}
-                    {{#afModal class="btn btn-default btn-block" collection="File" fields="uuid,title,width,height,image,fileType,script,permissions,dateModified" id="update_file" operation="update" doc=this._id buttonContent="Update File" title="Update File" buttonClasses="btn-primary"}}<span class="glyphicon glyphicon-upload" aria-hidden="true"></span>{{/afModal}}
-                {{/if}}
-            </div>
-            <div class="remove_button">
-                {{#if isInRole 'admin'}}
-                    {{#afModal class="btn btn-default btn-block" collection="File" fields="userId,title" id="remove_file" operation="remove" doc=this._id buttonContent="Remove File" title="Remove File" buttonClasses="btn-primary" prompt="Are you sure? This will delete all groups and shapes under this File."}}<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>{{/afModal}}
-                {{/if}}
-            </div>
-        </div>
-        <div class="flex">
-            <div class="view_button">
-                <a href="/file/{{this._id}}" target="_blank">
-                <button class="btn btn-default btn-block" id="view_file"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></button></a>
-            </div>
-            <div class="edit_button">
-                <a href="/filem/{{this._id}}" target="_blank">
-                <button class="btn btn-default btn-block" id="edit_file"><span class="glyphicon glyphicon-edit" aria-hidden="true"></span></button></a>
-            </div>
-        </div>
-    </div>
-</template>
-
-<template name="show_file">
-</template>
--->
 <template name="svgEditor">
     <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="svgEditor">
     </svg>
@@ -121,20 +73,20 @@
     <div>
         <select id = 'selectfiletype1' onchange='setType();'>
             {{# each optionstype1}}
-                <option value="{{this}}">{{this}}</option> 
+                <option value="{{this}}">{{this}}</option>
             {{/each}}
         </select>
         <input type='text' id='file1'/>
         {{selectedfiles1}}/{{totalfiles}}
         <select id = 'selectfile1' onchange='setDep(1);'>
             {{# each options1}}
-                <option value="{{this.id}}">{{this.title}}</option> 
+                <option value="{{this.id}}">{{this.title}}</option>
             {{/each}}
         </select>
         <select id = 'selectcol1'>
             <option selected></option>
             {{# each options11}}
-                <option value="{{this}}">{{this}}</option> 
+                <option value="{{this}}">{{this}}</option>
             {{/each}}
         </select>
         <a href="/file/{{fileId1}}" target="_blank"><button id="viewFile1">view</button></a>
@@ -145,20 +97,20 @@
     <div>
         <select id = 'selectfiletype2' onchange='setType();'>
             {{# each optionstype2}}
-                <option value="{{this}}">{{this}}</option> 
+                <option value="{{this}}">{{this}}</option>
             {{/each}}
         </select>
         <input type='text' id='file2'/>
         {{selectedfiles2}}/{{totalfiles}}
         <select id = 'selectfile2' onchange='setDep(2);'>
             {{# each options2}}
-                <option value="{{this.id}}">{{this.title}}</option> 
+                <option value="{{this.id}}">{{this.title}}</option>
             {{/each}}
         </select>
         <select id = 'selectcol2'>
             <option selected></option>
             {{# each options22}}
-                <option value="{{this}}">{{this}}</option> 
+                <option value="{{this}}">{{this}}</option>
             {{/each}}
         </select>
         <a href="/file/{{fileId2}}" target="_blank"><button id="viewFile2">view</button></a>
@@ -170,7 +122,7 @@
     <div>
         <select id = 'selecttype'>
             {{# each optionst}}
-                <option value="{{this}}">{{this}}</option> 
+                <option value="{{this}}">{{this}}</option>
             {{/each}}
         </select>
         <button id="newDep" onclick="insertDep();">insert</button>
@@ -207,8 +159,8 @@
         <jscut-simulate-gcode
             width="400"
             height="400"
-            gcode="{{gcode}}" 
-            cutterdiameter="{{cutterDiameter}}" 
+            gcode="{{gcode}}"
+            cutterdiameter="{{cutterDiameter}}"
             cutterheight="{{cutterHeight}}"
             time1="{{time1}}"
             time2="{{time2}}"

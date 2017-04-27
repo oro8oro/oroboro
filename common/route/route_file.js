@@ -19,7 +19,7 @@ Router.map(function(){
             var file = File.findOne({_id: this.params._id});
             if(typeof file == 'undefined')
                 file = File.findOne({title: this.params._id});
-            if(typeof file != 'undefined'){      
+            if(typeof file != 'undefined'){
                 if(file.fileType == 'image/jpeg'){
                     //var headers = {'Content-type': file.fileType, 'Access-Control-Allow-Origin' : '*', Location: file.script};
                     this.response.writeHead(302, {Location: file.script});
@@ -49,7 +49,7 @@ Router.map(function(){
             var file = File.findOne({_id: this.params._id});
             if(typeof file == 'undefined')
                 file = File.findOne({title: this.params._id});
-            if(typeof file != 'undefined'){      
+            if(typeof file != 'undefined'){
                 if(file.fileType == 'image/jpeg'){
                     //var headers = {'Content-type': file.fileType, 'Access-Control-Allow-Origin' : '*', Location: file.script};
                     this.response.writeHead(302, {Location: file.script});
@@ -200,7 +200,7 @@ Router.map(function(){
             var file = File.findOne({_id: this.params._id});
             if(typeof file == 'undefined')
                 file = File.findOne({title: this.params._id});
-            if(typeof file != 'undefined'){      
+            if(typeof file != 'undefined'){
                 if(file.fileType == 'image/jpeg'){
                     //var headers = {'Content-type': file.fileType, 'Access-Control-Allow-Origin' : '*', Location: file.script};
                     this.response.writeHead(302, {Location: file.script});
@@ -431,7 +431,7 @@ Router.route('/browse/:_id/:dim', {
         this.subscribe('dependencies').wait();
     },
     data: function(){
-        return {id: this.params._id, dim: this.params.dim};   
+        return {id: this.params._id, dim: this.params.dim};
     },
      waitOn: function(){
         return IRLibLoader.load(server + '/file/GZxMGchzEkKFtakFh');

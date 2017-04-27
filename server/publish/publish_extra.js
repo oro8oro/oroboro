@@ -1,5 +1,5 @@
 /*
-Meteor.publish(null, function (){ 
+Meteor.publish(null, function (){
   return Meteor.roles.find({});
 });
 */
