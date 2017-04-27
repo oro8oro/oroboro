@@ -249,7 +249,7 @@ resizeItem = function(item, dx, dy, sidex, sidey){
 }
 
 transformGroup = function(item, distx, disty, sidex, sidey){
-    console.log(distx);console.log(disty);console.log(sidex);console.log(sidey);
+    console.orolog(distx);console.orolog(disty);console.orolog(sidex);console.orolog(sidey);
     var pp = item.transform();
     var box = item.bbox();
     var vals = [];
@@ -270,7 +270,7 @@ transformGroup = function(item, distx, disty, sidex, sidey){
         vals[3] = pp.d + disty / box.height;
     }
     vals[1] = pp.b; vals[2] = pp.c;
-    console.log(vals);
+    console.orolog(vals);
     return vals;
 }
 
@@ -492,7 +492,7 @@ rotateMatrix = function (a, rad, pivot) {
         out[4] = a4;
         out[5] = a5;
     }
-    console.log(JSON.stringify(out));
+    console.orolog(JSON.stringify(out));
     if(a instanceof Array)
         return out;
     else
@@ -1544,7 +1544,7 @@ buildAttractors = function(p, points, hinge, attr, id, attrs, midds, newhinge){
             this.opacity(0.6);
         });
         index[k[i]].attr.on('dblclick', function(e){
-            console.log('dblclick')
+            console.orolog('dblclick')
             var n = attrs[p]["attr"+this.attr("no")];
             if(n.p == 1){
                 points.subpath[n.p][0] = 'M'
@@ -2029,7 +2029,7 @@ buildSelectorLocked = function(id){
 /*
 showMenu = function(){
     if(global_oro_variables.selected.members){
-        console.log(global_oro_variables.selected.members.length);
+        console.orolog(global_oro_variables.selected.members.length);
         var members = global_oro_variables.selected.members;
         if(members.length == 0){
             if(SVG.get("svgMenu") != undefined)
@@ -2054,7 +2054,7 @@ showMenu = function(){
                     for(i in members){
                         if(SVG.get(members[i].attr("selected")).attr("type") == type){
                             if(SVG.get("svgMenu").attr("uuid") != m+"multiple_" + type){
-                                console.log(m+"multiple_" + type);
+                                console.orolog(m+"multiple_" + type);
                                 SVG.get("svgMenu").remove();
                                 buildMenu(SVG.get("svgEditor"),m+"multiple_" + type);
                             }
@@ -2131,7 +2131,7 @@ saveItemLocalisation = function(id){
         val = [item.attr("x"), item.attr("y"), item.attr("width"), item.attr("height")].join(',');
 
     upd["pointList"] = val;
-    console.log('saveItemLocalisation: ' + JSON.stringify(upd))
+    console.orolog('saveItemLocalisation: ' + JSON.stringify(upd))
     //Meteor.call('update_document', "Item", id, upd);
     oro.wraps.update_document("Item", id, upd);
 }
@@ -2223,7 +2223,7 @@ updateFont = function(item, font){
 }
 
 updateItem = function(id, fields){
-    console.log(fields);
+    console.orolog(fields);
     var item = SVG.get(id);
     if(fields.groupId){
         if(SVG.get(fields.groupId)){
@@ -2236,7 +2236,7 @@ updateItem = function(id, fields){
             if(SVG.get(fields.groupId))
                 var parent = SVG.get(fields.groupId);
             else
-                console.log('parent group does not exist');
+                console.orolog('parent group does not exist');
         else
             var parent = item.parent;
         if(SVG.get('box_'+id))
@@ -2368,7 +2368,7 @@ unlockItems = function(){
 }
 
 select_item = function(id, multiple){
-    console.log('start select item');
+    console.orolog('start select item');
     var type = SVG.get(id).attr("type");
     if(['para_simple_path', 'para_complex_path', 'embeddedCanvas', 'pathEquation', 'pathEquationPolar'].indexOf(type) == -1 && !multiple && SVG.get(id).attr('role') != 'connector'){
         var results = buildSelector(id, type);
@@ -2432,11 +2432,11 @@ build_item = function(g,it){
     else if(type == 'markdown'){
             var points = split_oro_points(it.pointList);
             var item = g.foreignObject(points[2],points[3]).attr("id", it._id).move(points[0], points[1]).appendChild("div", {id: "markdown_"+it._id});
-            console.log(it.text);
+            console.orolog(it.text);
             $.ajax({
                 url: it.text,
                 success: function(data){
-                    console.log('success')
+                    console.orolog('success')
                     global_oro_variables.templates['markdownTemplate'] = Blaze.renderWithData(Template.markdownTemplate, {markdowndata: data}, document.getElementById("markdown_"+it._id));
                 }
             });
@@ -2564,7 +2564,7 @@ build_item = function(g,it){
                         dif[i] = {x: p[0] - SVG.get(groupids[i]).x(), y: p[1] - SVG.get(groupids[i]).y()}
                 }
                 if(ini.x){
-                    console.log('bubble');
+                    console.orolog('bubble');
                     var self = this;
                     //selection.each(function(i){
                     global_oro_variables.selected.each(function(i){
@@ -2596,7 +2596,7 @@ build_item = function(g,it){
                     positionSelector(this.attr('locked'));
                 }
                 if(ini.x){
-                    console.log('bubble');
+                    console.orolog('bubble');
                     var self = this;
                     var difx = self.x() - ini.x;
                     var dify = self.y() - ini.y;
@@ -2630,7 +2630,7 @@ build_item = function(g,it){
                     groupids = null;
                 }
                 if(ini.x){
-                    console.log('bubble');
+                    console.orolog('bubble');
                     var self = this;
                     //selection.each(function(i){
                     global_oro_variables.selected.each(function(i){
@@ -2673,7 +2673,7 @@ removeGroup = function(id, deep, callb){
     }
     Meteor.call('remove_document', 'Group', id, function(err, res){
         if(err)
-            console.log(err)
+            console.orolog(err)
         if(res)
             if(callb)
                 callb(res)
@@ -2689,7 +2689,7 @@ removeFile = function(id, callb){
         Meteor.call('remove_document', 'Dependency', deps[d]._id);
     Meteor.call('remove_document', 'File', id, function(err, res){
         if(err)
-            console.log(err)
+            console.orolog(err)
         if(res)
             if(callb)
                 callb(res)
@@ -2708,7 +2708,7 @@ build_group_client = function (g, group, subgroups){
             all.sort(function(a, b){
                 return a.ordering - b.ordering
             })
-            console.log(JSON.stringify(all));
+            console.orolog(JSON.stringify(all));
             for(i in all){
                 if(all[i].pointList)
                     build_item(g, all[i]);
@@ -2722,7 +2722,7 @@ build_group_client = function (g, group, subgroups){
 
 recursive = 0;
 recursive_group_client = function (parent, group, linkedgs){
-    //console.log("recursive: ", recursive);
+    //console.orolog("recursive: ", recursive);
     //if(recursive > 500) return;
     //recursive = recursive + 1;
     var subgroups = Group.find({ groupId: group._id }, { sort: { ordering:1 }}).fetch();
@@ -2820,7 +2820,7 @@ recursive_group_client = function (parent, group, linkedgs){
         //id for menu_group.multiple.common: pW4eF4gT67dYk2zDo
         //id for menu_group.multiple_subjects: BzPQYeEQ4TtufSEnF
         var common_group = Group.findOne({uuid: group.uuid.substring(0,group.uuid.lastIndexOf('.'))+".common"});
-        //console.log(group.uuid.substring(0,group.uuid.lastIndexOf('.'))+".common");
+        //console.orolog(group.uuid.substring(0,group.uuid.lastIndexOf('.'))+".common");
         if(common_group){
             var common_group_items = Group.find({ groupId: common_group._id }, { sort: { ordering:1 }}).fetch();
             var menu_button = subparent.group().attr("id","menu_main_button");
@@ -2858,7 +2858,7 @@ recursive_group_client = function (parent, group, linkedgs){
                 var func = this.attr("function").substring(this.attr("function").lastIndexOf('.')+1);
             else
                 var func = this.attr("function");
-            console.log(func);
+            console.orolog(func);
             window[func](this, event);
         });
     }
@@ -2929,7 +2929,7 @@ no_of_points = function (path) {
     var ct1 = 4.5;
     var ct2 = 1;
     var no_of_points = Math.floor(len/diag * ct1 * path.array.value.length);
-    //console.log(path.attr("name") + " should have no_of_points: ", no_of_points);
+    //console.orolog(path.attr("name") + " should have no_of_points: ", no_of_points);
     return no_of_points;
 }
 
@@ -2955,7 +2955,7 @@ getSimplePathArray = function (path, no_of_points) {
 getComplexity = function (path) {
     var no_of_points = path.array.value.length;
     var complexity = Math.log2(no_of_points);
-    //console.log("COMPLEXITY: "+path.attr("name") + ": " + complexity);
+    //console.orolog("COMPLEXITY: "+path.attr("name") + ": " + complexity);
     return complexity;
 }
 
@@ -3186,7 +3186,7 @@ absolutizePath = function(path){
                 tempy = points[p][6];
             }
     }
-    console.log(points);
+    console.orolog(points);
     //path.plot(points);
 }
 
@@ -3339,9 +3339,9 @@ polylineToPath = function polylineToPath(line){
 
 insertItem = function(object, callb){
     Meteor.call('insert_document', 'Item', object, function(err, res){
-        if(err) console.log(err);
+        if(err) console.orolog(err);
         if(res){
-            console.log(res);
+            console.orolog(res);
             if(callb)
                 callb(res)
         }
@@ -3349,9 +3349,9 @@ insertItem = function(object, callb){
 }
 insertGroup = function(object, callb){
     Meteor.call('insert_document', 'Group', object, function(err, res){
-        if(err) console.log(err);
+        if(err) console.orolog(err);
         if(res){
-            console.log(res);
+            console.orolog(res);
             if(callb)
                 callb(res);
         }
@@ -3359,7 +3359,7 @@ insertGroup = function(object, callb){
 }
 
 cloneItem = function cloneItem(it, groupId, locked, callb){
-    console.log('cloneItem');
+    console.orolog('cloneItem');
     if(typeof it === 'string')
         it = Item.findOne({_id: it});
     it.original = it._id;
@@ -3376,11 +3376,11 @@ cloneItem = function cloneItem(it, groupId, locked, callb){
     if(!it.locked && it.parameters && it.parameters.parametrizedGroup)
         delete it.parameters.parametrizedGroup
     insertItem(it, callb);
-    console.log('/cloneItem');
+    console.orolog('/cloneItem');
 }
 
 cloneGroup = function cloneGroup(gr, parentId, parent){
-    console.log('cloneGroup');
+    console.orolog('cloneGroup');
     if(typeof gr === 'string')
         gr = Group.findOne({_id: gr});
     var no = Group.find({uuid: gr.uuid}).count();
@@ -3403,14 +3403,14 @@ cloneGroup = function cloneGroup(gr, parentId, parent){
         }
         //var groups = Group.find({groupId: groupId}).fetch();
         //var items = Item.find({groupId: groupId}).fetch();
-        console.log(JSON.stringify(items));
+        console.orolog(JSON.stringify(items));
         for(g in groups)
             cloneGroup(groups[g], res, 'groupId');
         for(i in items)
             cloneItem(items[i], res);
     });
 
-    console.log('/cloneGroup');
+    console.orolog('/cloneGroup');
 }
 
 
@@ -3462,7 +3462,7 @@ paraSquare = function(obj){
 }
 
 paraRect = function(obj, val){
-    console.log(obj);
+    console.orolog(obj);
     var delta = Math.sqrt(Math.sqrt(Math.sqrt(2)));
     var x = Number(obj.x), y = Number(obj.y), w = Number(obj.width), h = Number(obj.height), rx = Number(obj.rx), ry = Number(obj.ry);
     //if(typeof val != 'undefined' && obj.maintainRatio)
@@ -3483,7 +3483,7 @@ paraRect = function(obj, val){
 }
 
 paraEllipse = function(obj, val){
-    console.log(obj);
+    console.orolog(obj);
     var delta = Math.sqrt(Math.sqrt(Math.sqrt(2)));
     var x = Number(obj.x), y = Number(obj.y), rx,ry;
     rx = Number(obj.rx);
@@ -3508,23 +3508,23 @@ paraCircle = function(obj){
 
 paraFormulae = function(latex){
     return 'http://latex.codecogs.com/svg.latex?'+latex;
-    //console.log(it.text);
+    //console.orolog(it.text);
     /*
     $.ajax({
         url: it.text,
         success: function(data) {
-            console.log(data);
+            console.orolog(data);
         }
     });*/
 /*
     $.get(it.text, function(data){
-        console.log(data);
+        console.orolog(data);
     })*/
 }
 
 paraTextPath = function(parameters, update){
     var obj = parameters.params;
-    //console.log(obj);
+    //console.orolog(obj);
     var path = SVG.get(obj.elements.path);
     var text = SVG.get(obj.elements.text);
     path.show();
@@ -3752,11 +3752,11 @@ pointSymmetry = function(parameters, update){
 /*
     if(SVG.get('pointSymmetry_'+obj.elements.path))
         SVG.get('pointSymmetry_'+obj.elements.path).remove()
-    console.log(path)
-    console.log(path.parent)
+    console.orolog(path)
+    console.orolog(path.parent)
     var point = path.parent.circle(5).fill('#ce2525').stroke({color: '#ffffff', width: 1}).opacity(0.6);
     point.center(obj.pointX, obj.pointY).attr('id', 'pointSymmetry_'+obj.elements.path);
-    console.log(point);
+    console.orolog(point);
     */
     /*
     point.draggable();
@@ -3826,7 +3826,7 @@ pointSymmetry = function(parameters, update){
             }
         }
         paths[r] = path.clone()
-        //console.log('-----pointSymmetry result', r, JSON.stringify(arrs[r]))
+        //console.orolog('-----pointSymmetry result', r, JSON.stringify(arrs[r]))
         paths[r].plot(arrs[r]).attr('id', 'pointSymmetry_' + r);
     }
 
@@ -3884,7 +3884,7 @@ lineSymmetry = function(parameters, update){
             if(arrs[r][i][0] != 'Z'){
                 var len = arrs[r][i].length;
                 if(dscale > 0){
-                    //console.log('dscale '+ dscale);
+                    //console.orolog('dscale '+ dscale);
                     bigx = obj.pointX - arrs[r][i][len-2]
                     bigy = obj.pointY - arrs[r][i][len-1]
                     //dx = dx + bigx*(1-dscale)
@@ -3892,11 +3892,11 @@ lineSymmetry = function(parameters, update){
                     dx = dx + (bigx-dx)*(1-dscale)
                     dy = dy + (bigy-dy)*(1-dscale)
                 }
-                //console.log(dx);
-                //console.log(dy);
+                //console.orolog(dx);
+                //console.orolog(dy);
                 if(m1 != Infinity){
                     b2 = arrs[r][i][len-1] - m2 * arrs[r][i][len-2];
-                    //console.log(b2);
+                    //console.orolog(b2);
                     x = (b2-b1) / (m1-m2);
                     y = m1 * x + b1;
                 }
@@ -3908,8 +3908,8 @@ lineSymmetry = function(parameters, update){
                     x = arrs[r][i][len-2];
                     y = obj.pointY1;
                 }
-                //console.log(x);
-                //console.log(y);
+                //console.orolog(x);
+                //console.orolog(y);
                 var p = rotate_point(x, y, a, [arrs[r][i][len-2]+dx, arrs[r][i][len-1]+dy ])
                 arrs[r][i][len-2] = p[0];
                 arrs[r][i][len-1] = p[1];
@@ -4255,12 +4255,12 @@ paraQrCode = function(parameters, update){
 
 // in connectableextend.js
 build_connectors = function(connectors){
-    //console.log(connectors);
+    //console.orolog(connectors);
 
     if(!(connectors instanceof Array))
         connectors = [connectors];
 
-    //console.log(connectors);
+    //console.orolog(connectors);
 
     var links = SVG.get('connectors_links'),
         markers = SVG.get('connectors_markers'),
@@ -4272,7 +4272,7 @@ build_connectors = function(connectors){
         if(!connectors[i].connector)
             connectors[i] = Connector.findOne({_id: connectors[i]});
 
-        //console.log(connectors[i])
+        //console.orolog(connectors[i])
 
         options = {};
         if(connectors[i].connector && SVG.get(connectors[i].connector)){
@@ -4323,12 +4323,12 @@ build_connectors = function(connectors){
 }
 
 remove_connectors = function(connectors){
-    console.log(connectors);
+    console.orolog(connectors);
 
     if(!(connectors instanceof Array))
         connectors = [connectors];
 
-    console.log(connectors);
+    console.orolog(connectors);
 
     var index;
     for(var i = 0 ; i < connectors.length; i++){
@@ -4337,7 +4337,7 @@ remove_connectors = function(connectors){
         else
             index = connectors[i]
 
-        console.log(index);
+        console.orolog(index);
         if(global_oro_variables.connections[index]){
             global_oro_variables.connections[index].connector.remove();
             delete global_oro_variables.connections[index]

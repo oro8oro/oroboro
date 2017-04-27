@@ -5,7 +5,7 @@ Meteor.publish('grouppublish', function(id){
 
 Meteor.publish('groupspublish', function(ids){
     check(ids, [String])
-    //console.log('groupspublish: '+JSON.stringify(ids));
+    //console.orolog('groupspublish: '+JSON.stringify(ids));
     return Group.find({_id: {$in: ids}})
 })
 

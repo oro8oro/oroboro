@@ -1,7 +1,7 @@
 buildMenu = function buildMenu(editor,subject){
-    console.log(subject);
+    console.orolog(subject);
     var group = Group.findOne({uuid: subject});
-    console.log(group);
+    console.orolog(group);
     var menu = editor.group().attr("id", "svgMenu").attr("uuid", subject);
     recursive_group_client(menu, group);
     var kids = menu.children();
@@ -13,14 +13,14 @@ menuItemBox = function menuItemBox(){
     if(global_oro_variables.selected.members && global_oro_variables.selected.members.length){
         var elem = global_oro_variables.selected.members[0];
         var selected = SVG.get(elem.attr("selected"));
-        console.log("Type: ", selected.attr("type"));
+        console.orolog("Type: ", selected.attr("type"));
         if(selected.parent.attr("type") != 'layer'){
             var selectedgroup = Group.findOne({_id: selected.parent.attr("id")}).selected;
-            console.log(selectedgroup)
+            console.orolog(selectedgroup)
             var id;
             if(selectedgroup != 'null' && selected.parent.parent && selected.parent.parent.attr("type") != 'layer'){
                 id = selected.parent.parent.attr("id")
-                console.log(id)
+                console.orolog(id)
                 deselect();
                 var selector = buildSelector(id, selected.parent.parent.attr("type"));
             }
@@ -31,7 +31,7 @@ menuItemBox = function menuItemBox(){
             }
             if(selector){
                 global_oro_variables.selected.add(selector);
-                console.log(id);
+                console.orolog(id);
                 Meteor.call('update_document', 'Group', id, {selected: Meteor.userId()});
                 showDatGui();
                 Session.set("selected", "true");
@@ -56,7 +56,7 @@ menuItemGroup = function menuItemGroup(){
         /*
         Meteor.call('insert_document', 'Group', doc, function(error, id){
             if(error)
-                console.log(error);
+                console.orolog(error);
             if(id)
                 for(i in ids)
                     Item.update({_id: ids[i]}, {$set: {groupId: id}});
@@ -77,8 +77,8 @@ menuItemUnGroup = function menuItemUnGroup(){
                 else
                     itids.push(this.attr("id"))
             });
-            console.log(itids)
-            console.log(grids)
+            console.orolog(itids)
+            console.orolog(grids)
 
             var upd = {groupId: newid}
 
@@ -249,15 +249,15 @@ updateItemDB = function updateItemDB(item, groupId, locked){
     if(locked)
         upd.locked = groupId;
     //todo: parameters
-    console.log(upd);
+    console.orolog(upd);
     var id = item.attr("id");
-    console.log(id);
+    console.orolog(id);
     if(Item.findOne({_id: id})){
-        console.log('update');
+        console.orolog('update');
         Meteor.call('update_document', 'Item', id, upd);
     }
     else{
-        console.log('insert');
+        console.orolog('insert');
         insertItem(upd);
     }
 }
@@ -265,7 +265,7 @@ updateItemDB = function updateItemDB(item, groupId, locked){
 updateGroupDB = function updateGroupDB(group, parentId, layer, locked){
     var upd = {};
     var id = group.attr("id");
-    console.log(id);
+    console.orolog(id);
     if(group.attr("opacity"))
         upd.transparency = group.attr("opacity");
     if(layer){
@@ -281,9 +281,9 @@ updateGroupDB = function updateGroupDB(group, parentId, layer, locked){
     var m = group.transform();
     if(m.a != 1 || m.b != 0 || m.c != 0 || m.d != 1 || m.e != 0 || m.f != 0)
         upd.transform = [m.a, m.b, m.c, m.d, m.e, m.f].join(',');
-    console.log(upd);
+    console.orolog(upd);
     if(Group.findOne({_id: id})){
-        console.log('update');
+        console.orolog('update');
         Meteor.call('unset_document', 'Group', id, ['groupId', 'fileId']);
         Meteor.call('update_document', 'Group', id, upd);
         group.each(function(i, children) {
@@ -297,7 +297,7 @@ updateGroupDB = function updateGroupDB(group, parentId, layer, locked){
     else{
         //don't know if updateGroupDB & ItemDB can be called from a callback to insertGroup(upd,callb);
         insertGroup (upd, function(id){
-            console.log(id);
+            console.orolog(id);
                 group.each(function(i, children) {
                     if(this.type == 'g')
                         updateGroupDB(this, id, false);
@@ -313,14 +313,14 @@ updateFileDB = function updateFileDB(root){
     var id = Session.get('fileId')
     var dbids = file_components_ids(id)
     , newids = [];
-    console.log('dbids: ' + JSON.stringify(dbids));
+    console.orolog('dbids: ' + JSON.stringify(dbids));
     if(dbids.items.length > 0 || dbids.groups.length > 0)
         root.each(function(i, children) {
             if(this.type != 'defs' && this.attr('id') != 'connectors_use')
                 newids.push(this.attr("id"));
         },true);
 
-    console.log('newids: ' + JSON.stringify(newids))
+    console.orolog('newids: ' + JSON.stringify(newids))
     var kids = clone(root.children())
 
     var newlayers = [], index = 0;
@@ -336,10 +336,10 @@ updateFileDB = function updateFileDB(root){
             newlayers[index].add(SVG.get(kids[i].attr('id')));
         }
     }
-    console.log('no of kids: ' + root.children().length)
-    console.log(root.children())
+    console.orolog('no of kids: ' + root.children().length)
+    console.orolog(root.children())
     root.each(function(i, children) {
-        console.log(this);
+        console.orolog(this);
         updateGroupDB(this, id, true);
     });
     if(dbids.items.length > 0 || dbids.groups.length > 0)
@@ -368,26 +368,26 @@ absorbSVG = function absorbSVG(code, its, groupparentId, locked){
                 orig.remove()
             else
                 orig.parent.remove(orig)
-            console.log(code)
+            console.orolog(code)
             var newsvg = SVG.get('viewport').svg(code);
-            console.log(newsvg)
+            console.orolog(newsvg)
             var root = newsvg.roots()[0];
             $(root.node).attr('id', Session.get("fileId"));
             updateFileDB(root);
         }
         else{
-            console.log(its);
+            console.orolog(its);
             itids = Object.keys(its);
             for(i in itids){
                 SVG.get(itids[i]).remove();
             }
-            console.log(code);
+            console.orolog(code);
             var newit = SVG.get(Session.get("fileId")).svg(code);
-            console.log(newit);
+            console.orolog(newit);
             var newids = [];
 
             newit.roots(function(){
-                console.log(this);
+                console.orolog(this);
                 var itemid = this.attr("id");
                 newids.push(itemid);
                 if(groupparentId)
@@ -399,7 +399,7 @@ absorbSVG = function absorbSVG(code, its, groupparentId, locked){
                             var parentId = its[Object.keys(its)[0]];
                     else
                         var parentId = SVG.get(Session.get("fileId")).first();
-                console.log(parentId);
+                console.orolog(parentId);
                 if(this.type == 'g')
                     updateGroupDB(this, parentId, locked);
                 else{
@@ -441,7 +441,7 @@ menuItemCodeSave = function menuItemCodeSave(){
 }
 
 menuItemCsvModal = function menuItemCsvModal(){
-    console.log('csvmodal');
+    console.orolog('csvmodal');
     //$('#csvModal').modal({backdrop: true, show: true});
     disablePan();
 }
@@ -468,7 +468,7 @@ menuItemParseCsv = function menuItemParseCsv(){
     var keys = csv.meta.fields;
     var optk = Object.keys(opt);
     var defaultv = {};
-    console.log(keys);
+    console.orolog(keys);
     var optktemp = []
     for(var i = 0; i < optk.length; i++){
         var ind = keys.indexOf(opt[optk[i]]);
@@ -478,8 +478,8 @@ menuItemParseCsv = function menuItemParseCsv(){
             optktemp.push(optk[i]);
     }
     optk = optktemp;
-    console.log(defaultv);
-    console.log(optk)
+    console.orolog(defaultv);
+    console.orolog(optk)
     var parsed = [];
     for(var i = 0; i < data.length; i++){
         var ins = {};
@@ -547,7 +547,7 @@ menuItemParseCsv = function menuItemParseCsv(){
         }
         parsed.push(ins);
     }
-    console.log(parsed);
+    console.orolog(parsed);
     if(controllers[0].getValue() == 'separate files'){
         var f = File.findOne({_id: Session.get('fileId')});
         var no = File.find({uuid: f.uuid}).count();
@@ -561,11 +561,11 @@ menuItemParseCsv = function menuItemParseCsv(){
         f.permissions.view = [];
         f.uuid = f.uuid+no;
         f.selected = [];
-        console.log(f);
+        console.orolog(f);
         var parentId = Session.get('fileId'); ////make dependecypath,structuralpath,groupids,itemids
         for(var i = 0 ; i < parsed.length; i++){
             Meteor.call('insert_document', 'Item', parsed[i], function(err, id3){
-                if(err) console.log(err);
+                if(err) console.orolog(err);
                 if(id3){
                     var para = Item.findOne({_id: id3}).parameters.params;
                     var l = Math.abs(Number(para.left))
@@ -581,18 +581,18 @@ menuItemParseCsv = function menuItemParseCsv(){
                     else
                         f.height = u + d;
                     Meteor.call('insert_document', 'File', f, function(err, id){
-                        if(err) console.log(err);
+                        if(err) console.orolog(err);
                         if(id){
-                            console.log(id);
+                            console.orolog(id);
                             Meteor.call('insert_document', 'Dependency', { fileId1: id, fileId2: parentId, type: 1 });
                             Meteor.call('insert_document', 'Group', {fileId: id, type: "layer"}, function(err, id2){
-                                if(err) console.log(err);
+                                if(err) console.orolog(err);
                                 if(id2){
-                                    console.log(id2);
-                                    console.log(id3);
+                                    console.orolog(id2);
+                                    console.orolog(id3);
                                     Meteor.call('update_document', 'Item', id3, { groupId: id2 }, function(err, res){
-                                        if(err) console.log(err);
-                                        if(res) console.log(res);
+                                        if(err) console.orolog(err);
+                                        if(res) console.orolog(res);
                                     });
                                 }
                             })
@@ -759,10 +759,10 @@ createLayerMenu = function createLayerMenu(x,y){
                 var r = this.attr("no") - Math.ceil(Math.floor((this.cy() - inicy) / lh * 2) / 2);
             else
                 var r = this.attr("no") + Math.ceil(Math.floor((inicy - this.cy()) / lh * 2) / 2);
-            console.log(Math.ceil(Math.floor((inicy - this.cy()) / lh * 2) / 2));
-            console.log(Math.floor((inicy - this.cy()) / lh * 2));
-            console.log(inicy - this.cy());
-            console.log(r);
+            console.orolog(Math.ceil(Math.floor((inicy - this.cy()) / lh * 2) / 2));
+            console.orolog(Math.floor((inicy - this.cy()) / lh * 2));
+            console.orolog(inicy - this.cy());
+            console.orolog(r);
             if(SVG.get("layerRect_"+r) && this.cy() > SVG.get("layerRect_"+r).y() && this.cy() < (SVG.get("layerRect_"+r).y() + lh)){
                 if(r > this.attr("no"))
                     SVG.get("layerRect_"+r).dy(lh);
@@ -793,14 +793,14 @@ createLayerMenu = function createLayerMenu(x,y){
             Meteor.call('update_document', "Group", this.attr("layer"), {ordering: r})
             if(r > this.attr("no"))
                 for(var i = this.attr("no")+1; i <= r; i++){
-                    console.log(i);
-                    console.log(SVG.get('layerRect_'+i).attr("layer"));
+                    console.orolog(i);
+                    console.orolog(SVG.get('layerRect_'+i).attr("layer"));
                     Meteor.call('update_document', "Group", SVG.get('layerRect_'+i).attr("layer"), {ordering: i-1})
                 }
             else
                 for(var i = this.attr("no")-1; i >= r; i--){
-                    console.log(i);
-                    console.log(SVG.get('layerRect_'+i).attr("layer"));
+                    console.orolog(i);
+                    console.orolog(SVG.get('layerRect_'+i).attr("layer"));
                     Meteor.call('update_document', "Group", SVG.get('layerRect_'+i).attr("layer"), {ordering: i+1})
                 }
             togglePanZoom();
@@ -963,7 +963,7 @@ menuItemDelete = function menuItemDelete(){
     if(!global_oro_variables.selected.members)
       return;
     var selected = global_oro_variables.selected.members;
-    console.log(selected);
+    console.orolog(selected);
     var its = [], grs = [], conns = [];
     for(s in selected)
         if(SVG.get(selected[s].attr("selected")).type == 'g')
@@ -1001,7 +1001,7 @@ menuItemClone = function menuItemClone(selected){
             cloneItem(it.attr("id"), svgparent.attr("id"), locked)/*, function(id){
                 var iids = File.findOne({_id: Session.get('fileId')}).itemids;
                 iids.push(id);
-                console.log(iids);
+                console.orolog(iids);
                 Meteor.call('update_document', 'File', Session.get('fileId'), {itemids: iids});
             });*/
         else{
@@ -1012,7 +1012,7 @@ menuItemClone = function menuItemClone(selected){
             cloneGroup(it.attr("id"), svgparent.attr("id"), parent)/*, function(id){
                 var gids = File.findOne({_id: Session.get('fileId')}).groupids;
                 gids.push(id);
-                console.log(gids);
+                console.orolog(gids);
                 Meteor.call('update_document', 'File', Session.get('fileId'), {groupids: gids});
             });*/
         }
@@ -1063,8 +1063,8 @@ curveToSimplePath = function(points, bigDiag, noPoints, decim, val){
     var noPo = (noPoints * dg / bigDiag) * ct;
     var step = len/noPo;
     var newpoints = [];
-    //console.log(len);console.log(noPo); console.log(step);
-    //console.log(dg); console.log(bigDiag);
+    //console.orolog(len);console.orolog(noPo); console.orolog(step);
+    //console.orolog(dg); console.orolog(bigDiag);
     for(var i = 0 ; i < len ; i = i + step){
         var point = tempath.pointAt(i);
         newpoints.push( [ Number(point.x.toFixed(decim)), Number(point.y.toFixed(decim)) ] );
@@ -1156,13 +1156,13 @@ menuItemOffset = function menuItemOffset(clone, option, value){
     ClipperLib.JS.ScaleUpPath(patharr, scale);
     var co = new ClipperLib.ClipperOffset(opt.miterLimit, opt.arcTolerance * scale);
     var solution = new ClipperLib.Paths();
-    console.log(patharr)
+    console.orolog(patharr)
     co.AddPaths([patharr], ClipperLib.JoinType[joinType], ClipperLib.EndType[endType]);
     co.Execute(solution, opt.delta * scale)
     ClipperLib.JS.ScaleDownPaths(solution, scale);
-    console.log(solution)
+    console.orolog(solution)
     solution = JSON.stringify(pathArrayXYOro(solution))
-console.log(solution)
+console.orolog(solution)
     if(clone){
         solution = split_oro_path_points(solution)
         if(!SVG.get('offsetclone_'+path.attr('id'))){
@@ -1196,7 +1196,7 @@ menuItemJoin = function menuItemJoin(){
     for(s in selected)
         arr.push(SVG.get(selected[s].attr("selected")));
     var newpath = joinPaths(arr);
-    console.log(newpath);
+    console.orolog(newpath);
     SVG.get(selected[0].attr("selected")).plot(newpath);
     saveItemLocalisation(selected[0].attr("selected"));
     for(s = 1; s < selected.length; s++)
@@ -1275,11 +1275,11 @@ callFilebrowserModal = function(noshow, callback){
     Session.set("fileBCallback", callback);
 /*
     var box1 = $('#browserContent')[0].getBoundingClientRect()
-    console.log(box1)
+    console.orolog(box1)
     var box2 = $('#Bcrumbs')[0].getBoundingClientRect()
-    console.log(box2)
+    console.orolog(box2)
             var width = box1.width + box2.width
-            console.log(width)
+            console.orolog(width)
 
             //$('#modal-container').css({'margin': '0px auto;', 'width': width})
             //$('#modal-content').css({'margin-left': - box2.left});
@@ -1290,7 +1290,7 @@ callFilebrowserModal = function(noshow, callback){
       });
 /*
     var margl = '-'+box2.left+'px'
-    console.log(margl)
+    console.orolog(margl)
     $('#modal-container').css('margin', '0px auto;')
     $('#modal-content').css({'margin-left': margl});
 
@@ -1319,7 +1319,7 @@ menuItemAddConnector = function menuItemAddConnector(noshow){
 }
 
 menuAddElemCallb = function menuAddElemCallb(id){
-    console.log('menuAddElemCallb');
+    console.orolog('menuAddElemCallb');
     //$('#filebrowserModal').modal('hide');
     var currentLayer;
     SVG.get(Session.get('fileId')).each(function(i,children){
@@ -1330,22 +1330,22 @@ menuAddElemCallb = function menuAddElemCallb(id){
         currentLayer =  SVG.get(Session.get('fileId')).first();
     if(File.findOne({_id: id})){
         var g = Group.findOne({fileId: id, type: 'layer'},{sort: {ordering: 1}});
-        console.log(g._id)
+        console.orolog(g._id)
         var elem = Group.findOne({groupId: g._id},{sort: {ordering: 1}});
-        console.log(elem)
+        console.orolog(elem)
         if(elem)
             cloneGroup(elem, currentLayer.attr("id"), 'groupId');
         else{
             var elem = Item.findOne({groupId: g._id},{sort: {ordering: 1}});
-            console.log(elem)
+            console.orolog(elem)
             cloneItem(elem, currentLayer.attr("id"));
         }
         /*
         Meteor.call('getFirstElement', id, function(err, res){
             if(err)
-                console.log(err)
+                console.orolog(err)
             if(res){
-                console.log(res)
+                console.orolog(res)
 
                 if(res.type == 'item')
                     cloneItem(res.elem, currentLayer.attr("id"));
@@ -1368,27 +1368,27 @@ menuAddElemCallb = function menuAddElemCallb(id){
 }
 
 menuAddTemplateCallb = function menuAddTemplateCallb(id){
-    console.log('menuAddTemplateCallb');
+    console.orolog('menuAddTemplateCallb');
     //$('#filebrowserModal').modal('hide');
 
     var file = File.findOne({_id: Session.get('fileId')});
-    console.log(file);
+    console.orolog(file);
     var group = {fileId: Session.get('fileId'), type: "layer", uuid: "layer_"+(SVG.get(Session.get('fileId')).children().length+1), ordering: 0}
-    console.log(group);
+    console.orolog(group);
     Meteor.call('insert_document', 'Group', group, function(err,id2){
-        if(err) console.log(err);
+        if(err) console.orolog(err);
         else if(id2){
-            console.log('insertedGroup: '+id2)
+            console.orolog('insertedGroup: '+id2)
             var pointList = "0,0,"+file.width+","+file.height
             var item = {groupId: id2, pointList: pointList, text: "/file/"+id, locked: id2, type: 'rasterImage'}
-            console.log('insertItem: ' + JSON.stringify(item))
+            console.orolog('insertItem: ' + JSON.stringify(item))
             Meteor.call('insert_document', 'Item', item);
         }
     })
 }
 
 menuAddConnectorCallb = function menuAddConnectorCallb(id){
-    console.log('menuAddConnectorCallb');
+    console.orolog('menuAddConnectorCallb');
     //$('#filebrowserModal').modal('hide');
 
     if(File.findOne({_id: id}))
@@ -1416,7 +1416,7 @@ menuItemResetMatrix = function menuItemResetMatrix(){
 }
 
 menuItemSelect = function menuItemSelect(id){
-    console.log(id);
+    console.orolog(id);
     var results = buildSelector(id);
     global_oro_variables.selected.add(results);
     SVG.get(id).draggable();
@@ -1443,7 +1443,7 @@ menuItemDeparametrize = function menuItemDeparametrize(){
             insertItem(it);
         }
         else
-            console.log('no callback function and no pointList')
+            console.orolog('no callback function and no pointList')
     }
 }
 
@@ -1748,8 +1748,8 @@ menuItemImportSelector = function menuItemImportSelector(){
         SVG.get('viewport').transform("matrix", [matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f].join(','));
         panCallback(matrix);
 
-        console.log(code);
-        console.log(elements);
+        console.orolog(code);
+        console.orolog(elements);
 
         //global_oro_variables.subscriptionhandles.file.stop();
 

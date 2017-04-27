@@ -13,7 +13,7 @@ Meteor.methods({
   }
 })
 cloneFile = function cloneFile(id){
-    console.log('cloneFilestart');
+    console.orolog('cloneFilestart');
     var f = File.findOne({_id: id});
     var no = File.find({uuid: f.uuid}).count();
     var deps = Dependency.find({fileId1: id}).fetch();
@@ -31,7 +31,7 @@ cloneFile = function cloneFile(id){
     f.noofchildren = 0;
 
     var fileId = File.insert(f);
-    console.log('cloneFile', fileId);
+    console.orolog('cloneFile', fileId);
     if(!fileId) {
       throw new Meteor.Error('File not cloned', id);
     }
@@ -48,7 +48,7 @@ cloneFile = function cloneFile(id){
 }
 
 cloneItem = function cloneItem(it, groupId){
-    console.log('cloneItem');
+    console.orolog('cloneItem');
     if(typeof it === 'string')
         it = Item.findOne({_id: it});
     it.original = it._id;
@@ -60,12 +60,12 @@ cloneItem = function cloneItem(it, groupId){
     it.selected = 'null';
     if(!it.locked && it.parameters && it.parameters.parametrizedGroup)
         delete it.parameters.parametrizedGroup
-    console.log('/cloneItem');
+    console.orolog('/cloneItem');
     return Item.insert(it);
 }
 
 cloneGroup = function cloneGroup(gr, parentId, parent){
-    console.log('cloneGroup');
+    console.orolog('cloneGroup');
     if(typeof gr === 'string')
         gr = Group.findOne({_id: gr});
     var no = Group.find({uuid: gr.uuid}).count();
@@ -91,13 +91,13 @@ cloneGroup = function cloneGroup(gr, parentId, parent){
         Dependency.insert(deps[d]);
     }
 
-    //console.log(JSON.stringify(items));
+    //console.orolog(JSON.stringify(items));
     for(g in groups)
         cloneGroup(groups[g], newid, 'groupId');
     for(i in items) {
         cloneItem(items[i], newid);
     }
-    console.log('/cloneGroup');
+    console.orolog('/cloneGroup');
 
     return newid;
 

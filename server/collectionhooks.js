@@ -1,14 +1,14 @@
 //after item insert, if it has a locked attribute, it will update the parent group's locked attribute
 Item.after.insert(function(userId, doc){
-    console.log('after.insert');
-    console.log('server: ' + Meteor.isServer)
-    //console.log(doc);
-    console.log(this._id);
-    console.log('hook for getElementPath')
+    console.orolog('after.insert');
+    console.orolog('server: ' + Meteor.isServer)
+    //console.orolog(doc);
+    console.orolog(this._id);
+    console.orolog('hook for getElementPath')
     var fileId = getElementPath(this._id);
-    console.log(fileId)
+    console.orolog(fileId)
     fileId = fileId[fileId.length-1];
-    console.log(fileId)
+    console.orolog(fileId)
     var iids = File.findOne({_id: fileId}).itemids;
     if(!iids)
         iids = [];
@@ -16,7 +16,7 @@ Item.after.insert(function(userId, doc){
     File.update({_id: fileId}, {$set: {itemids: iids}});
     if(doc.locked && doc.locked != 'null'){
         var gr = Group.findOne({_id: doc.locked});
-        console.log(gr);
+        console.orolog(gr);
         if(gr){
             if(gr.locked && gr.locked != 'null')
                 var locked = gr.locked.split(',');
@@ -29,23 +29,23 @@ Item.after.insert(function(userId, doc){
                 upd.parameters = gr.parameters
                 upd.parameters.params.elements[doc.parameters.parametrizedGroup] = doc._id;
             }
-            console.log(upd);
+            console.orolog(upd);
             Group.update({_id: gr._id}, {$set: upd});
         }
     }
-    console.log('/after.insert');
+    console.orolog('/after.insert');
 });
 //gfkHDYEEX8ih7tnBJ
 Item.before.remove(function(userId, doc){
-    console.log('before remove');
-    console.log('server: ' + Meteor.isServer)
-    console.log(doc._id);
+    console.orolog('before remove');
+    console.orolog('server: ' + Meteor.isServer)
+    console.orolog(doc._id);
     var fileId = getElementPath(doc.groupId);
     fileId = fileId[fileId.length-1];
     var iids = File.findOne({_id: fileId}).itemids;
     iids.splice(iids.indexOf(doc._id),1);
     File.update({_id: fileId}, {$set: {itemids: iids}});
-    console.log('/before remove');
+    console.orolog('/before remove');
 });
 Item.after.update(function(userId, doc, fieldNames, modifier, options){
     if(fieldNames.length > 1 || fieldNames.indexOf('selected') == -1){
@@ -56,58 +56,58 @@ Item.after.update(function(userId, doc, fieldNames, modifier, options){
 })
 
 Group.after.insert(function(userId, doc){
-    console.log('group after.insert');
-    console.log('server: ' + Meteor.isServer)
-    console.log(this._id);
+    console.orolog('group after.insert');
+    console.orolog('server: ' + Meteor.isServer)
+    console.orolog(this._id);
 
     if(doc.type == 'parametrizedGroup' && doc.parameters && doc.parameters.parametrizedGroup){
-            console.log('here')
+            console.orolog('here')
             var upd = doc.parameters
             upd.params.elements[doc.parameters.parametrizedGroup] = doc._id;
-            console.log(upd);
+            console.orolog(upd);
             Meteor.call('update_document', 'Group', doc._id, upd);
     }
 
     var fileId = getElementPath(this._id);
     fileId = fileId[fileId.length-1];
-    console.log(fileId);
+    console.orolog(fileId);
     var iids = File.findOne({_id: fileId}).groupids;
-    console.log(iids);
+    console.orolog(iids);
     if(!iids)
         iids = [];
     iids.push(this._id);
-    console.log(iids);
+    console.orolog(iids);
     File.update({_id: fileId}, {$set: {groupids: iids}});
-    console.log('/group after.insert');
+    console.orolog('/group after.insert');
 });
 
 Group.before.remove(function(userId, doc){
-    console.log('group before remove');
-    console.log('server: ' + Meteor.isServer)
-    console.log(doc._id);
+    console.orolog('group before remove');
+    console.orolog('server: ' + Meteor.isServer)
+    console.orolog(doc._id);
     if(doc.groupId)
         var fileId = getElementPath(doc.groupId);
     else
         var fileId = getElementPath(doc.fileId);
-    console.log(fileId);
+    console.orolog(fileId);
     fileId = fileId[fileId.length-1];
-    console.log(fileId);
+    console.orolog(fileId);
     var iids = File.findOne({_id: fileId}).groupids;
     iids.splice(iids.indexOf(doc._id),1);
     File.update({_id: fileId}, {$set: {groupids: iids}});
-    console.log('/group before remove');
+    console.orolog('/group before remove');
 });
 Dependency.after.insert(function(userId, doc){
-    console.log('dependency after insert');
+    console.orolog('dependency after insert');
     if(doc.type == 1){
-        console.log('structural dep');
+        console.orolog('structural dep');
         var parentFile = File.findOne({_id: doc.fileId2});
         var noofchildren = parentFile.noofchildren +1;
         File.update({_id: doc.fileId2}, {$set: {noofchildren: noofchildren}});
         var spath = getFilePath(doc.fileId1, 1);
         File.update({_id: doc.fileId1}, {$set: {structuralpath: spath}});
         if(parentFile.fileType == 'image/svg+xml' && parentFile.parameters && parentFile.parameters.type == 'template'){
-            console.log('its a template');
+            console.orolog('its a template');
             //add parentFile id to child's templatepath parameter
             var parameters = File.findOne({_id: doc.fileId1}).parameters;
             if(!parameters)
@@ -116,7 +116,7 @@ Dependency.after.insert(function(userId, doc){
                 parameters.templatepath = parentFile.parameters.templatepath.concat([doc.fileId2]);
             else
                 parameters.templatepath = [doc.fileId2]
-            console.log("parameters: "+JSON.stringify(parameters.templatepath))
+            console.orolog("parameters: "+JSON.stringify(parameters.templatepath))
             Meteor.call('update_document', 'File', doc.fileId1, {parameters: parameters})
         }
     }
@@ -127,9 +127,9 @@ Dependency.after.insert(function(userId, doc){
 });
 
 Dependency.before.update(function(userId, doc, fieldNames, modifier, options){
-    console.log(fieldNames);
-    console.log(modifier);
-    console.log(options);
+    console.orolog(fieldNames);
+    console.orolog(modifier);
+    console.orolog(options);
 
     var old = Dependency.findOne({_id: doc._id})
     if(doc.type == 1 || old.type == 1){

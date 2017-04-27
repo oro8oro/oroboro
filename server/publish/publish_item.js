@@ -6,7 +6,7 @@ Meteor.publish('itempublish', function(id){
 
 Meteor.publish('itemspublish', function(ids){
     check(ids, [String])
-    //console.log('itemspublish: '+JSON.stringify(ids));
+    //console.orolog('itemspublish: '+JSON.stringify(ids));
     return Item.find({_id: {$in: ids}})
 })
 

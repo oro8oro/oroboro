@@ -21,14 +21,14 @@ Meteor.startup(function () {
 
 count = {g: 0, i:0};
 Template.show_meteor_file_svg.rendered = function(){
-    console.log('render svg file');
+    console.orolog('render svg file');
     count = {g: 0, i:0};
     $('body').addClass('no_scroll');
     var file = File.findOne({_id: this.data._id});
     var fileId = this.data._id;
     Session.set("fileId", this.data._id);
     var groups = Group.find({fileId: this.data._id}, { sort: { ordering:1 }}).fetch();
-    console.log(groups)
+    console.orolog(groups)
     var draw = SVG(this.data._id);//.size(file.width, file.height);
     draw.width(file.width);
     draw.height(file.height);
@@ -39,7 +39,7 @@ Template.show_meteor_file_svg.rendered = function(){
     var connectordefs = defs.group().attr('id', 'connectordefs');
 
     if(file.parameters && file.parameters.templatepath){
-        console.log('template');
+        console.orolog('template');
         var templates = file.parameters.templatepath;
         var layertemps = [], images = [];
         for(var i = 0; i < templates.length; i++){
@@ -74,14 +74,14 @@ Template.show_meteor_file_svg.rendered = function(){
     }
     */
 
-    console.log('/render svg file');
-    console.log(Meteor.userId())
-    console.log(file.selected)
+    console.orolog('/render svg file');
+    console.orolog(Meteor.userId())
+    console.orolog(file.selected)
     if(!file.selected)
         file.selected = []
     if(Meteor.userId() && file.selected.indexOf(Meteor.userId()) == -1){
         file.selected.push(Meteor.userId())
-        console.log(file.selected)
+        console.orolog(file.selected)
         Meteor.call('update_document', 'File', fileId, {selected: file.selected})
     }
 
@@ -97,13 +97,13 @@ Template.show_meteor_file_svg.rendered = function(){
         Group.find().observe({
             added: function(doc){
                 if(!SVG.get(doc._id) && count.g != 0){
-                    console.log('group not in Editor');
+                    console.orolog('group not in Editor');
                     if(doc.groupId)
                         var parentId = doc.groupId;
                     else
                         var parentId = doc.fileId;
                     if(parentId == undefined)
-                        console.log("Group: " + JSON.stringify(doc) + " does not have a parent id")
+                        console.orolog("Group: " + JSON.stringify(doc) + " does not have a parent id")
                     else if(SVG.get(parentId)){
                     //else{
                         var idds = recursive_group_ids(doc._id, {items:[],groups:[]});
@@ -113,8 +113,8 @@ Template.show_meteor_file_svg.rendered = function(){
                         for(var i in idds.groups)
                             if(SVG.get(idds.groups[i]))
                                 SVG.get(idds.groups[i]).remove();
-                        console.log(parentId);
-                        console.log(SVG.get(parentId));
+                        console.orolog(parentId);
+                        console.orolog(SVG.get(parentId));
                         recursive_group_client(SVG.get(parentId), doc);
                         if(doc.type == 'layer'){
                             var win = Session.get("window");
@@ -123,7 +123,7 @@ Template.show_meteor_file_svg.rendered = function(){
                             createLayerMenu(win.w,win.h);
                         }
                         if(doc.type == 'simpleGroup' || doc.type == 'parametrizedGroup'){
-                            //console.log(SVG.get(doc._id).children());
+                            //console.orolog(SVG.get(doc._id).children());
                             deselect();
                             var selector = buildSelector(SVG.get('svgEditor'), doc._id);
                             global_oro_variables.selected.add(selector);
@@ -134,7 +134,7 @@ Template.show_meteor_file_svg.rendered = function(){
             },
             removed: function(doc){
                 var id = doc._id;
-                console.log('removed: ' + id);
+                console.orolog('removed: ' + id);
                 if(SVG.get(id)){
                     deselectItem(id);
                     var type = SVG.get(id).attr("type");
@@ -153,14 +153,14 @@ Template.show_meteor_file_svg.rendered = function(){
         Group.find().observeChanges({
             changed: function(id,doc){
                 var group = SVG.get(id);
-                //console.log(id);
-                console.log(doc);
+                //console.orolog(id);
+                console.orolog(doc);
                 var locked = Session.get("lockedItems");
-                //console.log(locked);
+                //console.orolog(locked);
                 if(doc.selected){
                     if(doc.selected != 'null'){
                         if(doc.selected != Meteor.userId()){
-                            console.log(locked.indexOf(id));
+                            console.orolog(locked.indexOf(id));
                             if(locked.indexOf(id) == -1){
                                 locked.push(id);
                                 buildSelectorLocked(id);
@@ -189,7 +189,7 @@ Template.show_meteor_file_svg.rendered = function(){
                     else
                         var parentId = doc.fileId;
                     if(parentId == undefined)
-                        console.log("Group: " + doc._id + " does not have a parent id")
+                        console.orolog("Group: " + doc._id + " does not have a parent id")
                     else{
                         group.remove();
                         recursive_group_client(SVG.get(parentId), doc);
@@ -202,13 +202,13 @@ Template.show_meteor_file_svg.rendered = function(){
                     }
                 }
                 if(doc.ordering){
-                    //console.log(doc.ordering)
-                    //console.log(SVG.get(id).parent.get(doc.ordering))
+                    //console.orolog(doc.ordering)
+                    //console.orolog(SVG.get(id).parent.get(doc.ordering))
                     //var pos = SVG.get(id).position()
                     SVG.get(id).before(SVG.get(id).parent.get(doc.ordering));
                 }
                 if(doc.transform){
-                    console.log(doc.transform);
+                    console.orolog(doc.transform);
                     SVG.get(id).transform("matrix", doc.transform);
                     positionSelector(id);
                 }
@@ -228,8 +228,8 @@ Template.show_meteor_file_svg.rendered = function(){
     this.autorun(function(){
         Item.find().observe({
             added: function(doc){
-                //console.log('added item: '+JSON.stringify(doc));
-                //console.log(count);
+                //console.orolog('added item: '+JSON.stringify(doc));
+                //console.orolog(count);
                 if(!SVG.get(doc._id) && count.i != 0)
                     if(doc.groupId != Session.get('fileId') && SVG.get(doc.groupId))
                         build_item(SVG.get(doc.groupId), doc);
@@ -237,7 +237,7 @@ Template.show_meteor_file_svg.rendered = function(){
                         build_item(SVG.get('connectordefs'), doc);
             },
             removed: function(doc){
-                //console.log('removed item: ' + JSON.stringify(doc));
+                //console.orolog('removed item: ' + JSON.stringify(doc));
                 deleteItem(doc._id);
             }
         });
@@ -246,9 +246,9 @@ Template.show_meteor_file_svg.rendered = function(){
     this.autorun(function(){
         Item.find().observeChanges({
             changed: function(id, fields){
-                console.log(Date.now())
-                console.log('changed item: ' +id)
-                console.log(fields);
+                console.orolog(Date.now())
+                console.orolog('changed item: ' +id)
+                console.orolog(fields);
                 if(fields.selected){
                     var locked = Session.get("lockedItems");
                     if(fields.selected != 'null'){
@@ -262,7 +262,7 @@ Template.show_meteor_file_svg.rendered = function(){
                         else
                             if(global_oro_variables.selected.members)
                                 if(global_oro_variables.selected.members.indexOf(SVG.get("box_"+id)) == -1){
-                                    console.log('select item');
+                                    console.orolog('select item');
                                     select_item(id);
                                     locked.push(id);
                                     Session.set("lockedItems", locked);
@@ -284,8 +284,8 @@ Template.show_meteor_file_svg.rendered = function(){
     this.autorun(function(){
         Connector.find().observeChanges({
             changed: function(id, fields){
-                console.log(id);
-                console.log(fields);
+                console.orolog(id);
+                console.orolog(fields);
                 if(fields.sourceAttach)
                     global_oro_variables.connections[id].setConnectorAttachment('source', fields.sourceAttach)
                 if(fields.targetAttach)
@@ -312,7 +312,7 @@ Template.show_meteor_file_svg.rendered = function(){
                     global_oro_variables.connections[id].setType(fields.type);
                 }
                 if(fields.source || fields.target){
-                    console.log(id);
+                    console.orolog(id);
                     remove_connectors(id)
                     build_connectors(id)
                 }
@@ -356,7 +356,7 @@ setItemsValue = function setItemValue(property, val){
 setFill = function setFill(val){
     var itemids = [];
     //var val = String($.jPicker.List[0].color.active.val('ahex'));
-    //console.log(val);
+    //console.orolog(val);
     var kids = global_oro_variables.selected.members;
     for(var k in kids){
         var itemid = kids[k].attr("selected");
@@ -364,7 +364,7 @@ setFill = function setFill(val){
     }
     var upd = {};
     upd = {"palette.fillColor": val};
-    console.log(upd);
+    console.orolog(upd);
     //Meteor.call('update_collection', "Item", itemids, upd);
     oro.wraps.update_collection('Item', itemids, upd);
 }
@@ -372,7 +372,7 @@ setFill = function setFill(val){
 setFillOpacity = function setFillOpacity(val){
     var itemids = [];
     //var val = String($.jPicker.List[0].color.active.val('ahex'));
-    //console.log(val);
+    //console.orolog(val);
     var kids = global_oro_variables.selected.members;
     for(var k in kids){
         var itemid = kids[k].attr("selected");
@@ -582,13 +582,13 @@ renderedTemplates = [];
 g0 = undefined;
 
 Template.svgEditor.rendered = function(){
-    console.log('render svgEditor')
+    console.orolog('render svgEditor')
     window.windowType = 'svgEditor'
-    console.log('get script dependencies')
+    console.orolog('get script dependencies')
     var js_dep = File.findOne({_id: "Yq9iqYhEma9z9mYrp"}).dependencypath;
     var cssfiles = separate_deps(js_dep,"text/css");
     var jsfiles = separate_deps(js_dep,"application/javascript");
-    console.log('/get script dependencies')
+    console.orolog('/get script dependencies')
     var f = this.data.file
 
     if(!f)
@@ -603,11 +603,11 @@ Template.svgEditor.rendered = function(){
     if(!f)
         f = File.findOne({$or: [{title: {$regex: this.data.id, $options: 'i'}}, {uuid: {$regex: this.data.id, $options: 'i'}}]})
 
-    console.log(f)
+    console.orolog(f)
     this.data = f
 
 
-    console.log('load scripts')
+    console.orolog('load scripts')
     $("head").append('<script type="application/javascript" src="/SVGPathSeg-polyfill.js">')
     for(var i in jsfiles){
         $("head").append('<script type="application/javascript" src="/file/' + jsfiles[i]._id + '">');
@@ -618,7 +618,7 @@ Template.svgEditor.rendered = function(){
     for(var i in cssfiles){
         $("head").append('<link rel="stylesheet" type="text/css" href="/file/' + cssfiles[i]._id + '">');
     }
-    console.log('/load scripts');
+    console.orolog('/load scripts');
 
     window.onbeforeunload = function(e) {
         unlockItems();
@@ -632,7 +632,7 @@ Template.svgEditor.rendered = function(){
     var shiftselection = {}, finish = false, elements = [];
     document.addEventListener("mousedown", function( e ) {
         if(e.shiftKey && (e.target == document.getElementById('background') || e.target == document.getElementById('grey_background'))){
-            console.log('mousedown');
+            console.orolog('mousedown');
             finish = false
             disablePan();
             shiftselection.x = e.clientX;
@@ -672,11 +672,11 @@ Template.svgEditor.rendered = function(){
                 SVG.get('connectors_links').each(function(i){
                     connectors.push(this.attr('id'))
                 })
-                console.log(connectors);
+                console.orolog(connectors);
                 SVG.get('connectors_use').each(function(i){
                     connectors.push(this.attr('id'))
                 })
-                console.log(connectors);
+                console.orolog(connectors);
                 elements = elements.concat(groups).concat(connectors);
             }
         }
@@ -762,7 +762,7 @@ Template.svgEditor.rendered = function(){
   }, false);
     document.addEventListener("mouseup", function( e ) {
         if(shiftselection.x){
-            console.log('mouseup int')
+            console.orolog('mouseup int')
             if(global_oro_variables.selected.members && global_oro_variables.selected.members.length > 0 && global_oro_variables.selected.members[0].attr('type') == 'pathPoints'){
                 var points = SVG.get('hingePoints').children();
                 for(var i = 0; i < points.length; i++){
@@ -780,7 +780,7 @@ Template.svgEditor.rendered = function(){
             enablePan();
             if(global_oro_variables.selected.members.length > 0){
                 showDatGui();
-                console.log('markSelected');
+                console.orolog('markSelected');
                 markSelected();
             }
         }
@@ -822,7 +822,7 @@ Template.svgEditor.rendered = function(){
     };
 
     document.addEventListener('keydown', function(e){
-      //console.log('keydown', e, e.key, e.altKey, global_oro_variables.selected.members, keyControlls[e.key])
+      //console.orolog('keydown', e, e.key, e.altKey, global_oro_variables.selected.members, keyControlls[e.key])
 
       if(e.altKey && keyControlls[e.key]){
             e.preventDefault();
@@ -837,8 +837,8 @@ Template.svgEditor.rendered = function(){
      /*******
     **  variables:
     ********/
-    console.log('this data')
-    console.log(this.data)
+    console.orolog('this data')
+    console.orolog(this.data)
     var x = Session.get("window").w;
     var y = Session.get("window").h;
     var a = Math.min(x,y) * mini_scale;
@@ -847,14 +847,14 @@ Template.svgEditor.rendered = function(){
     Session.set("fileId", fileId);
     Session.set('fileWidth', this.data.width);
     Session.set('fileHeight', this.data.height);
-    console.log('file.permissions', file.permissions);
-    console.log('isAdmin?', Meteor.userId(), Roles.userIsInRole(Meteor.userId(), 'admin'));
+    console.orolog('file.permissions', file.permissions);
+    console.orolog('isAdmin?', Meteor.userId(), Roles.userIsInRole(Meteor.userId(), 'admin'));
     if(file.permissions.edit.indexOf(Meteor.userId()) != -1 || file.permissions.edit.length == 0 || Roles.userIsInRole(Meteor.userId(), 'admin'))
         var enableEdit = "true";
     else
         var enableEdit = "false";
     Session.set("enableEdit", enableEdit);
-    //console.log(Session.get("enableEdit"));
+    //console.orolog(Session.get("enableEdit"));
 
     var editor = SVG("svgEditor").size(10000,10000);
     var defs = editor.defs().attr('id', 'editorDefs');
@@ -904,13 +904,13 @@ Template.svgEditor.rendered = function(){
     **  database SVG file:
     ********/
 
-    console.log('load file template')
+    console.orolog('load file template')
 
     renderedTemplates["show_meteor_file_svg"] = Blaze.renderWithData(Template.show_meteor_file_svg, {"_id":this.data._id}, document.getElementById("viewport"));
     //var g0 = SVG(fileId);
     g0 = SVG(fileId);
 
-    console.log('/load file template')
+    console.orolog('/load file template')
 
     /*******
     **  minimap:
@@ -947,9 +947,9 @@ Template.svgEditor.rendered = function(){
         this.opacity(0.6);
     });
     locked.on('click',function(e){
-        console.log('locked');
+        console.orolog('locked');
         Session.set('lockPanZoom', 'false');
-        console.log(Session.get('lockPanZoom'))
+        console.orolog(Session.get('lockPanZoom'))
     });
     unlocked.on('mouseover',function(e){
         this.opacity(1);
@@ -958,9 +958,9 @@ Template.svgEditor.rendered = function(){
         this.opacity(0.6);
     });
     unlocked.on('click',function(e){
-        console.log('unlocked');
+        console.orolog('unlocked');
         Session.set('lockPanZoom', 'true');
-        console.log(Session.get('lockPanZoom'))
+        console.orolog(Session.get('lockPanZoom'))
     });
     Session.set('lockPanZoom', 'false');
 
@@ -1005,7 +1005,7 @@ Template.svgEditor.rendered = function(){
     this.autorun(function(){
         var f = File.findOne({_id: Session.get('fileId')});
         if(f.selected){
-            //console.log(f.selected);
+            //console.orolog(f.selected);
             users = f.selected;
             SVG.get("chatUserIcons").clear();
             for(i in users){
@@ -1054,18 +1054,18 @@ Template.svgEditor.rendered = function(){
             if(users.length > 1 && Session.get('miceEnabled') ){
                 Session.set('userIds', users)
                 users.splice(users.indexOf(Meteor.userId()),1);
-                console.log(users)
+                console.orolog(users)
                 var us = Meteor.users.find({_id: {$in: users}}, {fields: {parameters: 1}}).fetch();
-                console.log(us);
+                console.orolog(us);
                 for(u in us){
                     if(us[u].parameters && us[u].parameters.mousecoord){
                         var p = us[u].parameters.mousecoord
-                        console.log(p);
+                        console.orolog(p);
                         if(!SVG.get('coordMouse_'+us[u]._id))
                             mousegroup.use(SVG.get('coordMouse')).attr('id', 'coordMouse_'+us[u]._id).attr('mousex', p.x).attr('mousey', p.y);
                         var view = SVG.get('viewport').node.getCTM();
                         var pp = transformPoint(p.x, p.y, [view])
-                        console.log(pp)
+                        console.orolog(pp)
                         SVG.get('coordMouse_'+us[u]._id).move(pp[0],pp[1]);
                     }
                 }
@@ -1085,15 +1085,15 @@ Template.svgEditor.rendered = function(){
                         mousegroup.use(SVG.get('coordMouse')).attr('id', 'coordMouse_'+us[u]._id);
                     var view = SVG.get('viewport').node.getCTM()
                     var pp = transformPoint(p.x, p.y, [view])
-                    console.log(p)
-                    console.log(pp)
+                    console.orolog(p)
+                    console.orolog(pp)
                     SVG.get('coordMouse_'+us[u]._id).move(pp[0],pp[1]).attr('id', 'coordMouse_'+us[u]._id).attr('mousex', p.x).attr('mousey', p.y);
                 }
             }
         }
     })
 
-    console.log('/render svgEditor')
+    console.orolog('/render svgEditor')
 }
 
 Template.svgEditor.events({
@@ -1189,9 +1189,9 @@ var codes=[], images=[],last_code="";
 
 function addCode(code){
     last_code = code;
-    console.log(codes)
-    console.log(codes[code])
-    console.log(temp_head)
+    console.orolog(codes)
+    console.orolog(codes[code])
+    console.orolog(temp_head)
     if (codes[code] == undefined) {
         codes[code]= {
             data: code.toLowerCase().replace(/[^\w]+/g, '-'),
@@ -1249,7 +1249,7 @@ var toc = [];
 */
 function renderAll() {
         for (var ii = 0 ; ii < umls.length; ii++) {
-            console.log('uml_'+ii)
+            console.orolog('uml_'+ii)
             var canvas = document.getElementById('uml_'+ii);
 
             nomnoml.draw(canvas, umls[ii]);
@@ -1262,7 +1262,7 @@ function renderAll() {
 
     //$("head").append('<script src="/jquery.splitter-0.15.0.js"></script>')
     $("head").append('<link href="/jquery.splitter.css" rel="stylesheet"/>')
-    $("body").append('<script> var hash = window.location.hash; console.log(hash); if(document.getElementById(hash.substring(1))){ document.getElementById(hash.substring(1)).scrollIntoView(true);} </script>');
+    $("body").append('<script> var hash = window.location.hash; console.orolog(hash); if(document.getElementById(hash.substring(1))){ document.getElementById(hash.substring(1)).scrollIntoView(true);} </script>');
 
     var renderer = new marked.Renderer();
     var content =""
@@ -1294,16 +1294,16 @@ function renderAll() {
       }
 
       if (lang == "uml") {
-        //console.log(validateURL("http://localhost/nomnoml-librarify/uml.txt"));
+        //console.orolog(validateURL("http://localhost/nomnoml-librarify/uml.txt"));
         if (validateURL(code)){
-            //console.log(code);
+            //console.orolog(code);
             var location  = umls.length;
             umls.push("code");
             $.get(
                code,
                function(data, textStatus, jqXHR) {
                   //load the iframe here...
-                  //console.log(data);
+                  //console.orolog(data);
                   umls[location]=data;
                   //return '<canvas id="uml_'+(umls.length-1)+'"></canvas>';
                   renderAll();
@@ -1353,15 +1353,15 @@ Template.markdownFileMd.helpers({
 
 Template.svgDinamic.onRendered(function(){
 
-    console.log('get script dependencies')
+    console.orolog('get script dependencies')
     var js_dep = File.findOne({_id: "Yq9iqYhEma9z9mYrp"}).dependencypath;
     var cssfiles = separate_deps(js_dep,"text/css");
     var jsfiles = separate_deps(js_dep,"application/javascript");
-    console.log('/get script dependencies')
+    console.orolog('/get script dependencies')
 
     this.data = this.data.file;
 
-    console.log('load scripts')
+    console.orolog('load scripts')
     for(var i in jsfiles){
         $("head").append('<script type="application/javascript" src="/file/' + jsfiles[i]._id + '">');
     }
@@ -1370,7 +1370,7 @@ Template.svgDinamic.onRendered(function(){
     for(var i in cssfiles){
         $("head").append('<link rel="stylesheet" type="text/css" href="/file/' + cssfiles[i]._id + '">');
     }
-    console.log('/load scripts');
+    console.orolog('/load scripts');
 
      /*******
     **  variables:
@@ -1393,11 +1393,11 @@ Template.svgDinamic.onRendered(function(){
 
     buildWBackground();
 
-    console.log('load file template')
+    console.orolog('load file template')
     renderedTemplates["show_meteor_file_svg"] = Blaze.renderWithData(Template.show_meteor_file_svg, {"_id":this.data._id, dinamic: true}, document.getElementById("viewport"));
     //var g0 = SVG(fileId);
     g0 = SVG(fileId);
-    console.log('/load file template')
+    console.orolog('/load file template')
 
     this.autorun(function(){
         var win = Session.get("window");
@@ -1486,7 +1486,7 @@ Template.gcode.onRendered(function(){/*
 
 
     var gcode = gcodeConversionViewModel.gcode();
-    console.log(gcode)*/
+    console.orolog(gcode)*/
 })
 /*
 Template.gcode.events({
@@ -1532,8 +1532,8 @@ Template.svgViewer.onRendered(function(){
                     newlayers[index].add(SVG.get(kids[i].attr('id')));
                 }
             }
-            console.log('no of kids: ' + svg.children().length)
-            console.log(svg.children())
+            console.orolog('no of kids: ' + svg.children().length)
+            console.orolog(svg.children())
 
 
             Session.set("fileId", svg.attr('id'))
@@ -1605,8 +1605,8 @@ Template.svgViewer.onRendered(function(){
             }).on('click', function(e){
                 if(Meteor.userId())
                     Meteor.call('insert_document', 'File', {fileType: "image/svg+xml", original: self.data.url, width: 1448, height: 1024, permissions: {view: [], edit: [Meteor.userId()]}, creatorId: Meteor.userId(), noofchildren: 0}, function(err, id){
-                        console.log(err)
-                        console.log(id)
+                        console.orolog(err)
+                        console.orolog(id)
                         SVG.get(Session.get('fileId')).attr('id', id)
                         Session.set('fileId', id);
                         Meteor.call('insert_document', 'Dependency', {fileId1: id, fileId2: '4wtih642DRCZ5eFxq', type: 1})
@@ -1658,7 +1658,7 @@ Template.chatterModal.rendered = function(){
     this.autorun(function(){
         var f = File.findOne({_id: Session.get('fileId')});
         if(f.selected){
-            console.log(f.selected);
+            console.orolog(f.selected);
             users = f.selected;
             $('#chatterUsers').html();
             var icons = [];

@@ -4,9 +4,9 @@ Meteor.publish('dependencypublish', function(id){
 })
 
 Meteor.publish('dependenciespublish', function(ids){
-    //console.log(ids)
+    //console.orolog(ids)
     check(ids, [String])
-    //console.log('dependenciespublish: '+JSON.stringify(ids));
+    //console.orolog('dependenciespublish: '+JSON.stringify(ids));
     return Dependency.find({_id: {$in: ids}});
 })
 

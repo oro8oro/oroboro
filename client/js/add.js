@@ -8,7 +8,7 @@ getDoc = function(){
             upd.collection1 = $('#selectcol1').val();
         if($('#selectcol2').val())
             upd.collection2 = $('#selectcol2').val();
-        console.log(upd);
+        console.orolog(upd);
     }
     return upd;
 }
@@ -29,8 +29,8 @@ insertDep = function(){
     var upd = getDoc();
     if(upd){
         Meteor.call('insert_document', 'Dependency', upd, function(err, res){
-            if(err) console.log(err);
-            if(res) console.log(res);
+            if(err) console.orolog(err);
+            if(res) console.orolog(res);
         });
         /*
         if(upd.type == 1){
@@ -53,8 +53,8 @@ updateDep = function(){
     if(upd){
         var old = Dependency.findOne({_id: Session.get('currentDependency')});
         Meteor.call('update_document', 'Dependency', Session.get('currentDependency'), upd, function(err, res){
-            if(err) console.log(err);
-            if(res) console.log(res);
+            if(err) console.orolog(err);
+            if(res) console.orolog(res);
         });
         if(upd.type == 1 || upd.type == 3){
             var spath = getFilePath(upd.fileId1, 1);
@@ -80,7 +80,7 @@ updateDep = function(){
 
 deleteDep = function(){
     var d = Session.get('currentDependency')
-    console.log(d);
+    console.orolog(d);
     //var old = Dependency.findOne({_id: d})
     Meteor.call('remove_document', 'Dependency', d);
     /*
@@ -101,7 +101,7 @@ getSearch = function(val, id, type){
         type = {};
     var f = Meteor.call('searchCollection', 'File', ['title', 'uuid', '_id'], val, 'i', type, function(err, res){
         if(err)
-            console.log(err);
+            console.orolog(err);
         if(res){
             Session.set('searchResultNo_'+id, res.length);
             var last = false;
@@ -122,20 +122,20 @@ getSearch = function(val, id, type){
 }
 noD = 0;
 setDep = function(no){
-    console.log(no);
+    console.orolog(no);
     Session.set('selectfile'+no, $('#selectfile'+no).val());
     if(noD == 0 || noD == no){
-        console.log('set currentDependency');
+        console.orolog('set currentDependency');
         noD = no;
-        console.log(no);
-        console.log($('#selectfile'+no).val());
+        console.orolog(no);
+        console.orolog($('#selectfile'+no).val());
         var q = {};
         q['fileId'+no] = $('#selectfile'+no).val();
         if(Number(no) == 1)
             var no2 = 2
         else
             no2 = 1;
-        console.log(q);
+        console.orolog(q);
         var f = Dependency.find(q).map(function(res){
             var doc = File.findOne({_id: res['fileId'+no2]});
             var name = ((doc.title) ? doc.title: '') + ' / ' + ((doc.uuid) ? doc.uuid: '') + ' / ' + ((doc._id) ? doc._id: '');
@@ -146,9 +146,9 @@ setDep = function(no){
             Session.set('searchResultNo_'+'file'+no2, f.length);
             var dep = {};
             dep['fileId'+no] = $('#selectfile'+no).val();
-            console.log(dep);
+            console.orolog(dep);
             var d = Dependency.findOne(dep);
-            console.log(d);
+            console.orolog(d);
             if(d){
                 Session.set('currentDependency', d._id);
                 //$('#currentdep').val(JSON.stringify(d));
@@ -180,9 +180,9 @@ setType = function(){
 
 saveScript = function(){
     var upd = {script: ace.edit("aceEditor").getSession().getValue()}
-    console.log(upd);
+    console.orolog(upd);
     var extant = Session.get('selectfile1')
-    console.log(extant)
+    console.orolog(extant)
     if(extant != '')
         Meteor.call('update_document', 'File', extant, upd);
     else{
@@ -191,17 +191,17 @@ saveScript = function(){
         upd.uuid = upd.title;
         upd.permissions = {view: [], edit: [Meteor.userId()]}
         upd.creatorId = Meteor.userId();
-        console.log(upd);
+        console.orolog(upd);
         Meteor.call('insert_document', 'File', upd, function(err,res){
-            if(err) console.log(err);
-            if(res) console.log(res);
+            if(err) console.orolog(err);
+            if(res) console.orolog(res);
         });
     }
 }
 
 deleteScript = function(){
     var extant = Session.get('selectfile1')
-    console.log(extant)
+    console.orolog(extant)
     if(extant && extant != ''){
         var deps = Dependency.find({$or: [{fileId1: extant}, {fileId2: extant}]}).fetch();
         for(var i = 0; i < deps.length; i++)
@@ -233,10 +233,10 @@ Template.addDeps.rendered = function(){
 
     this.autorun(function(){
         var val = Session.get('selectfile1');
-        console.log('autorun script ' + val);
+        console.orolog('autorun script ' + val);
         if(val && val != ''){
-            console.log(val);
-            console.log(File.findOne({_id: val}));
+            console.orolog(val);
+            console.orolog(File.findOne({_id: val}));
             ace.edit("aceEditor").getSession().setValue(File.findOne({_id: val}).script)
         }
     });
@@ -250,10 +250,10 @@ Template.addDeps.events({
         }
     },
     'keydown, keyup, keypress #file2': function(e){
-        console.log('2!!!!!');
+        console.orolog('2!!!!!');
         Session.set('file2', $('#file2').val());
         if(e.keyCode == 13){
-            console.log('--------2')
+            console.orolog('--------2')
             setDep(2);
         }
     }

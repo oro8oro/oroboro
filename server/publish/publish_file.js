@@ -19,7 +19,7 @@ Meteor.publishComposite('fileParents', function(fileId, options) {
 });
 
 Meteor.publishComposite('fileKids', function(fileId, options) {
-  console.log('publish fileKids', fileId, options);
+  console.orolog('publish fileKids', fileId, options);
   check(fileId, String);
   check(options, Match.Optional(Object));
 
@@ -67,7 +67,7 @@ Meteor.publish('filepublish', function(id){
 
 Meteor.publish('filespublish', function(ids){
     check(ids, [String])
-    //console.log('filespublish: '+JSON.stringify(ids));
+    //console.orolog('filespublish: '+JSON.stringify(ids));
     return File.find({_id: {$in: ids}})
 })
 
@@ -90,13 +90,13 @@ Meteor.publish('file', function(fileId){
     //if(f.parameters && f.parameters.templatepath)
     //    fileIds = fileIds.concat(f.parameters.templatepath)
     var self = this;
-    //console.log(self);
+    //console.orolog(self);
 
     var handle2 = File.find({_id: fileId}, {fields: {groupids: 1} }).observe({
         changed: function(newdoc, olddoc){
-            console.log('publishhandle2groupids')
+            console.orolog('publishhandle2groupids')
             var insert = diff(newdoc.groupids, olddoc.groupids);
-            //console.log('insert:' + JSON.stringify(insert));
+            //console.orolog('insert:' + JSON.stringify(insert));
             if(insert != []){
                 if(!self._documents.groupp)
                     self._documents.groupp = []
@@ -114,7 +114,7 @@ Meteor.publish('file', function(fileId){
                     }
             }
             var remove = diff(olddoc.groupids, newdoc.groupids)
-            //console.log('remove:' + JSON.stringify(remove));
+            //console.orolog('remove:' + JSON.stringify(remove));
             if( remove != [])
                 for(var i = 0; i < remove.length; i++)
                     if(self._documents.groupp[remove[i]])
@@ -123,11 +123,11 @@ Meteor.publish('file', function(fileId){
     });
     var handle3 = File.find({_id: fileId}, {fields: {itemids: 1} }).observe({
         changed: function(newdoc, olddoc){
-            console.log('publishhandle3itemids')
+            console.orolog('publishhandle3itemids')
             var insert = diff(newdoc.itemids, olddoc.itemids);
-            console.log('insert:' + JSON.stringify(insert));
-            console.log('sfsdsdsdfds: '+JSON.stringify(self._documents));
-            console.log('sfsdsdsdfds: '+JSON.stringify(self._documents.item));
+            console.orolog('insert:' + JSON.stringify(insert));
+            console.orolog('sfsdsdsdfds: '+JSON.stringify(self._documents));
+            console.orolog('sfsdsdsdfds: '+JSON.stringify(self._documents.item));
             if(insert != []){
                 if(!self._documents.item)
                     self._documents.item = []
@@ -145,7 +145,7 @@ Meteor.publish('file', function(fileId){
                     }
             }
             var remove = diff(olddoc.itemids, newdoc.itemids)
-            //console.log('remove:' + JSON.stringify(remove));
+            //console.orolog('remove:' + JSON.stringify(remove));
             if( remove != [])
                 for(var i = 0; i < remove.length; i++)
                     if(self._documents.item[remove[i]])
@@ -156,11 +156,11 @@ Meteor.publish('file', function(fileId){
 
     var handle3 = File.find({_id: fileId}, {fields: {selected: 1} }).observe({
         changed: function(newdoc, olddoc){
-            console.log('publishhandleusers')
-            console.log(newdoc)
-            console.log(olddoc)
+            console.orolog('publishhandleusers')
+            console.orolog(newdoc)
+            console.orolog(olddoc)
             var insert = diff(newdoc.selected, olddoc.selected);
-            console.log('insert:' + JSON.stringify(insert));
+            console.orolog('insert:' + JSON.stringify(insert));
             if(insert != []){
                 if(!self._documents.users)
                     self._documents.users = []
@@ -178,7 +178,7 @@ Meteor.publish('file', function(fileId){
                     }
             }
             var remove = diff(olddoc.selected, newdoc.selected)
-            //console.log('remove:' + JSON.stringify(remove));
+            //console.orolog('remove:' + JSON.stringify(remove));
             if( remove != [])
                 for(var i = 0; i < remove.length; i++)
                     if(self._documents.users[remove[i]])

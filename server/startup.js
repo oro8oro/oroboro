@@ -5,7 +5,7 @@ Meteor.startup(function () {
       useAuth: true,
       prettyJson: true,
       //onLoggedIn: function(){
-      //  console.log()
+      //  console.orolog()
       //}
     });
 
