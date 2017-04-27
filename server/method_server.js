@@ -52,7 +52,7 @@ build_item = function build_item(item){
                 if(item.font.textAnchor)
                     itemscript = itemscript + ' text-anchor="' + item.font.textAnchor + '"';
             }
-            itemscript = itemscript + '>' + '<tspan dy="' + (Number(item.font.size)*1.27) + '" x="' + points[0] + '">' + item.text + '</tspan>' + '</text>';
+            itemscript = itemscript + '>' + '<tspan dy="' + (Number(item.font ? item.font.size : 10)*1.27) + '" x="' + points[0] + '">' + item.text + '</tspan>' + '</text>';
     }
     else if(item.type == 'polyline'){
             if(item.closed == false)
