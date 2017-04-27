@@ -131,7 +131,7 @@ datGuiParam = function(item){
             for(var i = 0; i < k.length; i++)
                 if(k[i] != 'elements'){
                     this[k[i]] = it.parameters.params[k[i]];
-                    console.log(k[i] + ': ' + it.parameters.params[k[i]]);
+                    console.orolog(k[i] + ': ' + it.parameters.params[k[i]]);
                 }
             var elem = Object.keys(it.parameters.params.elements);
             for(var i = 0; i < elem.length; i++){
@@ -145,9 +145,9 @@ datGuiParam = function(item){
                     this[k[i]] = it.parameters.params[k[i]]
         }
         if(item.attr('role') && item.attr('role') == 'connector'){
-            console.log(item);
+            console.orolog(item);
             var connector = Connector.findOne({_id: item.attr('connection')}); //add attributes for target and source
-            console.log(connector)
+            console.orolog(connector)
             this.connector = connector.connector;
             this.marker = connector.marker;
             this.sourceAttach = connector.sourceAttach;
@@ -165,13 +165,13 @@ datGuiParam = function(item){
             var k = Object.keys(it.parameters.params);
             var keys;
             k.splice(k.indexOf('elements'),1);
-            console.log(k);
+            console.orolog(k);
             for(var i in k)
                 this[k[i]] = it.parameters.params[k[i]];
-            console.log(it);
+            console.orolog(it);
             for(var e = 0; e < it.parameters.params.elements.length; e++){
                 keys = Object.keys(it.parameters.params.elements[e]);
-                console.log(keys);
+                console.orolog(keys);
                 for(i = 0; i < keys.length; i++)
                     this[e + '_' + keys[i]] = it.parameters.params.elements[e][keys[i]];
             }
@@ -338,7 +338,7 @@ buildDatGui = function(gui, item, type, no){
         if(!it)
             it = Group.findOne({_id: item.attr('id')});
         var elemid = f5.add(param, 'elemid', [shortType(item.attr("type"))+'_'+item.attr("id")]);
-        console.log(item.type);
+        console.orolog(item.type);
         if(item.type == 'path')
             var noOfPo = f5.add(param, "noPoints", [item.array.value.length]);
         var path = getElementPath(item.attr("id"),[]);
@@ -379,32 +379,32 @@ buildDatGui = function(gui, item, type, no){
         });
         translateX.onChange(function(value){
             var m = item.transform();
-            console.log(value);
+            console.orolog(value);
             var matrix = [m.a,m.b,m.c,m.d,value,m.f].join(',');
             item.transform("matrix", matrix);
             //item.attr("transform", "matrix(" + matrix + ")");
-            console.log(item.transform().matrix);
-            console.log(item.node.getCTM());
+            console.orolog(item.transform().matrix);
+            console.orolog(item.node.getCTM());
             positionSelector(item.attr("id"));
         });
         translateX.onFinishChange(function(value){
             var m = item.transform();
-            console.log(value);
+            console.orolog(value);
             Meteor.call('update_document', 'Group', item.attr("id"), {transform: [m.a,m.b,m.c,m.d,value,m.f].join(',')});
         });
         translateY.onChange(function(value){
             var m = item.transform();
-            console.log(value);
+            console.orolog(value);
             var matrix = [m.a,m.b,m.c,m.d,m.e,value].join(',');
             item.transform("matrix", matrix);
             //item.attr("transform", "matrix(" + matrix + ")");
-            console.log(item.transform().matrix);
-            console.log(item.node.getCTM());
+            console.orolog(item.transform().matrix);
+            console.orolog(item.node.getCTM());
             positionSelector(item.attr("id"));
         });
         translateY.onFinishChange(function(value){
             var m = item.transform();
-            console.log(value);
+            console.orolog(value);
             Meteor.call('update_document', 'Group', item.attr("id"), {transform: [m.a,m.b,m.c,m.d,m.e,value].join(',')});
         });
         scaleX.onChange(function(value){
@@ -514,7 +514,7 @@ buildDatGui = function(gui, item, type, no){
                     else
                         pps[i].step(0.1);
                 pps[i].onChange(function(value){
-                    console.log(value);
+                    console.orolog(value);
                     var controllers = f7.__controllers;
                     var parameters = {};
                     for(var c = 0 ; c < controllers.length; c++)
@@ -522,11 +522,11 @@ buildDatGui = function(gui, item, type, no){
                             if(controllers[c].property == k[key])
                                 parameters[k[key]] = controllers[c].getValue();
 
-                    console.log(parameters);
+                    console.orolog(parameters);
                     it.parameters.params = parameters
                     window[it.parameters.callback](it);
                 }).onFinishChange(function(value){
-                    console.log(value);
+                    console.orolog(value);
                     var controllers = f7.__controllers;
                     var parameters = {};
                     for(var c = 0 ; c < controllers.length; c++)
@@ -537,7 +537,7 @@ buildDatGui = function(gui, item, type, no){
                     it.parameters.params = parameters;
                     var pointList = JSON.stringify(pathArraySvgOro(SVG.get(item.attr('id')).array.valueOf()))
                     var set = {parameters: it.parameters, pointList: pointList}
-                    console.log(set);
+                    console.orolog(set);
                     //Meteor.call('update_document', 'Item', item.attr('id'), set);
                     oro.wraps.update_document('Item', item.attr('id'), set);
                 });
@@ -560,7 +560,7 @@ buildDatGui = function(gui, item, type, no){
                     else
                         pps[i].step(0.1);
                 pps[i].onChange(function(value){
-                    console.log(value);
+                    console.orolog(value);
                     var controllers = f7.__controllers;
                     var parameters = {};
                     parameters.elements = {};
@@ -572,11 +572,11 @@ buildDatGui = function(gui, item, type, no){
                             if(controllers[c].property == elem[e])
                                 parameters.elements[elem[e]] = controllers[c].getValue();
                     }
-                    console.log(parameters);
+                    console.orolog(parameters);
                     it.parameters.params = parameters
                     window[it.parameters.callback](it.parameters);
                 }).onFinishChange(function(value){
-                    console.log(value);
+                    console.orolog(value);
                     var controllers = f7.__controllers;
                     var parameters = {};
                     parameters.elements = {};
@@ -603,7 +603,7 @@ buildDatGui = function(gui, item, type, no){
                     if(changedelem){
                         set.locked = elems.join(',');
                     }
-                    console.log(set);
+                    console.orolog(set);
                     //Meteor.call('update_document', 'Group', item.attr('id'), set);
                     oro.wraps.update_document('Group', item.attr('id'), set);
                 });
@@ -612,7 +612,7 @@ buildDatGui = function(gui, item, type, no){
                         var controllers = global_oro_variables.gui.__folders.Parameters.__controllers
                         var index = controllers.indexOf(this);
                         if(value){
-                            console.log(controllers[index-1].getValue());
+                            console.orolog(controllers[index-1].getValue());
                             deselectItem(item.attr('id'));
                             if(!SVG.get(controllers[index-1].getValue()).visible())
                                 SVG.get(controllers[index-1].getValue()).show();
@@ -762,7 +762,7 @@ buildDatGui = function(gui, item, type, no){
                     $.ajax({
                         url: text,
                         success: function(data){
-                            console.log(data);
+                            console.orolog(data);
                         }
                     });
                     it.parameters.latex = value;
@@ -815,9 +815,9 @@ buildDatGui = function(gui, item, type, no){
                 var lighten = f11.add(param, 'simplify', 0, range).step(0.1).onChange(function(value){
                     if(value > 0){
                         item.opacity(0);
-                        console.log(value)
+                        console.orolog(value)
                         value = value * dg / range
-                        console.log(value)
+                        console.orolog(value)
                         menuItemLighten(value);
                         var elem = SVG.get(global_oro_variables.selected.members[0].attr("selected"));
                         if(!SVG.get('simplify_noPoints'))
@@ -829,9 +829,9 @@ buildDatGui = function(gui, item, type, no){
                     var id = item.attr("id");
                     SVG.get(id).opacity(opaque);
                     if(value > 0){
-                        console.log(value)
+                        console.orolog(value)
                         value = value * dg / range
-                        console.log(value)
+                        console.orolog(value)
                         menuItemLighten(value);
                         SVG.get(id).plot(SVG.get("clone_"+id).attr("d"));
                         SVG.get("clone_"+id).remove();
@@ -926,7 +926,7 @@ buildDatGui = function(gui, item, type, no){
                         positionSelector(item.attr("id"));
                     }).onFinishChange(function(value){
                         var points = [value, item.attr("y"), item.attr("width"), item.attr("height")].join(',');
-                        console.log(points);
+                        console.orolog(points);
                         Meteor.call('update_document', 'Item', item.attr("id"), {pointList: points});
                     });
                 y.onChange(function(value){
@@ -934,7 +934,7 @@ buildDatGui = function(gui, item, type, no){
                         positionSelector(item.attr("id"));
                     }).onFinishChange(function(value){
                         var points = [item.attr("x"), value, item.attr("width"), item.attr("height")].join(',');
-                        console.log(points);
+                        console.orolog(points);
                         Meteor.call('update_document', 'Item', item.attr("id"), {pointList: points});
                     });
                 w.onChange(function(value){
@@ -942,7 +942,7 @@ buildDatGui = function(gui, item, type, no){
                         positionSelector(item.attr("id"));
                     }).onFinishChange(function(value){
                         var points = [item.attr("x"), item.attr("y"), value, item.attr("height")].join(',');
-                        console.log(points);
+                        console.orolog(points);
                         Meteor.call('update_document', 'Item', item.attr("id"), {pointList: points});
                     });
                 h.onChange(function(value){
@@ -950,7 +950,7 @@ buildDatGui = function(gui, item, type, no){
                         positionSelector(item.attr("id"));
                     }).onFinishChange(function(value){
                         var points = [item.attr("x"), item.attr("y"), item.attr("width"), value].join(',');
-                        console.log(points);
+                        console.orolog(points);
                         Meteor.call('update_document', 'Item', item.attr("id"), {pointList: points});
                     });
                 if(item.attr("type") == 'embeddedHtml'){
@@ -973,14 +973,14 @@ buildDatGui = function(gui, item, type, no){
                     setFill(value);
                 });
                 fill.onFinishChange(function(value){
-                    console.log(value);
+                    console.orolog(value);
                     setFill(value);
                 });
                 fillo.onChange(function(value){
                     item.attr('fill-opacity', value);
                 });
                 fillo.onFinishChange(function(value){
-                    console.log(value);
+                    console.orolog(value);
                     setFillOpacity(value);
                 });
                 stroke.onChange(function(value){
@@ -988,42 +988,42 @@ buildDatGui = function(gui, item, type, no){
                     setStroke(value);
                 });
                 stroke.onFinishChange(function(value){
-                    console.log(value);
+                    console.orolog(value);
                     setStroke(value);
                 });
                 strokeo.onChange(function(value){
                     item.attr('stroke-opacity', value);
                 });
                 strokeo.onFinishChange(function(value){
-                    console.log(value);
+                    console.orolog(value);
                     setStrokeOpacity(value);
                 });
                 strokew.onChange(function(value){
                     item.attr('stroke-width', value);
                 });
                 strokew.onFinishChange(function(value){
-                    console.log(value);
+                    console.orolog(value);
                     setStrokeWidth(value);
                 });
                 stroked.onChange(function(value){
                     item.attr('stroke-dasharray', value);
                 });
                 stroked.onFinishChange(function(value){
-                    console.log(value);
+                    console.orolog(value);
                     setStrokeDasharray(value);
                 });
                 strokelj.onChange(function(value){
                     item.attr('stroke-linejoin', value);
                 });
                 strokelj.onFinishChange(function(value){
-                    console.log(value);
+                    console.orolog(value);
                     setStrokeLinejoin(value);
                 });
                 strokelc.onChange(function(value){
                     item.attr('stroke-linecap', value);
                 });
                 strokelc.onFinishChange(function(value){
-                    console.log(value);
+                    console.orolog(value);
                     setStrokeLinecap(value);
                 });
                 if(['para_simple_path', 'para_complex_path', 'pathEquation'].indexOf(item.attr("type")) == -1){
@@ -1039,7 +1039,7 @@ buildDatGui = function(gui, item, type, no){
                         rotate_selector(item.attr("id"), item.cx(), item.cy(), value/180*Math.PI)
                     });
                     angle.onFinishChange(function(value){
-                        console.log(value);
+                        console.orolog(value);
                         degrees = 0;
                         saveItemLocalisation(item.attr("id"));
                         //update(param, 'angle', 0);
@@ -1049,11 +1049,11 @@ buildDatGui = function(gui, item, type, no){
                 if(['simple_path', 'complex_path'].indexOf(item.attr('type')) != -1){
                     var xdegrees = 0, ydegrees = 0, temp;
                     var skewx = f2.add(param, 'skewX', -180, 180).step(1).onChange(function(value){
-                        console.log(value);
+                        console.orolog(value);
                         temp = value;
                         value = value - xdegrees;
                         xdegrees = temp;
-                        console.log(value);
+                        console.orolog(value);
                         skewPath(item, value/180*Math.PI, 0);
                     }).onFinishChange(function(value){
                         xdegrees = 0;
@@ -1061,11 +1061,11 @@ buildDatGui = function(gui, item, type, no){
                         saveItemLocalisation(item.attr("id"));
                     });
                     var skewy = f2.add(param, 'skewY', -180, 180).step(1).onChange(function(value){
-                        console.log(value);
+                        console.orolog(value);
                         temp = value;
                         value = value - ydegrees;
                         ydegrees = temp;
-                        console.log(value);
+                        console.orolog(value);
                         skewPath(item, 0, value/180*Math.PI);
                     }).onFinishChange(function(value){
                         ydegrees = 0;
@@ -1078,7 +1078,7 @@ buildDatGui = function(gui, item, type, no){
                 opac.onChange(function(value){
                     item.opacity(value);
                 }).onFinishChange(function(value){
-                    console.log(value);
+                    console.orolog(value);
                     setOpacity(value);
                 });
             if(['text', 'embeddediFrame', 'embeddedCanvas', 'embeddedHtml', 'markdown', 'para_simple_path', 'para_complex_path', 'gradient', 'parametrizedGroup', 'simpleGroup', 'pathEquation'].indexOf(item.attr('type')) == -1 && (!item.attr('role') || item.attr('role') != 'connector')){
@@ -1090,7 +1090,7 @@ buildDatGui = function(gui, item, type, no){
                     positionSelector(item.attr("id"));
                 });
                 w.onFinishChange(function(value){
-                    console.log(value);
+                    console.orolog(value);
                     saveItemLocalisation(item.attr("id"));
                 });
                 h.onChange(function(value){
@@ -1101,13 +1101,13 @@ buildDatGui = function(gui, item, type, no){
                     positionSelector(item.attr("id"));
                 });
                 h.onFinishChange(function(value){
-                    console.log(value);
+                    console.orolog(value);
                     saveItemLocalisation(item.attr("id"));
                 });
             }
             if(['para_simple_path', 'para_complex_path', 'embeddedHtml', 'gradient', 'parametrizedGroup', 'simpleGroup', 'pathEquation'].indexOf(item.attr("type")) == -1 && (!item.attr('role') || item.attr('role') != 'connector')){
                 x.onChange(function(value){
-                    console.log(value);
+                    console.orolog(value);
                         item.x(value);
                     positionSelector(item.attr("id"));
                 });
@@ -1121,7 +1121,7 @@ buildDatGui = function(gui, item, type, no){
                 });
                 y.onFinishChange(function(value){
                         item.y(value);
-                    console.log(value);
+                    console.orolog(value);
                     saveItemLocalisation(item.attr("id"));
                 });
                 if(['embeddediFrame','embeddedCanvas', 'embeddedHtml', 'markdown', 'qrcode', 'rasterImage'].indexOf(item.attr("type")) == -1){
@@ -1130,7 +1130,7 @@ buildDatGui = function(gui, item, type, no){
                         positionSelector(item.attr("id"));
                     });
                     cx.onFinishChange(function(value){
-                        console.log(value);
+                        console.orolog(value);
                         saveItemLocalisation(item.attr("id"));
                     });
                     cy.onChange(function(value){
@@ -1138,7 +1138,7 @@ buildDatGui = function(gui, item, type, no){
                         positionSelector(item.attr("id"));
                     });
                     cy.onFinishChange(function(value){
-                        console.log(value);
+                        console.orolog(value);
                         saveItemLocalisation(item.attr("id"));
                     });
                 }
@@ -1204,7 +1204,7 @@ buildDatGui = function(gui, item, type, no){
                             vals.rx = rx;
                         if(ry)
                             vals.ry = ry;
-                        console.log(vals);
+                        console.orolog(vals);
                         var points = window[it.parameters.callback](vals, value);
                         if(item.attr("type") == 'para_simple_path')
                             item.plot(split_oro_path_points(points));
@@ -1229,8 +1229,8 @@ buildDatGui = function(gui, item, type, no){
                 var f8 = gui.addFolder('Gradient');
                 var k = Object.keys(it.parameters.params);
                 k.splice(k.indexOf('elements'),1);
-                console.log(k);
-                console.log(it);
+                console.orolog(k);
+                console.orolog(it);
                 var elems = [];
                 for(var e = 0; e < it.parameters.params.elements.length; e++){
                     keys = Object.keys(it.parameters.params.elements[e]);
@@ -1238,9 +1238,9 @@ buildDatGui = function(gui, item, type, no){
                         keys[i] = e + '_' + keys[i];
                     elems = elems.concat(keys);
                 }
-                console.log(elems);
+                console.orolog(elems);
                 var all = elems.concat(k);
-                console.log(all);
+                console.orolog(all);
                 var controls = [];
                 for(var i = 0; i < all.length; i++){
                     if(all[i].indexOf('color') != -1)
@@ -1265,7 +1265,7 @@ buildDatGui = function(gui, item, type, no){
                                 }
                         }
                         it.parameters.params = parameters;
-                        console.log(it.parameters)
+                        console.orolog(it.parameters)
                         window[it.parameters.callback](it);
                     }).onFinishChange(function(value){
                         var controllers = f8.__controllers;
@@ -1285,7 +1285,7 @@ buildDatGui = function(gui, item, type, no){
                                 }
                         }
                         it.parameters.params = parameters;
-                        console.log(it.parameters)
+                        console.orolog(it.parameters)
                         //Meteor.call('update_document', 'Item', item.attr('id'), {parameters: it.parameters});
                         oro.wraps.update_document('Item', item.attr("id"), {parameters: it.parameters});
                         })
@@ -1379,7 +1379,7 @@ buildDatGui = function(gui, item, type, no){
         var reload = f3.add(param, 'reload');
         var resetView = f3.add(param, 'resetView');
     }
-    console.log(type);
+    console.orolog(type);
     if(type == 'simple_path'){
         var union = f3.add(param, 'union');
         var diff = f3.add(param, 'difference');
@@ -1493,7 +1493,7 @@ buildDatGui = function(gui, item, type, no){
             });
         var qrtxt = f1.add(param, 'qrtxt').onChange(function(value){
                 var encoded = encodeURI(value);
-                console.log(encoded);
+                console.orolog(encoded);
                 var href = item.attr('href');
                 href = href.slice(0,href.indexOf('chl=')) + 'chl=' + encoded + href.slice(href.indexOf('&choe'));
                 item.attr('href', href);

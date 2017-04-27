@@ -4,7 +4,7 @@ Template.aceEditor.rendered = function(){
     editor.getSession().setMode("ace/mode/javascript");
     editor.getSession().setUseWrapMode(true);
     editor.getSession().on('change', function() {
-        //console.log(editor.getSession().getValue())
+        //console.orolog(editor.getSession().getValue())
         //parent.updater(editor.getSession().getValue());
     });
     editor.commands.addCommand({

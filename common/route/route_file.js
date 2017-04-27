@@ -36,11 +36,11 @@ Router.map(function(){
 
                 if(file.fileType == 'image/svg+xml') {
                   if(file.svg) {
-                    //console.log('----get file cache', file._id, new Date())
+                    //console.orolog('----get file cache', file._id, new Date())
                     this.response.end(file.svg);
                     return;
                   }
-                  //console.log('----compute file cache', file._id, new Date())
+                  //console.orolog('----compute file cache', file._id, new Date())
                   var script = Meteor.call('getFileScript', file._id);
                   File.update({_id: file._id}, {$set: {svg: script}});
                   this.response.end(script);
@@ -239,7 +239,7 @@ Router.route('/filem/:_id', {
     path: '/filem/:_id',
     template: 'svgEditor',
     subscriptions: function(){
-        console.log('subscribe');
+        console.orolog('subscribe');
         //this.subscribe('svgEditorScripts').wait();
         //this.subscribe('file', this.params._id).wait();
         //this.subscribe('filebrowse', 'vyRjpfv2kki5sPE9G', 'file').wait()
@@ -255,15 +255,15 @@ Router.route('/filem/:_id', {
         //this.wait(subs3);
         //global_oro_variables.subscriptionhandles['filebrowse'] = subs3;
 
-        console.log('/subscribe');
+        console.orolog('/subscribe');
     },
     action: function(){
         if(this.ready()){
-            console.log('this.ready');
+            console.orolog('this.ready');
             var f = File.findOne({_id: this.params._id});
-            //console.log(JSON.stringify(File.find().fetch()))
-            //console.log(JSON.stringify(Group.find().fetch()))
-            //console.log(JSON.stringify(Item.find().fetch()))
+            //console.orolog(JSON.stringify(File.find().fetch()))
+            //console.orolog(JSON.stringify(Group.find().fetch()))
+            //console.orolog(JSON.stringify(Item.find().fetch()))
             //var lastit = Item.findOne({_id: f.itemids[f.itemids.length-1]})
             this.render('svgEditor', {
                 data: function(){
@@ -278,7 +278,7 @@ Router.route('/editor/:_id', {
     path: '/editor/:_id',
     template: 'svgEditor',
     subscriptions: function(){
-        console.log('subscribe');
+        console.orolog('subscribe');
         //this.subscribe('svgEditorScripts').wait();
         //this.subscribe('file', this.params._id).wait();
         //this.subscribe('filebrowse', 'vyRjpfv2kki5sPE9G', 'file').wait()
@@ -287,7 +287,7 @@ Router.route('/editor/:_id', {
         this.subscribe('relatedfiles', this.params._id)
 
         var file = File.findOne({_id: this.params._id})
-        console.log(file);
+        console.orolog(file);
         /*
         for(var i in ids.items)
             this.subscribe('itempublish', ids.items[i])
@@ -308,16 +308,16 @@ Router.route('/editor/:_id', {
         this.wait(subs3);
         global_oro_variables.subscriptionhandles['filebrowse'] = subs3;
 
-        //console.log(global_oro_variables.subscriptionhandles);
-        console.log('/subscribe');
+        //console.orolog(global_oro_variables.subscriptionhandles);
+        console.orolog('/subscribe');
     },
     action: function(){
         if(this.ready()){
-            console.log('this.ready');
+            console.orolog('this.ready');
             var f = File.findOne({_id: this.params._id});
-            //console.log(JSON.stringify(File.find().fetch()))
-            //console.log(JSON.stringify(Group.find().fetch()))
-            //console.log(JSON.stringify(Item.find().fetch()))
+            //console.orolog(JSON.stringify(File.find().fetch()))
+            //console.orolog(JSON.stringify(Group.find().fetch()))
+            //console.orolog(JSON.stringify(Item.find().fetch()))
             var lastit = Item.findOne({_id: f.itemids[f.itemids.length-1]})
             this.render('svgEditor', {
                 data: function(){
@@ -332,7 +332,7 @@ Router.route('/filed/:_id', {
     path: '/filed/:_id',
     template: 'svgDinamic',
     subscriptions: function(){
-        console.log('subscribe');
+        console.orolog('subscribe');
         var subs1 = Meteor.subscribe('svgEditorScripts');
         this.wait(subs1);
         global_oro_variables.subscriptionhandles['svgEditorScripts'] = subs1;
@@ -345,12 +345,12 @@ Router.route('/filed/:_id', {
         this.wait(subs3);
         global_oro_variables.subscriptionhandles['filebrowse'] = subs3;
 
-        console.log(global_oro_variables.subscriptionhandles);
-        console.log('/subscribe');
+        console.orolog(global_oro_variables.subscriptionhandles);
+        console.orolog('/subscribe');
     },
     action: function(){
         if(this.ready()){
-            console.log('this.ready');
+            console.orolog('this.ready');
             var f = File.findOne({_id: this.params._id});
             this.render('svgDinamic', {
                 data: function(){
@@ -419,7 +419,7 @@ Router.route('/browse/:col/:_id/:start/:dim', {
         return {start: this.params.start, dim: this.params.dim, id: this.params._id, col: this.params.col, login: true};
     },
     onBeforeAction: function(){
-        console.log('load scripts');
+        console.orolog('load scripts');
         var script1 = IRLibLoader.load(server + '/file/NjYbTkGZKXn8miLnN'); // GZxMGchzEkKFtakFh');
         if(script1.ready()){
             var script2 = IRLibLoader.load(server + '/file/6BdThBrHzGa8qe3nm');
@@ -445,7 +445,7 @@ Router.route('/browse/:col/:_id/:start/:dim', {
     },*/
     action: function(){
         if(this.ready()){
-            console.log('ready');
+            console.orolog('ready');
             this.render();
         }
     }

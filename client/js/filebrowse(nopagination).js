@@ -1,6 +1,7 @@
 countB = 0;
 bscale = 0.1;
 noedit = 'JZXXMo5N38iwgfNAG'
+ounit = 'filebrowse';
 subsConfig = {
     cacheLimit: 40,
     expireIn: 20 //minutes
@@ -12,7 +13,6 @@ op = {
   navAfter: 0.5
 }
 redirect = function(params) {
-  //console.log('params', JSON.stringify(params));
   Router.go('/browse/file/' + params.id + '/' + params.start + '/' + params.dim + ( params.buttons || '' ));
 }
 
@@ -89,7 +89,7 @@ Template.filebrowse.onRendered(function(){
     this.autorun(function() {
       var ready = self.subs.fileKids.ready();
       var fready = self.subs.filepublish.ready();
-
+        console.orolog(ounit, 'ready, fready', ready, fready)
       if(ready && fready) {
         var data = self.data;
         data.start = parseInt(data.start);
@@ -117,7 +117,7 @@ Template.filebrowse.onRendered(function(){
     this.autorun(function() {
       var ready = self.subs.fileParents.ready();
       if(ready) {
-        console.log('fileParents ready');
+        console.orolog('fileParents ready');
         SVG.get('Bcrumbs').clear()
         fileBcrumbs(self.data);
       }
@@ -126,7 +126,7 @@ Template.filebrowse.onRendered(function(){
     this.autorun(function() {
       var userId = Meteor.userId();
       var files = self.files.get();
-      console.log('userId', userId);
+      console.orolog('userId', userId);
       if(files) {
         if(SVG.get('menu_defs')) {
           SVG.get('menu_defs').remove();
@@ -138,13 +138,13 @@ Template.filebrowse.onRendered(function(){
 
 Template.filebrowse.events({
     'click .filegroup': function(e,t){
-        console.log('click file')
+        console.orolog('click file')
         if(e.target.getAttribute('id').indexOf('container_') == -1 && e.target.tagName != 'use'){
             var id = e.currentTarget.getAttribute('id');
             var i = Number(id.substring(id.lastIndexOf("_")+1));
             var fileId = SVG.get("file_"+i).attr("fileId")
             if(File.findOne({_id: fileId}).noofchildren > 0 || fileId == vips.myWork){
-                console.log('other subscription');
+                console.orolog('other subscription');
                 var params = t.data;
                 var defaultButtons = Session.get('defaultButtons');
                 if(params.buttons != defaultButtons){
@@ -170,24 +170,24 @@ Template.filebrowse.events({
             else if(fileId == vips.about)
                 window.open('/md/AboutOroboro', '_blank');//about us
         }
-        console.log('/click file')
+        console.orolog('/click file')
     }
 })
 
 showBrowserContent = function(params, files){
-    console.log('browserContent');
+    console.orolog('browserContent');
     var start = params.start,
         dim = params.dim,
         col = params.col,
         parent;
-        console.log('col', col)
+        console.orolog('col', col)
     if(col == 'file')
         parent = File.findOne({_id: params.id});
     else{
         var path = getElementPath(params.id);
         parent = File.findOne({_id: path[path.length-1]});
     }
-    console.log('parent', parent)
+    console.orolog('parent', parent)
     Session.set('parentDims', {w: parent.width, h: parent.height});
 
     $('body').attr({"class": "no_scroll"}).css({margin:0,padding:0});
@@ -257,7 +257,7 @@ showBrowserContent = function(params, files){
                       var clone = container.use(k);
                       clone.on('click', function() {
                         var name = k.attr('data-action');
-                        console.log('name', name);
+                        console.orolog('name', name);
                         window[name](params);
                       });
                     });
@@ -274,11 +274,11 @@ showBrowserContent = function(params, files){
             SVG.get("file_"+i).opacity(1);
         })
     }
-    console.log('/browserContent');
+    console.orolog('/browserContent');
 }
 
 navButtons = function(params, files){
-    console.log('navButtons', JSON.stringify(params));
+    console.orolog('navButtons', JSON.stringify(params));
 
     var start = params.start;
     var dim = params.dim;
@@ -322,7 +322,7 @@ navButtons = function(params, files){
         n.opacity(op.navBefore);
 
         n.on('click', function(event){
-          console.log('n on click', params.start, JSON.stringify(params));
+          console.orolog('n on click', params.start, JSON.stringify(params));
             params.start += 1;
             redirect(params);
         })
@@ -348,7 +348,7 @@ navButtons = function(params, files){
 
         p.on('click', function(event){
           params.start -= 1;
-          console.log('prev click', JSON.stringify(params));
+          console.orolog('prev click', JSON.stringify(params));
             if(params.start > 0){
               redirect(params);
             }
@@ -431,11 +431,11 @@ navButtons = function(params, files){
             SVG.get('slidercontrol').cy(st + step * (start-1) + step/2);
         }
     }
-    console.log('/navButtons');
+    console.orolog('/navButtons');
 }
 
 fileBMenu = function(params, files){
-    console.log('fileBMenu');
+    console.orolog('fileBMenu');
 
     var start = params.start, dim = params.dim, col = params.col, id = params.id;
     var browser = SVG.get('fileBrowse');
@@ -443,7 +443,7 @@ fileBMenu = function(params, files){
 
     if(!params.buttons || params.buttons != 'nobuttons'){
         if(!SVG.get('menu_defs')){
-            console.log('create menu_defs')
+            console.orolog('create menu_defs')
             var menu = SVG.get('defs').group().attr("id", "menu_defs")
             var border = 100, skipx = 0;
 
@@ -462,7 +462,7 @@ fileBMenu = function(params, files){
                     }).on('mouseout', function(event){
                         this.parent.opacity(0.7);
                     }).mousedown(function(){
-                        console.log('mousedown img');
+                        console.orolog('mousedown img');
                         editIt(params)
                     });
 
@@ -481,7 +481,7 @@ fileBMenu = function(params, files){
                     }).on('mouseout', function(event){
                         this.parent.opacity(0.7);
                     }).mousedown(function(){
-                        console.log('mousedown img');
+                        console.orolog('mousedown img');
                         editCloneIt(params)
                     });
 
@@ -499,7 +499,7 @@ fileBMenu = function(params, files){
                     }).on('mouseout', function(event){
                         this.parent.opacity(0.7);
                     }).mousedown(function(){
-                        console.log('mousedown img');
+                        console.orolog('mousedown img');
                         removeIt(params)
                     });
                 skipx = 3
@@ -519,7 +519,7 @@ fileBMenu = function(params, files){
                 }).on('mouseout', function(event){
                     this.parent.opacity(0.7);
                 }).mousedown(function(){
-                    console.log('mousedown img', JSON.stringify(params));
+                    console.orolog('mousedown img', JSON.stringify(params));
                     exportIt(params)
                 });
 
@@ -539,11 +539,11 @@ fileBMenu = function(params, files){
                 }).on('mouseout', function(event){
                     this.parent.opacity(0.7);
                 }).mousedown(function(){
-                    console.log('mousedown img');
+                    console.orolog('mousedown img');
                     viewIt(params)
                 });
 
-            console.log('/created menu_defs')
+            console.orolog('/created menu_defs')
         }
     }
 
@@ -551,25 +551,25 @@ fileBMenu = function(params, files){
         navdefs = SVG.get('defs').group().attr('id','navdefs')
     if(!params.buttons || params.buttons != 'nobuttons'){
         if(!SVG.get('folder')){
-            console.log('create folder')
+            console.orolog('create folder')
             var folder = SVG.get('navdefs').image('/file/menuItemFolder').loaded(function(loader) {
                 this.size(loader.width, loader.height)
             })
             folder.attr("id", 'folder').on('click', function(){
                 browseIt(params);
             });
-            console.log('/created folder')
+            console.orolog('/created folder')
         }
         /* not yet
         if(!SVG.get('disector')){
-            console.log('create disector')
+            console.orolog('create disector')
             var disector = SVG.get('navdefs').image('/file/menuItemDisector').loaded(function(loader) {
                 this.size(loader.width, loader.height)
             })
             disector.attr('id', 'disector').on('click', function(){
                 disectIt();
             });;
-            console.log('/created disector')
+            console.orolog('/created disector')
         }*/
     }
     //for(i = 0; i < len; i++){
@@ -618,11 +618,11 @@ fileBMenu = function(params, files){
             }*/
         }
     }
-    console.log('/fileBMenu');
+    console.orolog('/fileBMenu');
 }
 
 fileBcrumbs = function(params){
-    console.log('fileBcrumbs');
+    console.orolog('fileBcrumbs');
 
     var start = params.start, dim = params.dim, col = params.col, id = params.id,
     fileid = params.id;
@@ -711,7 +711,7 @@ fileBcrumbs = function(params){
     }
     for(i in path)
         gr[i].cx(-maxwidth*scale/2 - 20)
-    console.log('/fileBcrumbs');
+    console.orolog('/fileBcrumbs');
 }
 
 editIt = function editIt(params) {
@@ -730,19 +730,19 @@ exportIt = function(params) {
 }
 
 editCloneIt = function editCloneIt(params){
-    console.log('editCloneItstart')
+    console.orolog('editCloneItstart')
     if(Meteor.userId()){
         if(params.col == 'file')
             Meteor.call('cloneFile', Session.get("fileBIt"), function(err, res){
-              if(err) console.log(err)
+              if(err) console.orolog(err)
               if(res) {
-                console.log('clonefile res', res);
+                console.orolog('clonefile res', res);
                 window.open('/filem/'+res, '_blank');
               }
             });
         /*else
             Meteor.call('cloneGroupFile', Session.get("fileBIt"), function(err, res){
-              console.log('cloneGroupFile res', res)
+              console.orolog('cloneGroupFile res', res)
               window.open('/filem/'+res, '_blank');
             });*/
     }

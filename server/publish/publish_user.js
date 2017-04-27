@@ -4,9 +4,9 @@ Meteor.publish('userpublish', function(id){
 })
 
 Meteor.publish('userspublish', function(ids){
-    //console.log(ids)
+    //console.orolog(ids)
     check(ids, [String])
-    //console.log('userspublish: '+JSON.stringify(ids));
+    //console.orolog('userspublish: '+JSON.stringify(ids));
     return Meteor.users.find({_id: {$in: ids}});
 })
 
