@@ -227,6 +227,7 @@ Router.map(function(){
                     this.response.end(script);
                 }
             }
+          }
         }
     });
 });
