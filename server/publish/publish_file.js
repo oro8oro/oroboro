@@ -1,3 +1,64 @@
+Meteor.publishComposite('fileParents', function(fileId, options) {
+  check(fileId, String);
+  check(options, Match.Optional(Object));
+
+  options = options || {};
+
+  return {
+    find: function() {
+      return File.find({_id: fileId});
+    },
+    children: [
+      {
+        find: function(file) {
+          return File.find({_id: {$in: file.structuralpath}});
+        }
+      }
+    ]
+  }
+});
+
+Meteor.publishComposite('fileKids', function(fileId, options) {
+  console.log('publish fileKids', fileId, options);
+  check(fileId, String);
+  check(options, Match.Optional(Object));
+
+  options = options || {};
+
+  return {
+    find: function() {
+      return Dependency.find({fileId2: fileId, type: 1}, options);
+    },
+    children: [
+      {
+        find: function(dep) {
+          return File.find({_id: dep.fileId1});
+        }
+      }
+    ]
+  }
+});
+
+Meteor.publishComposite('fileRelated', function(fileId, options) {
+  check(fileId, String);
+  check(options, Match.Optional(Object));
+
+  options = options || {};
+
+  return {
+    find: function() {
+      return Dependency.find({fileId2: fileId, type: {$ne: 1} }, options);
+    },
+    children: [
+      {
+        find: function(dep) {
+          return File.find({_id: dep.fileId1});
+        }
+      }
+    ]
+  }
+});
+
 Meteor.publish('filepublish', function(id){
     check(id, String);
     return File.find({_id: id});
