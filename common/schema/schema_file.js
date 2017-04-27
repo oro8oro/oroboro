@@ -24,14 +24,22 @@ Schemas.File = new SimpleSchema({
     dateModified: {
         type: Date,
         label: "Date Modified",
-        defaultValue: new Date(),
-        optional: true
+        optional: true,
+        autoValue: function () {
+          if (this.isUpdate) {
+            return new Date();
+          }
+        }
     },
     dateCreated: {
         type: Date,
         label: "Date Created",
-        defaultValue: new Date(),
-        optional: true
+        optional: true,
+        autoValue: function () {
+          if (this.isInsert) {
+            return new Date();
+          }
+        }
     },
     version: {
         type: String,
@@ -72,6 +80,10 @@ Schemas.File = new SimpleSchema({
                 ];
             }
         }*/
+    },
+    svg: { //svg file cache
+      type: String,
+      optional: true
     },
     script: {
         type: String,

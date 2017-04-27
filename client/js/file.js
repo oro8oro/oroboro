@@ -365,7 +365,8 @@ setFill = function setFill(val){
     var upd = {};
     upd = {"palette.fillColor": val};
     console.log(upd);
-    Meteor.call('update_collection', "Item", itemids, upd);
+    //Meteor.call('update_collection', "Item", itemids, upd);
+    oro.wraps.update_collection('Item', itemids, upd);
 }
 
 setFillOpacity = function setFillOpacity(val){

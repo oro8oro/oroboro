@@ -24,16 +24,26 @@ Router.map(function(){
                     //var headers = {'Content-type': file.fileType, 'Access-Control-Allow-Origin' : '*', Location: file.script};
                     this.response.writeHead(302, {Location: file.script});
                     this.response.end();
+                    return;
                 }
-                else{
-                    var headers = {'Content-type': file.fileType, 'Access-Control-Allow-Origin' : '*'};
-                    this.response.writeHead(200, headers);
-                    if(['application/octet-stream', 'application/javascript', 'text/css', 'text/plain', 'gcode'].indexOf(file.fileType) != -1)
-                        var script = file.script;
-                    else
-                        if(file.fileType == 'image/svg+xml')
-                            var script = Meteor.call('getFileScript', file._id);
-                    this.response.end(script);
+
+                var headers = {'Content-type': file.fileType, 'Access-Control-Allow-Origin' : '*'};
+                this.response.writeHead(200, headers);
+                if(['application/octet-stream', 'application/javascript', 'text/css', 'text/plain', 'gcode'].indexOf(file.fileType) != -1) {
+                    this.response.end(file.script);
+                    return;
+                }
+
+                if(file.fileType == 'image/svg+xml') {
+                  if(file.svg) {
+                    //console.log('----get file cache', file._id, new Date())
+                    this.response.end(file.svg);
+                    return;
+                  }
+                  //console.log('----compute file cache', file._id, new Date())
+                  var script = Meteor.call('getFileScript', file._id);
+                  File.update({_id: file._id}, {$set: {svg: script}});
+                  this.response.end(script);
                 }
             }
         }
@@ -211,7 +221,7 @@ Router.map(function(){
                     this.response.writeHead(200, headers);
                     if(['application/octet-stream', 'application/javascript', 'text/css', 'text/plain'].indexOf(file.fileType) != -1)
                         var script = file.script;
-                    else
+                    else {
                         if(file.fileType == 'image/svg+xml')
                             var script = Meteor.call('getFileScript', file._id, this.params.scale, true);
                     this.response.end(script);
@@ -360,11 +370,20 @@ Router.route('/browse/:col/:_id/:start/:dim/:buttons', {
         return {start: this.params.start, dim: this.params.dim, id: this.params._id, col: this.params.col, buttons: this.params.buttons};
     },
     onBeforeAction: function(){
-        var script1 = IRLibLoader.load(server + '/file/GZxMGchzEkKFtakFh');
+        var script1 = IRLibLoader.load(server + '/file/NjYbTkGZKXn8miLnN');  // GZxMGchzEkKFtakFh');
         if(script1.ready()){
             var script2 = IRLibLoader.load(server + '/file/6BdThBrHzGa8qe3nm');
             if(script2.ready()){
-                this.next();
+              //var script3 = IRLibLoader.load(server + '/file/SvgoiuE2Ft5hPuA7s'); // svg import
+              //if(script3.ready()) {
+              //  var script5 = IRLibLoader.load(server + '/file/9Za3SyDmhiBzmGYup'); // svg parse
+              //  if(script5.ready()) {
+              //    var script6 = IRLibLoader.load(server + '/file/uqxojroeQhqAQ2RQm'); // foreignObject
+              //    if(script6.ready()) {
+                    this.next();
+              //    }
+              //  }
+            //  }
             }
         }
     },
@@ -400,14 +419,22 @@ Router.route('/browse/:col/:_id/:start/:dim', {
     },
     onBeforeAction: function(){
         console.log('load scripts');
-        var script1 = IRLibLoader.load(server + '/file/GZxMGchzEkKFtakFh');
+        var script1 = IRLibLoader.load(server + '/file/NjYbTkGZKXn8miLnN'); // GZxMGchzEkKFtakFh');
         if(script1.ready()){
             var script2 = IRLibLoader.load(server + '/file/6BdThBrHzGa8qe3nm');
             if(script2.ready()){
                 var script3 = IRLibLoader.load(server + '/file/uqxojroeQhqAQ2RQm');
                 if(script3.ready()){
-                    console.log('/load scripts');
-                    this.next();
+                  //var script5 = IRLibLoader.load(server + '/file/9Za3SyDmhiBzmGYup'); // svg import
+                  //if(script5.ready()) {
+                    //var script4 = IRLibLoader.load(server + '/file/SvgoiuE2Ft5hPuA7s'); // svg parse
+                    //if(script4.ready()) {
+                      //var script6 = IRLibLoader.load(server + '/file/uqxojroeQhqAQ2RQm'); // foreignObject
+                      //if(script6.ready()) {
+                        this.next();
+                      //}
+                    //}
+                  //}
                 }
             }
         }

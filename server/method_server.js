@@ -32,6 +32,7 @@ addAtributes = function addAtributes(palette){
 };
 
 build_item = function build_item(item){
+  //console.log('build_item', item._id)
     if(item.type == 'rasterImage' || item.type == 'formulae' || item.type == 'qrcode'){
             var points = split_oro_points(item.pointList);
             var itemscript = '<image xlink:href="' + htmlEntities(item.text) + '" id="' + item._id + '" height="' + points[3] + '" width="' + points[2] + '" x="' + points[0] + '" y="' + points[1] + '"/>';
@@ -91,6 +92,7 @@ build_item = function build_item(item){
 }
 
 build_group = function build_group(group){
+  //console.log('build_group', group._id);
     var result = '';
     var items = Item.find({groupId: group._id}, {sort: {ordering:1}}).fetch();
     for(var i in items)
@@ -99,6 +101,7 @@ build_group = function build_group(group){
 }
 
 recursive_group = function recursive_group(group){
+  //console.log('recursive_group', group._id);
     var subgroups = Group.find({ groupId: group._id }, { sort: { ordering:1 }}).fetch();
     if(group.type == 'parametrizedGroup' && group.parameters)
         script = group.parameters.output;
@@ -136,7 +139,12 @@ recursive_depends = function recursive_depends(fileId, rel){
 */
 //<script xlink:href="file_name" />
 Meteor.methods({
+  setSvg: function(fileId) {
+    var script = Meteor.call('getFileScript', fileId);
+    File.update({_id: fileId}, {$set: {svg: script}});
+  },
     getFileScript: function (fileId, scale, notemplate){
+      //console.log('getFileScript fileId', fileId)
         var file = File.findOne({_id: fileId});
         if(scale){
             file.width = file.width * scale
@@ -195,6 +203,7 @@ Meteor.methods({
         return result;
     },
     getDependencies: function(fileId){
+      //console.log('getDependencies', fileId)
         scripts = [];
         recursive_depends(fileId, 3);
         for(var s in js_dep){
@@ -294,6 +303,7 @@ Meteor.methods({
         check(type, Number);
         check(skip, Number)
         check(limit, Number)
+        //console.log('getDependantFileIds', id)
 
         var q = {type: type}
         q[label] = id
@@ -311,26 +321,23 @@ Meteor.methods({
     },
     getComponentsIds: function(fileId){
         check(fileId, String)
-
+        console.log('getComponentsIds fileId', fileId)
         var ids = file_components_ids(fileId)
         return ids
     },
     getRelatedFiles: function(fileId){
         check(fileId, String)
-        console.log(fileId)
         var doc = File.findOne({_id: fileId});
         var fileIds = [fileId].concat(doc.structuralpath).concat(doc.dependencypath)
-        console.log(fileIds)
+        console.log('getRelatedFiles fileId', fileId, fileIds)
         return fileIds
     },
     getUsers: function(fileId){
         check(fileId, String)
-
-        console.log(fileId)
         var doc = File.findOne({_id: fileId});
         var userIds = [doc.creatorId].concat(doc.permissions.view).concat(doc.permissions.edit)
         //remnant...selected shouldn't be null
-        console.log(doc.selected)
+        //console.log('getUsers fileId', fileId, doc.selected)
         if(doc.selected)
             userIds = userIds.concat(doc.selected);
         return userIds

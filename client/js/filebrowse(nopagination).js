@@ -235,6 +235,12 @@ showBrowserContent = function(params, files){
         svg[i].attr({preserveAspectRatio: "xMidYMid meet"})
         svg[i].viewbox(0,0,f.width,f.height);
         svg[i].image(imagepath);
+        /*if(files[i].svg) {
+          svg[i].nested().svg(files[i].svg)
+        }
+        else {
+          Meteor.call('setSvg', files[i]._id);
+        }*/
         bkg[i] = gr[i].rect(parent.width,parent.height).fill('#FFFFFF').attr('id','background_'+i).opacity(0);
         x=x+parent.width/dim;
         gr[i].on('mouseover', function(){
@@ -727,39 +733,15 @@ editCloneIt = function editCloneIt(params){
     console.log('editCloneItstart')
     if(Meteor.userId()){
         if(params.col == 'file')
-            cloneFile(Session.get("fileBIt"), function(res){
-                FileSubs.subscribe('filepublish', res, function(err, res2){
-                    //reloadSubscriptions()
-                })
-                Meteor.setTimeout(function(){
-                    Meteor.call('getComponentsIds', res, function(err, res2){
-                        if(err)
-                            console.log(err)
-                        if(res2){
-                            subscriptions.groups.push(GroupSubs.subscribe('groupspublish', res2.groups))
-                            subscriptions.items.push(ItemSubs.subscribe('itemspublish', res2.items))
-                        }
-                    })
-                }, 10000)
-                window.open('/filem/'+res, '_blank');
+            Meteor.call('cloneFile', Session.get("fileBIt"), function(err, res){
+              console.log('clonefile res', res)
+              window.open('/filem/'+res, '_blank');
             });
-        else
-            cloneGroupFile(Session.get("fileBIt"), function(res){
-                FileSubs.subscribe('filepublish', res, function(err, res2){
-                    //reloadSubscriptions()
-                })
-                Meteor.setTimeout(function(){
-                    Meteor.call('getComponentsIds', res, function(err, res2){
-                        if(err)
-                            console.log(err)
-                        if(res2){
-                            subscriptions.groups.push(GroupSubs.subscribe('groupspublish', res2.groups))
-                            subscriptions.items.push(ItemSubs.subscribe('itemspublish', res2.items))
-                        }
-                    })
-                }, 10000)
-                window.open('/filem/'+res, '_blank');
-            });
+        /*else
+            Meteor.call('cloneGroupFile', Session.get("fileBIt"), function(err, res){
+              console.log('cloneGroupFile res', res)
+              window.open('/filem/'+res, '_blank');
+            });*/
     }
 }
 
