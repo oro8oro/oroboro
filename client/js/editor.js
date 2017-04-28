@@ -1319,7 +1319,7 @@ menuItemAddConnector = function menuItemAddConnector(noshow){
 }
 
 menuAddElemCallb = function menuAddElemCallb(id){
-    console.orolog('menuAddElemCallb');
+    console.orolog('menuAddElemCallb id', id);
     //$('#filebrowserModal').modal('hide');
     var currentLayer;
     SVG.get(Session.get('fileId')).each(function(i,children){
@@ -1328,43 +1328,10 @@ menuAddElemCallb = function menuAddElemCallb(id){
     });
     if(!currentLayer)
         currentLayer =  SVG.get(Session.get('fileId')).first();
-    if(File.findOne({_id: id})){
-        var g = Group.findOne({fileId: id, type: 'layer'},{sort: {ordering: 1}});
-        console.orolog(g._id)
-        var elem = Group.findOne({groupId: g._id},{sort: {ordering: 1}});
-        console.orolog(elem)
-        if(elem)
-            cloneGroup(elem, currentLayer.attr("id"), 'groupId');
-        else{
-            var elem = Item.findOne({groupId: g._id},{sort: {ordering: 1}});
-            console.orolog(elem)
-            cloneItem(elem, currentLayer.attr("id"));
-        }
-        /*
-        Meteor.call('getFirstElement', id, function(err, res){
-            if(err)
-                console.orolog(err)
-            if(res){
-                console.orolog(res)
 
-                if(res.type == 'item')
-                    cloneItem(res.elem, currentLayer.attr("id"));
-                else if(res.type == 'group')
-                    cloneGroup(res.elem, currentLayer.attr("id"), 'groupId');
-            }
-        })*/
-    }
-    else{
-        var elem = Group.findOne({_id: id})
-        if(elem){
-            if(elem.type == 'layer')
-                cloneGroup(Group.findOne({_id: id}), Session.get('fileId'), 'fileId');
-            else
-                cloneGroup(Group.findOne({_id: id}), currentLayer.attr("id"), 'groupId');
-        }
-        else
-            cloneItem(Item.findOne({_id: id}), currentLayer.attr("id"));
-    }
+    Meteor.call('addElement', currentLayer.attr("id"), id, function(err) {
+      if(err) console.log(err);
+    });
 }
 
 menuAddTemplateCallb = function menuAddTemplateCallb(id){
