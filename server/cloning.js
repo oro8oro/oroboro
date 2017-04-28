@@ -20,6 +20,7 @@ cloneFile = function cloneFile(id){
     var groups = Group.find({fileId: id}).fetch();
     f.original = f._id;
     delete f._id;
+    delete f.svg;
     f.creatorId = this.userId || Meteor.userId();
     f.dateModified = new Date();
     f.permissions.view = [];
