@@ -13,11 +13,28 @@ op = {
   navAfter: 0.5
 }
 redirect = function(params) {
-  Router.go('/browse/file/' + params.id + '/' + params.start + '/' + params.dim + ( params.buttons || '' ));
+  var current = Router.current().route.getName();
+  var inEditor = Session.get('filebrowserInHouse');
+
+  if(!inEditor) {
+    Router.go(current, params);
+    return;
+  }
+
+  var rparams = Object.assign({}, Router.current().params);
+  var query = Object.assign(rparams.query || {}, params);
+  var q = [];
+  for(key in query) {
+    q.push(key + '=' + query[key]);
+  }
+  q = q.join('&')
+  Router.go(current, rparams, {query: q});
+  return;
 }
 
 Template.filebrowse.onCreated(function() {
   var self = this;
+  this.params = new ReactiveVar();
   this.files = new ReactiveVar();
   this.subs = {};
   this.menuDefsVals = {
@@ -30,8 +47,26 @@ Template.filebrowse.onCreated(function() {
   this.autorun(function() {
     var data = Template.currentData();
     if(data) {
-      var start = parseInt(data.start),
-        dim = parseInt(data.dim);
+      self.params.set(data);
+      console.orolog('--SET PARAMS currentData', JSON.stringify(data));
+    }
+  })
+
+  this.autorun(function() {
+    var current = Router.current();
+    var data = current.params && current.params.query && current.params.query.id ? current.params.query : null;
+    if(data) {
+      self.params.set(data);
+      console.orolog('--SET PARAMS router query', JSON.stringify(data));
+    }
+  })
+
+
+  this.autorun(function() {
+    var data = self.params.get();
+    console.orolog('autorun get params')
+    if(data) {
+      console.orolog('autorun get params filebrowser data1', JSON.stringify(data));
 
       self.subs.filepublish = FileSubs.subscribe('filepublish', data.id);
       self.subs.fileParents = FileSubs.subscribe('fileParents', data.id);
@@ -39,12 +74,14 @@ Template.filebrowse.onCreated(function() {
 
       if(self.subs.fileKids) {
         self.subs.fileKids.stop();
+        console.orolog('fileKids stopped')
       }
       if(data.id != vips.myWork) {
-        self.subs.fileKids = Meteor.subscribe('fileKids', data.id, {skip: (start - 1) * dim*dim, limit: dim*dim });
+        self.subs.fileKids = Meteor.subscribe('fileKids', data.id, {skip: (data.start - 1) * data.dim * data.dim, limit: data.dim * data.dim });
+        console.orolog('fileKids sub', self.subs.fileKids)
       }
       else {
-        self.subs.fileKids = Meteor.subscribe('userWork', 'image/svg+xml', (start - 1) * dim*dim, dim*dim);
+        self.subs.fileKids = Meteor.subscribe('userWork', 'image/svg+xml', (data.start - 1) * data.dim * data.dim, data.dim * data.dim);
 
       }
     }
@@ -58,17 +95,19 @@ Template.filebrowse.onRendered(function(){
     if(!window.windowType)
         window.windowType = 'fileBrowser';
     $('body').css("background-color", "rgba(255, 255, 255, 0)");
-    var start = Number(this.data.start);
-    var dim = Number(this.data.dim);
-    if(!this.data.buttons){
+    var params = this.params.get();
+    console.orolog('params', JSON.stringify(params));
+    var start = Number(params.start);
+    var dim = Number(params.dim);
+    if(!params.buttons){
         Session.set('defaultButtons', 'buttons');
-        if(noedit.indexOf(this.data.id) != -1)
-            this.data.buttons = 'nobuttons'
+        if(noedit.indexOf(params.id) != -1)
+            params.buttons = 'nobuttons'
     }
     else
         Session.set('defaultButtons', 'nobuttons')
 
-    Session.set("fileBCallback", this.data.callback);
+    Session.set("fileBCallback", params.callback);
     var browser = SVG('filebrowsediv')
     browser.attr('id', 'fileBrowse');
     var browserContent = browser.group().attr('id', 'browserContent');
@@ -77,7 +116,7 @@ Template.filebrowse.onRendered(function(){
     defs.group().attr('id','navdefs');
     defs.group().attr('id','navigation');
     var crumbs = browser.group().attr("id", "Bcrumbs");
-    if(this.data.login){
+    if(params.login && params.login != 'false') {
         Blaze.render(Template.login, document.getElementById('logintemplatediv'));
     }
 
@@ -89,16 +128,17 @@ Template.filebrowse.onRendered(function(){
     this.autorun(function() {
       var ready = self.subs.fileKids.ready();
       var fready = self.subs.filepublish.ready();
-        console.orolog(ounit, 'ready, fready', ready, fready)
+      console.orolog(ounit, 'ready, fready', ready, fready)
       if(ready && fready) {
-        var data = self.data;
-        data.start = parseInt(data.start);
-        data.dim = parseInt(data.dim);
+        var data = Tracker.nonreactive(function() {
+          return self.params.get();
+        });
+        console.orolog('filebr data2', JSON.stringify(data));
 
         if(data.id != vips.myWork) {
           var files = [];
           Dependency.find({
-            fileId2: Template.currentData().id, type:1
+            fileId2: data.id, type:1
           }, {sort: {dateModified: -1}})
             .forEach(function(dep) {
               var f = File.findOne({_id: dep.fileId1});
@@ -112,10 +152,10 @@ Template.filebrowse.onRendered(function(){
         }
 
         SVG.get('browserContent').clear();
-
-        showBrowserContent(self.data, files);
-        navButtons(self.data, files);
-        fileBMenu(self.data, files);
+        console.orolog(files);
+        showBrowserContent(data, files);
+        navButtons(data, files);
+        fileBMenu(data, files);
         self.files.set(files);
       }
     });
@@ -125,7 +165,7 @@ Template.filebrowse.onRendered(function(){
       if(ready) {
         console.orolog('fileParents ready');
         SVG.get('Bcrumbs').clear()
-        fileBcrumbs(self.data);
+        fileBcrumbs(self.params.get());
       }
     });
 
@@ -137,7 +177,7 @@ Template.filebrowse.onRendered(function(){
         if(SVG.get('menu_defs')) {
           SVG.get('menu_defs').remove();
         }
-        fileBMenu(self.data, files);
+        fileBMenu(self.params.get(), files);
       }
     });
 })
@@ -151,7 +191,7 @@ Template.filebrowse.events({
             var fileId = SVG.get("file_"+i).attr("fileId")
             if(File.findOne({_id: fileId}).noofchildren > 0 || fileId == vips.myWork){
                 console.orolog('other subscription');
-                var params = t.data;
+                var params = t.params.get();
                 var defaultButtons = Session.get('defaultButtons');
                 if(params.buttons != defaultButtons){
                     if(defaultButtons == 'buttons')
@@ -181,7 +221,7 @@ Template.filebrowse.events({
 })
 
 showBrowserContent = function(params, files){
-    console.orolog('browserContent');
+    console.orolog('browserContent', JSON.stringify(params));
     var start = params.start,
         dim = params.dim,
         col = params.col,
@@ -247,7 +287,12 @@ showBrowserContent = function(params, files){
         else {
           Meteor.call('setSvg', files[i]._id);
         }*/
-        bkg[i] = gr[i].rect(parent.width,parent.height).fill('#FFFFFF').attr('id','background_'+i).opacity(0);
+        bkg[i] = gr[i].rect(parent.width,parent.height).fill('#FFFFFF')
+          .attr('id','background_'+i)
+          .opacity(0);
+
+        if(params.buttons == 'nobuttons' || f.noofchildren > 0)
+          bkg[i].style('cursor', 'pointer');
         x=x+parent.width/dim;
         gr[i].on('mouseover', function(){
             var i = this.attr("id").substring(this.attr("id").lastIndexOf("_")+1);

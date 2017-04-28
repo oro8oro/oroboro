@@ -362,13 +362,11 @@ Router.route('/filed/:_id', {
 });
 
 
-Router.route('/browse/:col/:_id/:start/:dim/:buttons', {
-    path: '/browse/:col/:_id/:start/:dim/:buttons',
+Router.route('/browse/:col/:id/:start/:dim/:buttons', {
+    path: '/browse/:col/:id/:start/:dim/:buttons',
     template: 'filebrowse',
     data: function(){
-        var dim = Number(this.params.dim);
-        var limit = dim * dim;
-        return {start: this.params.start, dim: this.params.dim, id: this.params._id, col: this.params.col, buttons: this.params.buttons};
+        return {start: parseInt(this.params.start), dim: parseInt(this.params.dim), id: this.params.id, col: this.params.col, buttons: this.params.buttons};
     },
     onBeforeAction: function(){
         var script1 = IRLibLoader.load(server + '/file/NjYbTkGZKXn8miLnN');  // GZxMGchzEkKFtakFh');
@@ -396,27 +394,25 @@ Router.route('/browse/:col/:_id/:start/:dim/:buttons', {
 });
 
 
-Router.route('/browse/:col/:_id/', function () {
-  this.redirect('/browse/' + this.params.col + '/' + this.params._id + '/1/3/');
+Router.route('/browse/:col/:id/', function () {
+  this.redirect('/browse/' + this.params.col + '/' + this.params.id + '/1/3/');
 })
 
-Router.route('/browse/:col/:_id/:start', function () {
-  this.redirect('/browse/' + this.params.col + '/' + this.params._id + '/' + this.params.start + '/3/');
+Router.route('/browse/:col/:id/:start', function () {
+  this.redirect('/browse/' + this.params.col + '/' + this.params.id + '/' + this.params.start + '/3/');
 })
 
 
 
 
-Router.route('/browse/:col/:_id/:start/:dim', {
-    path: '/browse/:col/:_id/:start/:dim',
+Router.route('/browse/:col/:id/:start/:dim', {
+    path: '/browse/:col/:id/:start/:dim',
     template: 'filebrowse',
     subscriptions: function(){
         //this.subscribe('filebrowse', this.params._id, this.params.col).wait();
     },
     data: function(){
-        var dim = Number(this.params.dim);
-        var limit = dim * dim;
-        return {start: this.params.start, dim: this.params.dim, id: this.params._id, col: this.params.col, login: true};
+        return {start: parseInt(this.params.start), dim: parseInt(this.params.dim), id: this.params.id, col: this.params.col, login: true};
     },
     onBeforeAction: function(){
         console.orolog('load scripts');
