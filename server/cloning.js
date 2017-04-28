@@ -10,6 +10,54 @@ Meteor.methods({
   },
   cloneItem: function(id, groupId) {
     return cloneItem(id, groupId);
+  },
+  // groupId = id of future parent; fileId = id of file / group that contains the future kid
+  addElement: function(groupId, fileId) {
+    console.orolog('addElement groupId, fileId', groupId, fileId)
+    var group = Group.findOne({fileId: fileId, type: 'layer'},{sort: {ordering: 1}});
+    var elem;
+    if(group) {
+        console.orolog('addElement file found, layer: ', group._id)
+        // Find the first group in this layer that has at least one element
+        var groups = Group.find({groupId: group._id},{sort: {ordering: 1}}).fetch();
+        for(var i = 0; i < groups.length; i++) {
+          if(Item.findOne({groupId: groups[i]._id})) {
+            elem = groups[i];
+            break;
+          }
+        }
+
+        console.orolog('addElement group in layer? ', JSON.stringify(elem));
+        if(elem) {
+          cloneGroup(elem, groupId, 'groupId');
+          return;
+        }
+
+        // No group with items inside. Check if layer has items
+        var elem = Item.findOne({groupId: group._id},{sort: {ordering: 1}});
+        console.orolog('addElement item in layer? ', JSON.stringify(elem));
+        if(elem) {
+          cloneItem(elem, groupId);
+          return;
+        }
+    }
+    console.orolog('addElement no file with layer found; group id given?', fileId);
+    // Maybe fileId is a group id
+    elem = Group.findOne({_id: fileId});
+    if(elem){
+      console.orolog('addElement group found', fileId);
+
+      //TODO: if layer? - we used to add the layer to the file directly
+      cloneGroup(elem, groupId, 'groupId');
+      return;
+    }
+    elem = Item.findOne({_id: fileId});
+    if(elem) {
+      console.orolog('addElement item found', fileId);
+      cloneItem(elem, groupId);
+      return;
+    }
+    console.orolog('addElement failed');
   }
 })
 cloneFile = function cloneFile(id){
@@ -20,6 +68,7 @@ cloneFile = function cloneFile(id){
     var groups = Group.find({fileId: id}).fetch();
     f.original = f._id;
     delete f._id;
+    delete f.svg;
     f.creatorId = this.userId || Meteor.userId();
     f.dateModified = new Date();
     f.permissions.view = [];
