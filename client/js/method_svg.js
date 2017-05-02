@@ -4012,10 +4012,11 @@ simpleLineSymmetry = function(obj, paths){
         arrs = [], dx = 0, dy = 0, bigx, bigy, x, y,
         m1 = (obj.pointY2 - obj.pointY1) / (obj.pointX2 - obj.pointX1),
         tempscale = obj.dscale,
-        cx, cy
+        cx, cy, b1, b2, m2,
+        blindSpot = !m1 || m1 == Infinity || m1 == -Infinity
 
-    if(m1){
-        var b1 = obj.pointY1 - m1 * obj.pointX1,
+    if(!blindSpot){
+        b1 = obj.pointY1 - m1 * obj.pointX1,
             m2 = -1/m1, b2;
     }
 
@@ -4024,7 +4025,7 @@ simpleLineSymmetry = function(obj, paths){
         //find perpendicular from path center to line for dscale
         if(tempscale > 1){
             var box = paths[paths.length-1].bbox()
-            if(m1 != Infinity){
+            if(!blindSpot){
                 b2 = box.cy - m2 * box.cx;
                 cx = (b2-b1) / (m1-m2);
                 cy = m1 * cx + b1;
@@ -4046,7 +4047,7 @@ simpleLineSymmetry = function(obj, paths){
             else {
                 var len = arrs[r][i].length;
 
-                if(m1 != Infinity){
+                if(!blindSpot){
                     b2 = arrs[r][i][len-1] - m2 * arrs[r][i][len-2];
                     x = (b2-b1) / (m1-m2);
                     y = m1 * x + b1;
@@ -4070,13 +4071,12 @@ simpleLineSymmetry = function(obj, paths){
                     dx = arrs[r][i][len-2]
                     dy = arrs[r][i][len-1]
                 }
-
                 var p = rotate_point(x, y, a, [dx, dy ])
                 arrs[r][i][len-2] = p[0];
                 arrs[r][i][len-1] = p[1];
 
                 if(arrs[r][i][0] == 'C'){
-                    if(m1 != Infinity){
+                    if(!blindSpot){
                         b2 = arrs[r][i][2] - m2 * arrs[r][i][1];
                         x = (b2-b1) / (m1-m2);
                         y = m1 * x + b1;
@@ -4105,7 +4105,7 @@ simpleLineSymmetry = function(obj, paths){
                     arrs[r][i][1] = a1[0];
                     arrs[r][i][2] = a1[1];
 
-                    if(m1 != Infinity){
+                    if(!blindSpot){
                         b2 = arrs[r][i][4] - m2 * arrs[r][i][3];
                         x = (b2-b1) / (m1-m2);
                         y = m1 * x + b1;
