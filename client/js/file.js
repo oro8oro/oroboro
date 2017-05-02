@@ -366,7 +366,7 @@ setFill = function setFill(val){
     upd = {"palette.fillColor": val};
     console.orolog(upd);
     //Meteor.call('update_collection', "Item", itemids, upd);
-    oro.wraps.update_collection('Item', itemids, upd);
+    global_oro_variables.wraps.update_collection('Item', itemids, upd);
 }
 
 setFillOpacity = function setFillOpacity(val){

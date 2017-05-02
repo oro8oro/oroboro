@@ -1,3 +1,5 @@
+var oro = global_oro_variables;
+
 datGuiParam = function(item){
     this.cloneFile = menuItemSaveNew;
     this.browse = menuItemBrowse;
