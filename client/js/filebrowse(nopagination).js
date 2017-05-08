@@ -575,7 +575,7 @@ fileBMenu = function(params, files){
                 });
 
 
-            var menuBview = menu.group()
+            /*var menuBview = menu.group()
               .attr('id', 'menuItemView')
               .opacity(0.7)
               .attr('data-action', 'viewIt');
@@ -592,8 +592,19 @@ fileBMenu = function(params, files){
                 }).mousedown(function(){
                     console.orolog('mousedown img');
                     viewIt(params)
-                });
-
+                });*/
+            if(Meteor.settings && Meteor.settings.public && Meteor.settings.public.ratingsUrl) {
+              var menuBrate = menu.group()
+                .attr('id', vips.button_ratings)
+                .opacity(0.7)
+                .attr('data-action', 'rateIt');
+              backgV = menuBrate.rect(20,30).fill('#59534d').opacity(0.7);
+              imgV = menuBrate.image('/file/'+vips.button_ratings).loaded(function(loader) {
+                      this.size(loader.width*bscale, loader.height*bscale)
+                      this.x(border+loader.width*bscale*(skipx+1)).y(loader.height*bscale/2);
+                      backgV.size(loader.width*bscale, loader.height*bscale).x(border+loader.width*bscale*(skipx+1)).y(loader.height*bscale/2);
+                  }).front();
+            }
             console.orolog('/created menu_defs')
         }
     }
@@ -842,4 +853,9 @@ removeIt = function removeIt(params){
                 removeItem(Session.get("fileBIt"), function(){
             });
     }
+}
+
+rateIt = function(params) {
+  var url = Meteor.settings.public.ratingsUrl + encodeURIComponent(Meteor.absoluteUrl() + 'file/' + Session.get("fileBIt"))
+  window.open(url, '_blank');
 }
