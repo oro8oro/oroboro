@@ -91,12 +91,21 @@ build_item = function build_item(item){
     return itemscript;
 }
 
+addLink = function(script, link) {
+  if(!link)
+    return script;
+  return '<a xlink:href="' + link + '">' + script + '</a>';
+}
+
 build_group = function build_group(group){
-  //console.orolog('build_group', group._id);
-    var result = '';
     var items = Item.find({groupId: group._id}, {sort: {ordering:1}}).fetch();
-    for(var i in items)
-        result = result + build_item(items[i]);
+    var result = items.reduce(function(script, it) {
+      return script + (
+        it.link ?
+          addLink(build_item(it), it.link) :
+          build_item(it)
+        );
+    }, '');
     return result;
 }
 
@@ -121,6 +130,8 @@ recursive_group = function recursive_group(group){
 
         script = script + '</g>';
     }
+    if(group.link)
+      script = addLink(script, group.link);
     return script;
 }
 /*
