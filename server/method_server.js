@@ -134,26 +134,10 @@ recursive_group = function recursive_group(group){
       script = addLink(script, group.link);
     return script;
 }
-/*
-js_dep = [];
 
-recursive_depends = function recursive_depends(fileId, rel){
-    var deps = Dependency.find({fileId1: fileId, type: rel}).fetch();
-    if(deps.length > 0)
-        for(var d in deps){
-            if(js_dep.indexOf(deps[d].fileId2) == -1){
-                js_dep.push(deps[d].fileId2);
-                recursive_depends(deps[d].fileId2, rel);
-            }
-        }
-}
-*/
-//<script xlink:href="file_name" />
 Meteor.methods({
-  setSvg: function(fileId) {
-    var script = Meteor.call('getSvgScript', fileId);
-    File.update({_id: fileId}, {$set: {svg: script}});
-  },
+    // Wrap SVG cache / contents in <svg></svg>
+    // Add whatever scripts we have as deps; TODO: is this still a thing?
     getWrappedSvg: function(fileId) {
       var scale, notemplate, responsive, file,
         start = '', content = '', end = '',
@@ -167,8 +151,11 @@ Meteor.methods({
         fileId = fileId.id;
       }
       file = File.findOne({_id: fileId});
-      content = file.svg ? file.svg : Meteor.call('getSvgScript', file, scale);
 
+      // Either get cache or recursively build the content
+      content = file.svg ? file.svg : Meteor.call('buildSvgCache', file, scale);
+
+      // Responsive SVG with dims 100% + viewBox
       if(responsive) {
         viewbox='viewBox="0 0 1448 1024"';
       }
@@ -176,6 +163,8 @@ Meteor.methods({
         width = file.width;
         height = file.height;
       }
+
+      // Scale the SVG; not responsive
       if(scale){
         templateheight = height / scale;
         templatewidth = width / scale;
@@ -213,7 +202,9 @@ Meteor.methods({
       }
       return start + scripts + fileTemplates + content + end;
     },
-    getSvgScript: function (file, scale) {
+
+    // Build the cache for the SVG files - only content within <svg></svg>
+    buildSvgCache: function (file, scale) {
       if(typeof file === 'string') {
         file = File.findOne({_id: fileId});
       }
@@ -227,7 +218,6 @@ Meteor.methods({
           if(!groups[g].parameters || !groups[g].parameters.hide || groups[g].parameters.hide == 'false')
               result = result + recursive_group(groups[g]);
       }
-      console.log('getSvgScript', result);
       File.update({_id: file._id}, {$set: {svg: result}});
       return result;
     },
