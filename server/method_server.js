@@ -134,74 +134,92 @@ recursive_group = function recursive_group(group){
       script = addLink(script, group.link);
     return script;
 }
-/*
-js_dep = [];
 
-recursive_depends = function recursive_depends(fileId, rel){
-    var deps = Dependency.find({fileId1: fileId, type: rel}).fetch();
-    if(deps.length > 0)
-        for(var d in deps){
-            if(js_dep.indexOf(deps[d].fileId2) == -1){
-                js_dep.push(deps[d].fileId2);
-                recursive_depends(deps[d].fileId2, rel);
-            }
-        }
-}
-*/
-//<script xlink:href="file_name" />
 Meteor.methods({
-  setSvg: function(fileId) {
-    var script = Meteor.call('getFileScript', fileId);
-    File.update({_id: fileId}, {$set: {svg: script}});
-  },
-    getFileScript: function (fileId, scale, notemplate){
-      //console.orolog('getFileScript fileId', fileId)
-        var file = File.findOne({_id: fileId});
-        if(scale){
-            file.width = file.width * scale
-            file.height = file.height * scale
-        }
-        if(file.fileType == "image/svg+xml"){
-            var result = '<svg width="' + file.width + '" height="' + file.height + '" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" onload="init()" id="' + fileId + '">';
-            var end = '</svg>';
-        }
-        scripts = '';
-        //scripts = '<script type="application/ecmascript" xlink:href="/file/require.js" /> ';
-        if(file.script)
-            scripts = scripts + '<script type="application/javascript"> <![CDATA[ \n' + file.script + '\n ]]> </script>'
-        else
-            scripts = scripts + '<script type="application/javascript"> <![CDATA[ \nfunction init(){}\n ]]> </script>'
-        //recursive_depends(fileId, 3);
-        var js_dep = getDependencies(fileId, 3);
-        for(var s in js_dep){
-            scripts = scripts + '<script type="application/ecmascript" xlink:href="' + '/file/' + js_dep[s] + '" />';
-        }
-        js_dep = [];
-        result = result + scripts;
-        //result = result + '<script type="application/javascript">' + file.script + '</script>';
-        if(scale){
-            result = result + '<g id="viewport" transform="matrix(' + scale + ' 0 0 ' + scale + ' 0 0)">';
-            end = '</g>' + end;
-            var templateheight = file.height / scale
-            var templatewidth = file.width / scale
-        }
-        else{
-            var templateheight = file.height
-            var templatewidth = file.width
-        }
-        var groups = Group.find({fileId: fileId}, {sort: {ordering:1}}).fetch();
-        if(file.parameters && file.parameters.templatepath && !notemplate){
-            var templates = file.parameters.templatepath;
-            for(var i = 0; i < templates.length; i++){
-                result = result + '<g id="templategroup_'+templates[i]+'" type="layer"><image xlink:href="/file/' + templates[i] + '" id="templategroup_'+templates[i]+'" height="' + templateheight + '" width="' + templatewidth + '" x="' + 0 + '" y="' + 0 + '"/></g>';
-            }
-        }
-        for(var g in groups){
-            if(!groups[g].parameters || !groups[g].parameters.hide || groups[g].parameters.hide == 'false')
-                result = result + recursive_group(groups[g]);
-        }
-        result = result + end;
-        return result;
+    // Wrap SVG cache / contents in <svg></svg>
+    // Add whatever scripts we have as deps; TODO: is this still a thing?
+    getWrappedSvg: function(fileId) {
+      var scale, notemplate, responsive, file,
+        start = '', content = '', end = '',
+        width = '100%', height = '100%', viewbox, viewport,
+        templateheight, templatewidth;
+
+      if(typeof fileId === 'object') {
+        scale = fileId.scale;
+        notemplate = fileId.notemplate;
+        responsive = fileId.responsive;
+        fileId = fileId.id;
+      }
+      file = File.findOne({_id: fileId});
+
+      // Either get cache or recursively build the content
+      content = file.svg ? file.svg : Meteor.call('buildSvgCache', file, scale);
+
+      // Responsive SVG with dims 100% + viewBox
+      if(responsive) {
+        viewbox='viewBox="0 0 1448 1024"';
+      }
+      else {
+        width = file.width;
+        height = file.height;
+      }
+
+      // Scale the SVG; not responsive
+      if(scale){
+        templateheight = height / scale;
+        templatewidth = width / scale;
+        width *= scale;
+        height *= scale;
+        viewport = '<g id="viewport" transform="matrix(' + scale + ' 0 0 ' + scale + ' 0 0)">';
+        end += '</g>';
+      }
+
+      start = '<svg width="' + width + '" height="' + height +
+        '" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" onload="init()" id="' + fileId + '" ' +
+        (viewbox ? viewbox : '') + '>' +
+        (viewport ? viewport : '');
+      end += '</svg>';
+
+      // Add script dependencies for the svg file; animation scripts etc.
+      scripts = '';
+      if(file.script)
+          scripts = scripts + '<script type="application/javascript"> <![CDATA[ \n' + file.script + '\n ]]> </script>'
+      else
+          scripts = scripts + '<script type="application/javascript"> <![CDATA[ \nfunction init(){}\n ]]> </script>'
+      var js_dep = getDependencies(fileId, 3);
+      for(var s in js_dep){
+          scripts = scripts + '<script type="application/ecmascript" xlink:href="' + '/file/' + js_dep[s] + '" />';
+      }
+      js_dep = [];
+
+      // For SVG files that have templates - ex. for creating buttons/icons for apps
+      var fileTemplates = ''
+      if(file.parameters && file.parameters.templatepath && !notemplate){
+          var templates = file.parameters.templatepath;
+          for(var i = 0; i < templates.length; i++){
+              fileTemplates = fileTemplates + '<g id="templategroup_'+templates[i]+'" type="layer"><image xlink:href="/file/' + templates[i] + '" id="templategroup_'+templates[i]+'" height="' + templateheight + '" width="' + templatewidth + '" x="' + 0 + '" y="' + 0 + '"/></g>';
+          }
+      }
+      return start + scripts + fileTemplates + content + end;
+    },
+
+    // Build the cache for the SVG files - only content within <svg></svg>
+    buildSvgCache: function (file, scale) {
+      if(typeof file === 'string') {
+        file = File.findOne({_id: fileId});
+      }
+      if(!file) return;
+
+      var fileId = file._id, result = '';
+      var groups = Group.find({fileId: fileId}, {sort: {ordering:1}}).fetch();
+
+      // Let the recursive dance begin
+      for(var g in groups){
+          if(!groups[g].parameters || !groups[g].parameters.hide || groups[g].parameters.hide == 'false')
+              result = result + recursive_group(groups[g]);
+      }
+      File.update({_id: file._id}, {$set: {svg: result}});
+      return result;
     },
     getGroupScript: function(groupId){
         var group = Group.findOne({_id: groupId});

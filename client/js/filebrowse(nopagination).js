@@ -281,12 +281,6 @@ showBrowserContent = function(params, files){
         svg[i].attr({preserveAspectRatio: "xMidYMid meet"})
         svg[i].viewbox(0,0,f.width,f.height);
         svg[i].image(imagepath);
-        /*if(files[i].svg) {
-          svg[i].nested().svg(files[i].svg)
-        }
-        else {
-          Meteor.call('setSvg', files[i]._id);
-        }*/
         bkg[i] = gr[i].rect(parent.width,parent.height).fill('#FFFFFF')
           .attr('id','background_'+i)
           .opacity(0);
