@@ -16,6 +16,7 @@ datGuiParam = function(item){
     this.uploadType = '';
     this.itemType = '';
     this.ok = menuItemParseCsv;
+    this.link = '';
     this.showMice = false
     this.qrcode = function(){
         $('#qrcodeModal').modal({backdrop: true, show: true});
@@ -116,6 +117,8 @@ datGuiParam = function(item){
         var it = Item.findOne({_id: item.attr('id')});
         if(!it)
             it = Group.findOne({_id: item.attr('id')})
+        if(it.link)
+          this.link = it.link;
         if(item.attr('type') == 'parametrizedGroup')
             this.genPath = menuGroupDeparametrize
         else
@@ -336,9 +339,16 @@ buildDatGui = function(gui, item, type, no){
     var param = new datGuiParam(item);
     var f5 = gui.addFolder('Info');
     if(item){
+        var elColl = 'Item';
         var it = Item.findOne({_id: item.attr('id')});
-        if(!it)
+        if(!it) {
             it = Group.findOne({_id: item.attr('id')});
+            elColl = 'Group';
+        }
+        var link = gui.add(param, 'link');
+        link.onFinishChange(function(value) {
+          oro.wraps.update_document(elColl, item.attr("id"), {link: value});
+        });
         var elemid = f5.add(param, 'elemid', [shortType(item.attr("type"))+'_'+item.attr("id")]);
         console.orolog(item.type);
         if(item.type == 'path')

@@ -63,6 +63,10 @@ Schemas.Group = new SimpleSchema({
             }
         }*/
     },
+    link: {
+      type: String,
+      optional: true
+    },
     ordering: {
         type: Number,
         label: "Ordering",

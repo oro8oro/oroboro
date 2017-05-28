@@ -58,6 +58,10 @@ Schemas.Item = new SimpleSchema({
         },*/
         optional: true
     },
+    link: {
+      type: String,
+      optional: true
+    },
     ordering: {
         type: Number,
         label: "Ordering",
