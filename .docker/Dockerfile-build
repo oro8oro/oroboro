@@ -1,0 +1,67 @@
+FROM ubuntu:16.04
+MAINTAINER Loredana Cirstea
+
+RUN mkdir /home/meteorapp
+WORKDIR /home/meteorapp
+
+# Do basic updates
+RUN apt-get update -q \
+  && apt-get clean
+
+# Get curl in order to download meteor
+# We need Python, make and g++ for node-gyp
+RUN apt-get install -y apt-utils curl git python make g++
+
+# We need this to run meteor in order to cache meteor packages
+# Without it we get error code 1 because of mongo
+# See https://github.com/meteor/meteor/issues/4019
+ENV OS_LOCALE="en_US.UTF-8"
+RUN apt-get install -y locales
+RUN locale-gen ${OS_LOCALE}
+
+# Install Meteor
+RUN echo "Install Meteor:" \
+  && (curl https://install.meteor.com/ | sh) \
+  && PATH=$PATH:/usr/local/bin
+
+# Cache Meteor packages
+# See https://github.com/meteor/meteor/issues/7914
+COPY ./.meteor ./.meteor
+# base packages, archived in buildC.sh
+# ADD packages.tar .
+# Remove packages from .meteor/packages
+# RUN sed -i '/oroboro/d' ./.meteor/packages
+
+# Cache npm packages
+# `meteor build` copies the root npm modules into the bundle
+# so we have to install them first
+ADD package.json .
+RUN meteor npm install --production
+
+RUN mkdir /home/meteorapp/server
+# Checks for the EXIT_ON_START variable and exits the process if true
+
+# This installs the Meteor packages
+# !!!! This takes a lot of time. If you add files that change frequently
+# before this command, package caching will be lost
+# RUN EXIT_ON_START=true meteor --once --allow-superuser run
+
+# Copy the rest of the source code
+ADD . .
+
+# RUN rm packages.tar
+
+ARG ROOT_URL
+ARG VERSION
+ARG BUNDLE
+
+# Build the Meteor app
+RUN meteor build --allow-superuser --server=$ROOT_URL --directory ../build
+
+# Copy package.json and docker files in the app build
+RUN cp -v /home/meteorapp/package.json /home/build/bundle/ \
+  && cp -v /home/meteorapp/.docker/Dockerfile /home/build/bundle/ \
+  && cp -v /home/meteorapp/.dockerignore /home/build/bundle/
+
+RUN cd /home/build \
+  && tar -czf $BUNDLE-$VERSION.tar.gz /home/build/bundle

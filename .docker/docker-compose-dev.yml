@@ -1,0 +1,32 @@
+version: '2'
+
+services:
+  oroboro:
+    image: loredanacirstea/oroboro:$DOCKER_TAG
+    volumes:
+      - ./uploads:/app/uploads
+    container_name: $BASE_APP_NAME
+    environment:
+      - PORT=3000
+      - ROOT_URL=http://oroboro.com:3000
+      - MONGO_URL=mongodb://mongo:27017/meteor
+      - MONGO_OPLOG_URL=mongodb://mongo:27017/local
+    ports:
+      - 3000:3000
+    links:
+      - mongo:mongo
+
+  mongo:
+    image: mongo:3.2
+    volumes:
+     - ./data/db:/data/db
+  #    - ./data/dump:/dump
+    command: mongod --smallfiles --oplogSize 128 --replSet rs0
+    labels:
+      - "traefik.enable=false"
+
+  mongo-init-replica:
+    image: mongo:3.2
+    command: 'mongo mongo/meteor --eval "rs.initiate({ _id: ''rs0'', members: [ { _id: 0, host: ''localhost:27017'' } ]})"'
+    links:
+      - mongo:mongo
