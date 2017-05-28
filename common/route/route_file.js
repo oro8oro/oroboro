@@ -9,7 +9,6 @@ Router.route('/file/:_id', function () {
 //var server = 'http://192.168.2.2:3000'
 var server = ''
 
-
 Router.map(function(){
     this.route('/file/:_id', {
         where: 'server',
@@ -35,14 +34,10 @@ Router.map(function(){
                 }
 
                 if(file.fileType == 'image/svg+xml') {
-                  if(file.svg) {
-                    //console.orolog('----get file cache', file._id, new Date())
-                    this.response.end(file.svg);
-                    return;
-                  }
-                  //console.orolog('----compute file cache', file._id, new Date())
-                  var script = Meteor.call('getFileScript', file._id);
-                  File.update({_id: file._id}, {$set: {svg: script}});
+                  var script = Meteor.call('getWrappedSvg', {
+                      id: file._id,
+                      responsive: this.params.query.responsive
+                    });
                   this.response.end(script);
                 }
             }
@@ -72,7 +67,7 @@ Router.map(function(){
                         var script = file.script;
                     else
                         if(file.fileType == 'image/svg+xml')
-                            var script = Meteor.call('getFileScript', file._id, this.params.scale);
+                            var script = Meteor.call('getWrappedSvg', {id: file._id, scale: this.params.scale});
                     this.response.end(script);
                 }
             }
@@ -223,7 +218,7 @@ Router.map(function(){
                         var script = file.script;
                     else {
                         if(file.fileType == 'image/svg+xml')
-                            var script = Meteor.call('getFileScript', file._id, this.params.scale, true);
+                            var script = Meteor.call('getWrappedSvg', {id: file._id, scale: this.params.scale, notemplate: true});
                     this.response.end(script);
                 }
             }
