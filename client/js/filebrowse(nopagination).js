@@ -238,7 +238,9 @@ showBrowserContent = function(params, files){
 
     $('body').attr({"class": "no_scroll"}).css({margin:0,padding:0});
     var browser = SVG.get('fileBrowse');
-    browser.viewbox(0,0,parent.width,parent.height);
+
+    // Account for navigation (crumbs and page slider)
+    browser.viewbox(-150,0,parent.width+300,parent.height);
     var browserContent = SVG.get('browserContent');
     var x, y=0;
     var svg=[],gr=[], bkg=[];
