@@ -12,6 +12,7 @@ op = {
   navBefore: 0.2,
   navAfter: 0.5
 }
+var vb_delta = 150;
 redirect = function(params) {
   var current = Router.current().route.getName();
   var inEditor = Session.get('filebrowserInHouse');
@@ -240,7 +241,7 @@ showBrowserContent = function(params, files){
     var browser = SVG.get('fileBrowse');
 
     // Account for navigation (crumbs and page slider)
-    browser.viewbox(-150,0,parent.width+300,parent.height);
+    browser.viewbox(-vb_delta,0,parent.width+2*vb_delta,parent.height);
     var browserContent = SVG.get('browserContent');
     var x, y=0;
     var svg=[],gr=[], bkg=[];
@@ -281,7 +282,7 @@ showBrowserContent = function(params, files){
         if(dim != 1)
             gr[i].rect(parent.width,parent.height).attr({rx:100,ry:100, strokeWidth:6,stroke:"#000"}).fill('none');
         svg[i].attr({preserveAspectRatio: "xMidYMid meet"})
-        svg[i].viewbox(0,0,f.width,f.height);
+        svg[i].viewbox(vb_delta,0,parent.width,parent.height);
         svg[i].image(imagepath);
         bkg[i] = gr[i].rect(parent.width,parent.height).fill('#FFFFFF')
           .attr('id','background_'+i)
@@ -296,7 +297,6 @@ showBrowserContent = function(params, files){
                 if(SVG.get("container_"+i))
                         SVG.get("container_"+i).show();
                 else{
-                    var vb = SVG.get('fileBrowse').attr("viewBox").split(" ");
                     var container = SVG.get('group_'+i).group()
                       .attr("id", "container_"+i);
 
@@ -308,7 +308,6 @@ showBrowserContent = function(params, files){
                         window[name](params);
                       });
                     });
-                    //container.scale(0.8 * Number(vb[2]) / container.bbox().width);
                 }
             }
             SVG.get("file_"+i).opacity(0.6);
@@ -641,7 +640,7 @@ fileBMenu = function(params, files){
                     var fold = SVG.get("group_"+i).group().scale(bscale).fill('none');
                     fold.use(SVG.get('folder'));
                     fold.rect(1024,1024).radius(512).fill('#59534d').opacity(0.6);
-                    fold.x(vb[2] - fold.bbox().width).y(vb[3] - fold.bbox().height);
+                    fold.x(vb[2] - 2*fold.bbox().width-vb_delta).y(vb[3] - fold.bbox().height);
                     fold.on('mouseover',function(){
                         this.opacity(0.6);
                     });
