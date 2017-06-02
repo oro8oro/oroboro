@@ -36,7 +36,7 @@ Router.map(function(){
                 if(file.fileType == 'image/svg+xml') {
                   var script = Meteor.call('getWrappedSvg', {
                       id: file._id,
-                      responsive: this.params.query.responsive
+                      responsive: this.params.query.r
                     });
                   this.response.end(script);
                 }
