@@ -1682,16 +1682,22 @@ buildHinge = function(p, points, hinge, midd, attr, id, hinges, midds, attrs, no
                 points.path[points.start+p][3] = a2x
                 points.path[points.start+p][4] = a2y
             }
-            points.path.splice(points.start+p-1,1);
 
-            //if we have to delete the first point, make sure that the new first point does not have attractors and begins with an M
-            if(p == 1){
-                if(points.path[points.start][0] == 'C'){
-                    points.path[points.start][1] = points.path[points.start][5]
-                    points.path[points.start][2] = points.path[points.start][6]
-                    points.path[points.start].splice(3,4);
-                }
-                points.path[points.start][0] = 'M';
+            points.path.splice(points.start+p-1,1);
+            if(points.path[points.start+p-1]) {
+              // We are deleting the only point from a subpath
+              if(points.path[points.start+p-1][0].match(/z/i)) {
+                points.path.splice(points.start+p-1,1);
+              }
+              else if(p == 1 && points.path[points.start+p-1][0] != 'M') {
+                  //if we have to delete the first point, make sure that the new first point does not have attractors and begins with an M
+                  if(points.path[points.start][0] == 'C'){
+                      points.path[points.start][1] = points.path[points.start][5]
+                      points.path[points.start][2] = points.path[points.start][6]
+                      points.path[points.start].splice(3,4);
+                  }
+                  points.path[points.start][0] = 'M';
+              }
             }
         }
         else if(selection.has(this)){ //there is a selection of points/hinges - group operation
@@ -1895,14 +1901,17 @@ buildSubPathPoints = function(points, hinge, midd, attr, id, hinges, midds, attr
         points.subpath.splice(0,0,'null')
         points.subpath.push('null')
     }
+
     for(p = 1; p < points.subpath.length-1; p++){
         hinges[p] = buildHinge(p, points, hinge, midd, attr, id, hinges, midds, attrs, no);
         midds[p] = buildMidd(p, points, hinge, midd, attr, id, hinges, midds, attrs, no);
     }
     if(points.subpath[points.subpath.length-1] == 'null')
         midds[points.subpath.length-2].remove();
-    var startl = [['M', points.subpath[1][1], points.subpath[1][2]], points.subpath[2]]
-    startlines[no] = SVG.get('startLines').path(startl).stroke({color: '#007fff', width: 3}).fill('none').opacity(0.6).attr("id", "startLine_"+no).attr('hingeM', hinges[1].attr('id')).attr('hinge2', hinges[2].attr('id'));
+    if(points.subpath[2] != 'null') {
+      var startl = [['M', points.subpath[1][1], points.subpath[1][2]], points.subpath[2]]
+      startlines[no] = SVG.get('startLines').path(startl).stroke({color: '#007fff', width: 3}).fill('none').opacity(0.6).attr("id", "startLine_"+no).attr('hingeM', hinges[1].attr('id')).attr('hinge2', hinges[2].attr('id'));
+    }
 }
 allpoints = [];
 subpaths = []
@@ -1910,6 +1919,7 @@ buildSelectorPoints = function(id){
     baselinePoints = [];
     var allhinges = [], allmidds = [], allattrs = [], startlines = [];
     subpaths = getSubPaths(SVG.get(id));
+
     var selector = SVG.get("svgEditor").group().attr("id", "box_"+id).attr("selected", id).attr("type", 'pathPoints');
     var midd = selector.group().attr("id", "middPoints");
     var hinge = selector.group().attr("id", "hingePoints");
@@ -1998,7 +2008,7 @@ positionSelectorPoints = function(subpaths){
                     startl[1] = ['L', pp[0], pp[1]];
                 }
 
-                if(subpaths){
+                if(subpaths && subpaths[i]){
                     if(allpoints[i][p].attr("type") == "hinge"){
                         if(subpaths[i].subpath[p][0] != 'C'){
                             subpaths[i].subpath[p][1] = pp[0];
@@ -2012,7 +2022,8 @@ positionSelectorPoints = function(subpaths){
                 }
             }
         }
-        SVG.get('startLine_'+i).plot(startl);
+        if(SVG.get('startLine_'+i))
+          SVG.get('startLine_'+i).plot(startl);
     }
 }
 
@@ -3195,6 +3206,10 @@ getSubPaths = function(path){
     var arr = path.array.value;
     var newarr = [];
     for(i in arr){
+        // If the subpath only has 1 point, don't add the Z - it hinders the edit points mode
+        if(arr[i][0].match(/z/i) && newarr[newarr.length-1].subpath.length == 1) {
+          continue;
+        }
         if(arr[i][0] == 'M'){
             newarr.push({path: arr, start: Number(i)});
             newarr[newarr.length-1].subpath = [ clone(arr[i]) ];
