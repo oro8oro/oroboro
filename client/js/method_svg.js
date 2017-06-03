@@ -1895,14 +1895,17 @@ buildSubPathPoints = function(points, hinge, midd, attr, id, hinges, midds, attr
         points.subpath.splice(0,0,'null')
         points.subpath.push('null')
     }
+
     for(p = 1; p < points.subpath.length-1; p++){
         hinges[p] = buildHinge(p, points, hinge, midd, attr, id, hinges, midds, attrs, no);
         midds[p] = buildMidd(p, points, hinge, midd, attr, id, hinges, midds, attrs, no);
     }
     if(points.subpath[points.subpath.length-1] == 'null')
         midds[points.subpath.length-2].remove();
-    var startl = [['M', points.subpath[1][1], points.subpath[1][2]], points.subpath[2]]
-    startlines[no] = SVG.get('startLines').path(startl).stroke({color: '#007fff', width: 3}).fill('none').opacity(0.6).attr("id", "startLine_"+no).attr('hingeM', hinges[1].attr('id')).attr('hinge2', hinges[2].attr('id'));
+    if(points.subpath[2] != 'null') {
+      var startl = [['M', points.subpath[1][1], points.subpath[1][2]], points.subpath[2]]
+      startlines[no] = SVG.get('startLines').path(startl).stroke({color: '#007fff', width: 3}).fill('none').opacity(0.6).attr("id", "startLine_"+no).attr('hingeM', hinges[1].attr('id')).attr('hinge2', hinges[2].attr('id'));
+    }
 }
 allpoints = [];
 subpaths = []
@@ -1910,6 +1913,7 @@ buildSelectorPoints = function(id){
     baselinePoints = [];
     var allhinges = [], allmidds = [], allattrs = [], startlines = [];
     subpaths = getSubPaths(SVG.get(id));
+
     var selector = SVG.get("svgEditor").group().attr("id", "box_"+id).attr("selected", id).attr("type", 'pathPoints');
     var midd = selector.group().attr("id", "middPoints");
     var hinge = selector.group().attr("id", "hingePoints");
@@ -2012,7 +2016,8 @@ positionSelectorPoints = function(subpaths){
                 }
             }
         }
-        SVG.get('startLine_'+i).plot(startl);
+        if(SVG.get('startLine_'+i))
+          SVG.get('startLine_'+i).plot(startl);
     }
 }
 
@@ -3195,6 +3200,10 @@ getSubPaths = function(path){
     var arr = path.array.value;
     var newarr = [];
     for(i in arr){
+        // If the subpath only has 1 point, don't add the Z - it hinders the edit points mode
+        if(arr[i][0].match(/z/i) && newarr[newarr.length-1].subpath.length == 1) {
+          continue;
+        }
         if(arr[i][0] == 'M'){
             newarr.push({path: arr, start: Number(i)});
             newarr[newarr.length-1].subpath = [ clone(arr[i]) ];
