@@ -1682,16 +1682,22 @@ buildHinge = function(p, points, hinge, midd, attr, id, hinges, midds, attrs, no
                 points.path[points.start+p][3] = a2x
                 points.path[points.start+p][4] = a2y
             }
-            points.path.splice(points.start+p-1,1);
 
-            //if we have to delete the first point, make sure that the new first point does not have attractors and begins with an M
-            if(p == 1){
-                if(points.path[points.start][0] == 'C'){
-                    points.path[points.start][1] = points.path[points.start][5]
-                    points.path[points.start][2] = points.path[points.start][6]
-                    points.path[points.start].splice(3,4);
-                }
-                points.path[points.start][0] = 'M';
+            points.path.splice(points.start+p-1,1);
+            if(points.path[points.start+p-1]) {
+              // We are deleting the only point from a subpath
+              if(points.path[points.start+p-1][0].match(/z/i)) {
+                points.path.splice(points.start+p-1,1);
+              }
+              else if(p == 1 && points.path[points.start+p-1][0] != 'M') {
+                  //if we have to delete the first point, make sure that the new first point does not have attractors and begins with an M
+                  if(points.path[points.start][0] == 'C'){
+                      points.path[points.start][1] = points.path[points.start][5]
+                      points.path[points.start][2] = points.path[points.start][6]
+                      points.path[points.start].splice(3,4);
+                  }
+                  points.path[points.start][0] = 'M';
+              }
             }
         }
         else if(selection.has(this)){ //there is a selection of points/hinges - group operation
@@ -2002,7 +2008,7 @@ positionSelectorPoints = function(subpaths){
                     startl[1] = ['L', pp[0], pp[1]];
                 }
 
-                if(subpaths){
+                if(subpaths && subpaths[i]){
                     if(allpoints[i][p].attr("type") == "hinge"){
                         if(subpaths[i].subpath[p][0] != 'C'){
                             subpaths[i].subpath[p][1] = pp[0];
