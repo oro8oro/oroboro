@@ -2970,17 +2970,6 @@ getComplexity = function (path) {
     return complexity;
 }
 
-//checks if path is complex or not (SVGjs Path) -> (String) - "complex" / "simple"
-checkPathType = function(path) {
-    var chars = ["c", "s", "q", "t", "a"];
-    var points = path.attr("d");
-    for(var c in chars){
-        if(points.toLowerCase().indexOf(chars[c]) != -1)
-            return "complex";
-    }
-    return "simple";
-}
-
 //simplify complex paths with H and V, S, Q, T, A
 simplifyCPath = function(path) {
     var svgArr = path.array.value;

@@ -43,3 +43,55 @@ Router.map(function(){
     });
 });
 
+// Server API for getting an item record
+Router.route('/api/item/:_id', { where: 'server' })
+  .get(function () {
+    var item = Item.findOne({_id: this.params._id});
+    var headers = {'Access-Control-Allow-Origin' : '*'};
+    if(!item) {
+      this.response.writeHead(404, headers);
+      this.response.end('Item not found');
+      return;
+    }
+
+    headers['Content-Type'] = 'application/json';
+    this.response.writeHead(200, headers);
+    this.response.end(JSON.stringify(item));
+
+  })
+  .post(function () {
+    var d = this.request.body.d;
+    if(!d) {
+      this.response.writeHead(404);
+      this.response.end();
+      return;
+    }
+    if(typeof d != 'string') {
+      this.response.writeHead(400);
+      this.response.end('String expected');
+      return;
+    }
+    var item = Item.findOne({_id: this.params._id});
+    if(!item) {
+      this.response.writeHead(404);
+      this.response.end('Item not found');
+      return;
+    }
+
+    var doc = {
+      groupId: item.groupId
+    }
+
+    if(checkPathType(d) == 'simple'){
+        doc.pointList = JSON.stringify(pathArraySvgOro(item.array.value));
+        doc.type = 'simple_path';
+    }
+    else{
+        doc.pointList = d;
+        doc.type = 'complex_path';
+    }
+    doc.closed = d[d.length-1].match(/z/i) ? true : false;
+    id = Item.insert(doc);
+    this.response.writeHead(200);
+    this.response.end('Inserted item ' + id);
+  })
