@@ -66,6 +66,11 @@ Router.route('/api/item/:_id', { where: 'server' })
       this.response.end();
       return;
     }
+    if(typeof d != 'string') {
+      this.response.writeHead(400);
+      this.response.end('String expected');
+      return;
+    }
     var item = Item.findOne({_id: this.params._id});
     if(!item) {
       this.response.writeHead(404);
