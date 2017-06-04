@@ -92,6 +92,10 @@ Router.route('/api/item/:_id', { where: 'server' })
     }
     doc.closed = d[d.length-1].match(/z/i) ? true : false;
     id = Item.insert(doc);
-    this.response.writeHead(200);
-    this.response.end('Inserted item ' + id);
+    var headers = {
+      'Access-Control-Allow-Origin' : '*',
+      'Content-Type': 'application/json'
+    };
+    this.response.writeHead(200, headers);
+    this.response.end(JSON.stringify({id: id}));
   })
