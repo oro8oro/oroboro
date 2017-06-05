@@ -83,7 +83,7 @@ Router.route('/api/item/:_id', { where: 'server' })
     }
 
     if(checkPathType(d) == 'simple'){
-        doc.pointList = JSON.stringify(pathArraySvgOro(item.array.value));
+        doc.pointList = JSON.stringify(pathToOro(d));
         doc.type = 'simple_path';
     }
     else{
