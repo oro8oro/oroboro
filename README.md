@@ -6,6 +6,21 @@ If you are interested to see a live version and/or a live presentation, let us k
 
 ![](http://orobo.go.ro:3500/file/JZXXMo5N38iwgfNAG/0.1)
 
+## About Orobo.ro
+
+[Oroboro](http://orobo.go.ro:3500) is an alpha live-collaboration SVG editor with cloud support, in Meteor.js.
+
+This is a complex project, combining powerful SVG editing features with creating and maintaining an online database for sharing, showcasing works, live-collaboration on projects and even creating and performing tutorials and presentations.
+
+
+Watch our [videos](https://www.youtube.com/playlist?list=PL323JufuD9JBh3p4P5atyV40B0SXrU99Y) and see our [tutorial](http://orobo.go.ro:3500/md/tutorial) for how to use the editor.
+
+Try our [playground](http://orobo.go.ro:3500/filem/eGfQyh6jCqxeEYmex) or [sign up](http://orobo.go.ro:3500) and start by ![](http://orobo.go.ro:3500/file/menuItemClone/0.04) cloning existing designs and editing them.
+
+## Current Status
+
+Alpha means that it is still in development and bugs could be encountered. On the other hand, this is a good thing because we can still implement features needed by the community and we are actually looking forward to [feedback on this](https://github.com/oro8oro/oroboro/issues)
+
 ## Running on your machine
 
 Initial setup:
@@ -15,25 +30,10 @@ git clone git@github.com:oro8oro/oroboro.git
 cd oroboro
 meteor
 
-# Data is needed to run the current version
+# Data is needed to run the current version (on the way)
 mongorestore -h localhost:3001 public/dump
 ```
 
-## About Orobo.ro
-
-[Oroboro](http://orobo.go.ro:3500) is an alpha live-collaboration SVG editor with cloud support, in Meteor.js.
-
-This is a complex project, combining powerful SVG editing features with creating and maintaining an online database for sharing, showcasing works, live-collaboration on projects and even creating and performing tutorials and presentations.
-
-
-See our [tutorial](http://orobo.go.ro:3500/md/tutorial) for how to use the editor.
-
-Try our [playground](http://orobo.go.ro:3500/filem/eGfQyh6jCqxeEYmex) or [sign up](http://orobo.go.ro:3500) and start by ![](http://orobo.go.ro:3500/file/menuItemClone/0.04) cloning existing designs and editing them.
-
-
-## Current Status
-
-Alpha means that it is still in development and bugs could be encountered. On the other hand, this is a good thing because we can still implement features needed by the community and we are actually looking forward to [feedback on this](https://github.com/oro8oro/oroboro/issues)
 
 ## Oroboro Editor
 
