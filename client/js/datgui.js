@@ -116,8 +116,8 @@ datGuiParam = function(item){
     if(item){
         var it = Item.findOne({_id: item.attr('id')});
         if(!it)
-            it = Group.findOne({_id: item.attr('id')})
-        if(it.link)
+            it = Group.findOne({_id: item.attr('id')});
+        if(it && it.link)
           this.link = it.link;
         if(item.attr('type') == 'parametrizedGroup')
             this.genPath = menuGroupDeparametrize
