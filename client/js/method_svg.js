@@ -2360,8 +2360,8 @@ markSelected = function(){
     var ids = [];
     for(s in selected)
         ids.push(selected[s].attr("selected"));
-    Meteor.call('update_collection', 'Item', ids, {selected: Meteor.userId()});
-    Meteor.call('update_collection', 'Group', ids, {selected: Meteor.userId()});
+    Meteor.call('update_collection', 'Item', ids, {selected: Meteor.userId() || 'unkown'});
+    Meteor.call('update_collection', 'Group', ids, {selected: Meteor.userId() || 'unkown'});
 }
 
 unlockItems = function(){
